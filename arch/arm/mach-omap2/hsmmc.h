@@ -6,6 +6,8 @@
  * published by the Free Software Foundation.
  */
 
+#include <asm/mach/mmc.h>
+
 struct mmc_card;
 
 struct omap2_hsmmc_info {
@@ -29,6 +31,7 @@ struct omap2_hsmmc_info {
 	int	ocr_mask;	/* temporary HACK */
 	int	max_freq;	/* maximum clock, if constrained by external
 				 * circuitry, or 0 for default */
+	struct mmc_platform_data *mmc_data;
 	/* Remux (pad configuration) when powering on/off */
 	void (*remux)(struct device *dev, int slot, int power_on);
 	/* init some special card */
