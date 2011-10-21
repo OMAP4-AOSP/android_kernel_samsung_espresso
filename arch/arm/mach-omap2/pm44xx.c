@@ -194,6 +194,21 @@ static int iva_toggle_wa_applied;
 u16 pm44xx_errata;
 #define is_pm44xx_erratum(erratum) (pm44xx_errata & OMAP4_PM_ERRATUM_##erratum)
 
+#ifdef CONFIG_MACH_TUNA
+/* HACK: check CAWAKE wakeup event */
+#define USBB1_ULPITLL_CLK	0x4A1000C0
+#define CONTROL_PADCONF_WAKEUPEVENT_2	0x4A1001E0
+static int cawake_event_flag = 0;
+void check_cawake_wakeup_event(void)
+{
+	if ((omap_readl(USBB1_ULPITLL_CLK) & 0x80000000) ||
+		(omap_readl(CONTROL_PADCONF_WAKEUPEVENT_2) & 0x2)) {
+		pr_info("[HSI] PORT 1 CAWAKE WAKEUP EVENT\n");
+		cawake_event_flag = 1;
+	}
+}
+#endif
+
 #define MAX_IOPAD_LATCH_TIME 1000
 
 void syscontrol_lpddr_clk_io_errata(bool enable)
@@ -914,6 +929,12 @@ static int omap4_pm_suspend(void)
 	 * More details can be found in OMAP4430 TRM section 4.3.4.2.
 	 */
 	omap4_enter_sleep(0, PWRDM_POWER_OFF, true);
+
+#ifdef CONFIG_MACH_TUNA
+	/* HACK: check CAWAKE wakeup event */
+	check_cawake_wakeup_event();
+#endif
+
 	omap4_print_wakeirq();
 	prcmdebug_dump(PRCMDEBUG_LASTSLEEP);
 
