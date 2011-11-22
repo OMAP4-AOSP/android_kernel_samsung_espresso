@@ -450,6 +450,11 @@ config OMAP4_HSOTG_ED_CORRECTION
 	  Select this option to overrive HSOTG PHY settings in
 	  order to improve Eye Diagramm. On 4430 CPUs this should
 	  improve Eye Diagram at least 8%.
+
+config OMAP_REBOOT_REASON
+	depends on ARCH_OMAP4
+	bool
+
 endmenu
 
 endif
