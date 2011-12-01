@@ -613,8 +613,8 @@ static int wm8994_device_init(struct wm8994 *wm8994, int irq)
 		break;
 	case WM1811:
 		/* Revision C did not change the relevant layer */
-		if (ret > 1)
-			ret++;
+		if (wm8994->revision > 1)
+			wm8994->revision++;
 		break;
 	default:
 		break;
