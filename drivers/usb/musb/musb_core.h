@@ -536,6 +536,10 @@ struct musb {
 	int reserve_async_suspend;
 #endif
 	int vbus_reset_count;
+	unsigned int otg_enum_delay;
+#ifdef CONFIG_OMAP4_DPLL_CASCADING
+	int event;
+#endif
 };
 
 struct musb_otg_work {
