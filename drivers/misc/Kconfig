@@ -593,4 +593,10 @@ source "drivers/misc/cache-2dmanager/Kconfig"
 source "drivers/misc/modem_if/Kconfig"
 source "drivers/misc/modem_if_v2/Kconfig"
 
+config COLOR_CONTROL
+	bool "Support for Color Control"
+	default y
+	help
+	  Say Y here to enable Color Control
+
 endif # MISC_DEVICES
