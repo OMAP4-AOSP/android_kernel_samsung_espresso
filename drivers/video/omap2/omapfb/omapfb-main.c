@@ -839,8 +839,9 @@ static int omapfb_release(struct fb_info *fbi, int user)
 {
 	struct omapfb_info *ofbi = FB2OFB(fbi);
 	struct omapfb2_device *fbdev = ofbi->fbdev;
+	struct omap_dss_device *display = fb2display(fbi);
 
-	omapfb_disable_vsync(fbdev);
+	omapfb_enable_vsync(fbdev, display->channel, false);
 
 	return 0;
 }
@@ -1400,8 +1401,9 @@ static int omapfb_blank(int blank, struct fb_info *fbi)
 				r = display->driver->enable(display);
 		}
 
-		if (fbdev->vsync_active)
-			omapfb_enable_vsync(fbdev);
+		if (fbdev->vsync_active &&
+			(display->state == OMAP_DSS_DISPLAY_ACTIVE))
+			omapfb_enable_vsync(fbdev, display->channel, true);
 
 		break;
 
@@ -1413,7 +1415,7 @@ static int omapfb_blank(int blank, struct fb_info *fbi)
 	case FB_BLANK_POWERDOWN:
 
 		if (fbdev->vsync_active)
-			omapfb_disable_vsync(fbdev);
+			omapfb_enable_vsync(fbdev, display->channel, false);
 
 		if (display->state != OMAP_DSS_DISPLAY_ACTIVE)
 			goto exit;
@@ -2384,23 +2386,10 @@ static int omapfb_init_display(struct omapfb2_device *fbdev,
 	return 0;
 }
 
-#ifdef CONFIG_FB_OMAP2_VSYNC_SYSFS
-static ssize_t omapfb_vsync_time(struct device *dev,
-                struct device_attribute *attr, char *buf)
-{
-	struct omapfb2_device *fbdev = dev_get_drvdata(dev);
-
-	return snprintf(buf, PAGE_SIZE, "%llu", ktime_to_ns(fbdev->vsync_timestamp));
-}
-static DEVICE_ATTR(vsync_time, S_IRUGO, omapfb_vsync_time, NULL);
-#endif
-
 static void omapfb_send_vsync_work(struct work_struct *work)
 {
 	struct omapfb2_device *fbdev =
 		container_of(work, typeof(*fbdev), vsync_work);
-
-#ifdef CONFIG_FB_OMAP2_VSYNC_SEND_UEVENTS
 	char buf[64];
 	char *envp[2];
 
@@ -2409,11 +2398,6 @@ static void omapfb_send_vsync_work(struct work_struct *work)
 	envp[0] = buf;
 	envp[1] = NULL;
 	kobject_uevent_env(&fbdev->dev->kobj, KOBJ_CHANGE, envp);
-#endif
-
-#ifdef CONFIG_FB_OMAP2_VSYNC_SYSFS
-	sysfs_notify(&fbdev->dev->kobj, NULL, "vsync_time");
-#endif
 }
 static void omapfb_vsync_isr(void *data, u32 mask)
 {
@@ -2422,17 +2406,29 @@ static void omapfb_vsync_isr(void *data, u32 mask)
 	schedule_work(&fbdev->vsync_work);
 }
 
-int omapfb_enable_vsync(struct omapfb2_device *fbdev)
+int omapfb_enable_vsync(struct omapfb2_device *fbdev, enum omap_channel ch,
+	bool enable)
 {
-	int r;
-	/* TODO: should determine correct IRQ like dss_mgr_wait_for_vsync does*/
-	r = omap_dispc_register_isr(omapfb_vsync_isr, fbdev, DISPC_IRQ_VSYNC2);
-	return r;
-}
+	int r = 0;
+	const u32 masks[] = {
+		DISPC_IRQ_VSYNC,
+		DISPC_IRQ_EVSYNC_EVEN,
+		DISPC_IRQ_VSYNC2
+	};
 
-void omapfb_disable_vsync(struct omapfb2_device *fbdev)
-{
-	omap_dispc_unregister_isr(omapfb_vsync_isr, fbdev, DISPC_IRQ_VSYNC2);
+	if (ch > OMAP_DSS_CHANNEL_LCD2) {
+		pr_warn("%s wrong channel number\n", __func__);
+		return -ENODEV;
+	}
+
+	if (enable)
+		r = omap_dispc_register_isr(omapfb_vsync_isr, fbdev,
+			masks[ch]);
+	else
+		r = omap_dispc_unregister_isr(omapfb_vsync_isr, fbdev,
+			masks[ch]);
+
+	return r;
 }
 
 static int omapfb_probe(struct platform_device *pdev)
@@ -2559,14 +2555,6 @@ static int omapfb_probe(struct platform_device *pdev)
 		dev_err(fbdev->dev, "failed to create sysfs entries\n");
 		goto cleanup;
 	}
-
-#ifdef CONFIG_FB_OMAP2_VSYNC_SYSFS
-	r = device_create_file(fbdev->dev, &dev_attr_vsync_time);
-	if (r) {
-		dev_err(fbdev->dev, "failed to add sysfs entries\n");
-		goto cleanup;
-	}
-#endif
 
 	INIT_WORK(&fbdev->vsync_work, omapfb_send_vsync_work);
 	return 0;
