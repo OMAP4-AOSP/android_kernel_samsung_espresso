@@ -982,7 +982,7 @@ static IMG_BOOL ProcessFlipV2(IMG_HANDLE hCmdCookie,
 		     uiHwcDataSz, calcsz);
 	}
 
-	if (ui32NumMemInfos == 0)
+	if(psDssData->num_ovls == 0 || ui32NumMemInfos == 0)
 	{
 		WARN(1, "must have at least one layer");
 		return IMG_FALSE;
@@ -1103,12 +1103,9 @@ static IMG_BOOL ProcessFlipV2(IMG_HANDLE hCmdCookie,
 		OMAPLFBDoBlits(psDevInfo, ppsMemInfos, &psHwcData->blit_data, ui32NumMemInfos);
 	}
 
-	if (psDssData->num_ovls == 0)
-		dsscomp_proxy_cmdcomplete((void *)hCmdCookie, IMG_TRUE);
-	else
-		dsscomp_gralloc_queue(psDssData, apsTilerPAs, false,
-						dsscomp_proxy_cmdcomplete,
-						(void *)hCmdCookie);
+	dsscomp_gralloc_queue(psDssData, apsTilerPAs, false,
+						  dsscomp_proxy_cmdcomplete,
+						  (void *)hCmdCookie);
 
 	for(i = 0; i < ARRAY_SIZE(asMemInfo); i++)
 	{
