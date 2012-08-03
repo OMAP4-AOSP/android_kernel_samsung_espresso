@@ -50,6 +50,7 @@ struct sync_timeline *sync_timeline_create(const struct sync_timeline_ops *ops,
 	if (obj == NULL)
 		return NULL;
 
+	kref_init(&obj->kref);
 	obj->ops = ops;
 	strlcpy(obj->name, name, sizeof(obj->name));
 
@@ -66,8 +67,10 @@ struct sync_timeline *sync_timeline_create(const struct sync_timeline_ops *ops,
 	return obj;
 }
 
-static void sync_timeline_free(struct sync_timeline *obj)
+static void sync_timeline_free(struct kref *kref)
 {
+	struct sync_timeline *obj =
+		container_of(kref, struct sync_timeline, kref);
 	unsigned long flags;
 
 	if (obj->ops->release_obj)
@@ -85,14 +88,14 @@ void sync_timeline_destroy(struct sync_timeline *obj)
 	unsigned long flags;
 	bool needs_freeing;
 
-	spin_lock_irqsave(&obj->child_list_lock, flags);
 	obj->destroyed = true;
-	needs_freeing = list_empty(&obj->child_list_head);
-	spin_unlock_irqrestore(&obj->child_list_lock, flags);
 
-	if (needs_freeing)
-		sync_timeline_free(obj);
-	else
+	/*
+	 * If this is not the last reference, signal any children
+	 * that their parent is going away.
+	 */
+
+	if (!kref_put(&obj->kref, sync_timeline_free))
 		sync_timeline_signal(obj);
 }
 
@@ -121,13 +124,8 @@ static void sync_timeline_remove_pt(struct sync_pt *pt)
 	spin_lock_irqsave(&obj->child_list_lock, flags);
 	if (!list_empty(&pt->child_list)) {
 		list_del_init(&pt->child_list);
-		needs_freeing = obj->destroyed &&
-			list_empty(&obj->child_list_head);
 	}
 	spin_unlock_irqrestore(&obj->child_list_lock, flags);
-
-	if (needs_freeing)
-		sync_timeline_free(obj);
 }
 
 void sync_timeline_signal(struct sync_timeline *obj)
@@ -173,6 +171,7 @@ struct sync_pt *sync_pt_create(struct sync_timeline *parent, int size)
 		return NULL;
 
 	INIT_LIST_HEAD(&pt->active_list);
+	kref_get(&parent->kref);
 	sync_timeline_add_pt(parent, pt);
 
 	return pt;
@@ -184,6 +183,8 @@ void sync_pt_free(struct sync_pt *pt)
 		pt->parent->ops->free_pt(pt);
 
 	sync_timeline_remove_pt(pt);
+
+	kref_put(&pt->parent->kref, sync_timeline_free);
 
 	kfree(pt);
 }
