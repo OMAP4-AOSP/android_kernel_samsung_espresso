@@ -44,3 +44,4 @@ obj-$(CONFIG_CHARGER_SMB136)	+= smb136_charger.o
 obj-$(CONFIG_CHARGER_SMB347)    += smb347_charger.o
 obj-$(CONFIG_BATTERY_MANAGER)	+= bat_manager.o
 obj-$(CONFIG_REMOVAL_BATTERY_MANAGER)	+= removal_bat_manager.o
+obj-$(CONFIG_FUEL_GAUGE)	+= fg/
