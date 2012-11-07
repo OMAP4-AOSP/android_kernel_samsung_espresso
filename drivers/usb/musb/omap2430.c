@@ -499,11 +499,10 @@ static void musb_otg_notifier_work(struct work_struct *data_notifier_work)
 		if (musb->gadget_driver)
 			pm_runtime_get_sync(musb->controller);
 #endif
+		pm_runtime_get_sync(dev->parent);
 		otg_init(musb->xceiv);
-#ifdef CONFIG_USB_SAMSUNG_OMAP_NORPM
-		musb_start(musb);
-		musb_platform_pullup(musb, 1);
-#endif
+		pm_runtime_mark_last_busy(dev->parent);
+		pm_runtime_put_autosuspend(dev->parent);
 		break;
 
 	case USB_EVENT_CHARGER:
