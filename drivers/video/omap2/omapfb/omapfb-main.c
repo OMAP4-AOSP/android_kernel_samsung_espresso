@@ -1866,10 +1866,13 @@ static void omapfb_free_resources(struct omapfb2_device *fbdev)
 		if (fbdev->displays[i].auto_update_work_enabled)
 			omapfb_stop_auto_update(fbdev, dssdev);
 
-		if (dssdev->state != OMAP_DSS_DISPLAY_DISABLED)
-			dssdev->driver->disable(dssdev);
+		if (dssdev) {
+			if (dssdev->driver && dssdev->driver->disable
+				&& dssdev->state != OMAP_DSS_DISPLAY_DISABLED)
+				dssdev->driver->disable(dssdev);
 
-		omap_dss_put_device(dssdev);
+			omap_dss_put_device(dssdev);
+		}
 	}
 
 	if (fbdev->auto_update_wq != NULL) {
