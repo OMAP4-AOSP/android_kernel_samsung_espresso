@@ -375,42 +375,42 @@ int main_fn(void *arg)
 
 	while (1) {
 
-		do {
+		val = gpio_get_value_cansleep(earlycam_dev->reverse_gpio);
+
+		while (val == 1 || val < 0) {
 			/* Spin inside this loop, sleeping for 100 mS
-			  * everytime until the user presses the gpio OR
-			  * in case there was an error reading the value.
-			  * This should be replaced by interrupt based
-			  * mechanism to avoid waking up the cpu
-			  * frequently
-			  */
+			 * everytime until the user presses the gpio OR
+			 * in case there was an error reading the value.
+			 * This should be replaced by interrupt based
+			 * mechanism to avoid waking up the cpu
+			 * frequently
+			 */
 			if (!once) {
 				if (display_enabled)
 					display_disable(comp);
 
 				vip_release(&fp);
 				/* Set a special code for init flag to signal
-				  * that the init apis have to be called again
-				  * after gpio release
-				  */
+				 * that the init apis have to be called again
+				 * after gpio release
+				 */
 				cam_init = 2;
 				/* Signal to the display that it needs to
-				  * re-acquire the pipes and enable
-				  * interrupts again next time when gpio
-				  * is pressed
-				  */
+				 * re-acquire the pipes and enable
+				 * interrupts again next time when gpio
+				 * is pressed
+				 */
 				once = 1;
 			}
 			msleep(100);
-			val = gpio_get_value_cansleep
-						(earlycam_dev->reverse_gpio);
-		} while (val == 1 || val < 0);
+		};
 
 		/* So we got a gpio press, start by initializing camera first */
 		if (cam_init == 2) {
 			ret = vip_open(&fp);
 			if (ret) {
 				pr_err("early_vip_open failed with error %d",
-					ret);
+						ret);
 				return ret;
 			}
 
@@ -430,15 +430,15 @@ int main_fn(void *arg)
 		if (ret) {
 			pr_err("capture_image failed with error %d", ret);
 			return ret;
-	    }
+		}
 		cam_init = 0;
 
-	    comp.ovls[0].ba = (u32) dma_addr_global_complete[buffer_index];
+		comp.ovls[0].ba = (u32) dma_addr_global_complete[buffer_index];
 		if (comp.ovls[0].ba != 0) {
 			ret = display_queue(comp);
 			if (ret)
 				pr_err("display_queue failed with error %d",
-					   ret);
+						ret);
 		}
 		once = 0;
 		msleep(33);
