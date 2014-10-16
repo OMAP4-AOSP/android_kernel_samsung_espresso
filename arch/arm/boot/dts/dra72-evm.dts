@@ -113,6 +113,12 @@
 		gpio = <135>;
 	};
 
+	ocp {
+		gpu: gpu@0x56000000 {
+			gpu-supply = <&abb_gpu>;
+		};
+	};
+
 	vaudio_1v8: fixedregulator-vaudio-dig {
 		compatible = "regulator-fixed";
 		regulator-name = "vdac_fixed";
