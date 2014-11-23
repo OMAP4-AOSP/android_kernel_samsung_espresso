@@ -25,6 +25,7 @@ One tx and one rx pair is required.
 dma-names: DMA request names. These strings correspond 1:1 with
 the ordered pairs in dmas. The RX request must be "rx" and the
 TX request must be "tx".
+caps2-mmc-hs200-1_8v: the controller supports HS200 mode
 
 Examples:
 
