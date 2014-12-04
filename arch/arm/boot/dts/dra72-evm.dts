@@ -850,6 +850,7 @@
 	vmmc-supply = <&vmmc2_fixed>;
 	bus-width = <8>;
 	max-frequency = <192000000>;
+	caps2-mmc-hs200-1_8v;
 	ti,non-removable;
 	pinctrl-names = "default";
 	pinctrl-0 = <&mmc2_pins>;

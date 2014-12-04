@@ -2135,6 +2135,9 @@ static struct omap_mmc_platform_data *of_get_hsmmc_pdata(struct device *dev)
 	if (of_find_property(np, "ti,needs-special-hs-handling", NULL))
 		pdata->slots[0].features |= HSMMC_HAS_HSPE_SUPPORT;
 
+	if (of_find_property(np, "caps2-mmc-hs200-1_8v", NULL))
+		pdata->slots[0].caps2 |= MMC_CAP2_HS200_1_8V_SDR | MMC_CAP2_HS200;
+
 	return pdata;
 }
 #else
@@ -2157,7 +2160,7 @@ static int omap_hsmmc_probe(struct platform_device *pdev)
 	unsigned tx_req, rx_req;
 	struct dmaengine_chan_caps *dma_chan_caps;
 	struct pinctrl *pinctrl;
-	u32 revision, capa2;
+	u32 revision;
 
 	match = of_match_device(of_match_ptr(omap_mmc_of_match), &pdev->dev);
 	if (match) {
@@ -2287,15 +2290,9 @@ static int omap_hsmmc_probe(struct platform_device *pdev)
 	mmc->caps |= MMC_CAP_DRIVER_TYPE_A | MMC_CAP_DRIVER_TYPE_C |
 		     MMC_CAP_DRIVER_TYPE_D;
 
-	capa2 = OMAP_HSMMC_READ(host->base, CAPA2);
-	if ((capa2 & SDR104) && (mmc->f_max > (2 * MMC_HIGH_DDR_MAX_DTR))) {
-		mmc->caps |= MMC_CAP_UHS_SDR104 | MMC_CAP_UHS_SDR50;
-		mmc->caps2 |= MMC_CAP2_HS200_1_8V_SDR;
-	}
-	if (capa2 & SDR50)
-		mmc->caps |= MMC_CAP_UHS_SDR50;
-	if (capa2 & DDR50)
-		mmc->caps |= MMC_CAP_UHS_DDR50;
+	if ((mmc_slot(host).caps2 & (MMC_CAP2_HS200_1_8V_SDR | MMC_CAP2_HS200)) &&
+	    (mmc->f_max > 2 * MMC_HIGH_DDR_MAX_DTR))
+		mmc->caps2 |= mmc_slot(host).caps2;
 
 	omap_hsmmc_conf_bus_power(host);
 
