@@ -571,6 +571,12 @@ config LEDS_AN30259A
           AN30259A has three channel LED driver. By synchronous clock
           function, combined operation is possible.
 
+config UID_CPUTIME
+	tristate "Per-UID cpu time statistics"
+	default n
+	help
+	  Per UID based cpu time statistics exported to /proc/uid_cputime
+
 config FACTORY_PBA_JACK_TEST_SUPPORT
 	bool "For samsung factory pba jack test"
 	default n
