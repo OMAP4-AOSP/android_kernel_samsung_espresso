@@ -1059,7 +1059,7 @@ omap_i2c_probe(struct platform_device *pdev)
 
 	dev = devm_kzalloc(&pdev->dev, sizeof(struct omap_i2c_dev), GFP_KERNEL);
 	if (!dev) {
-		dev_err(&pdev->dev, "Menory allocation failed\n");
+		dev_err(&pdev->dev, "Memory allocation failed\n");
 		return -ENOMEM;
 	}
 
@@ -1291,6 +1291,11 @@ static int omap_i2c_suspend(struct device *dev)
 	 * later stages of suspending when device Runtime PM is disabled.
 	 * I2C device will be turned off at "noirq" suspend stage.
 	 */
+	if (atomic_read(&dev->power.usage_count) > 1) {
+		dev_info(dev,
+			 "active I2C transaction detected - suspend aborted\n");
+		return -EBUSY;
+	}
 	ret = pm_runtime_resume(dev);
 	if (ret < 0)
 		return ret;
