@@ -382,6 +382,7 @@ long omap2_clk_round_rate_parent(struct clk *clk, struct clk *new_parent)
 	if (!clk->clksel || !new_parent)
 		return -EINVAL;
 
+	/*parent_div = _omap2_clksel_get_src_field(new_parent, clk, &field_val);*/
 	parent_div = _get_div_and_fieldval(new_parent, clk, &field_val);
 	if (!parent_div)
 		return -EINVAL;

@@ -62,20 +62,6 @@ static struct omap_device_pm_latency omap_emif_latency[] = {
 	       },
 };
 
-static u32 get_temperature_level(u32 emif_nr);
-
-void emif_dump(int emif_nr)
-{
-	void __iomem *base = emif[emif_nr].base;
-
-	printk("EMIF%d s=0x%x is_sys=0x%x is_ll=0x%x temp=0x%02x\n",
-	       emif_nr + 1,
-	       __raw_readl(base + OMAP44XX_EMIF_STATUS),
-	       __raw_readl(base + OMAP44XX_EMIF_IRQSTATUS_SYS),
-	       __raw_readl(base + OMAP44XX_EMIF_IRQSTATUS_LL),
-	       get_temperature_level(emif_nr));
-}
-
 /*
  * EMIF Power Management timer for Self Refresh will put the external SDRAM
  * in Self Refresh mode after the EMIF is idle for number of DDR clock cycles
@@ -611,7 +597,7 @@ static u32 get_temperature_level(u32 emif_nr)
  */
 static void setup_registers(u32 emif_nr, struct emif_regs *regs, u32 volt_state)
 {
-	u32 temp, read_idle;
+	u32 temp,read_idle;
 	void __iomem *base = emif[emif_nr].base;
 
 	__raw_writel(regs->ref_ctrl_shdw,
@@ -1218,59 +1204,6 @@ void emif_driver_shutdown(struct platform_device *pdev)
 	emif_clear_irq(pdev->id);
 }
 
-int emif_driver_suspend(struct platform_device *pdev, pm_message_t state)
-{
-	u32 temp;
-	u32 base;
-	int id = pdev->id;
-	if (id == 0)
-		base = OMAP44XX_EMIF1_VIRT;
-	else
-		base = OMAP44XX_EMIF2_VIRT;
-
-	temp = OMAP44XX_REG_EN_TA_SYS_MASK;
-
-	/* Disable the relevant interrupts for both LL and SYS*/
-	__raw_writel(temp, base + OMAP44XX_EMIF_IRQENABLE_CLR_SYS);
-	__raw_writel(temp, base + OMAP44XX_EMIF_IRQENABLE_CLR_LL);
-
-	/* Dummy read to make sure writes are complete */
-	__raw_readl(base + OMAP44XX_EMIF_IRQENABLE_CLR_LL);
-
-	__raw_writel(temp, base + OMAP44XX_EMIF_IRQSTATUS_SYS);
-	__raw_writel(temp, base + OMAP44XX_EMIF_IRQSTATUS_LL);
-
-
-
-	return 0;
-}
-int emif_driver_resume(struct platform_device *pdev)
-{
-
-	u32 temp;
-	int id = pdev->id;
-	u32 base;
-	if (id == 0)
-		base = OMAP44XX_EMIF1_VIRT;
-	else
-		base = OMAP44XX_EMIF2_VIRT;
-
-	temp = OMAP44XX_REG_EN_TA_SYS_MASK;
-
-	/* Clear any pendining interrupts */
-	__raw_writel(temp, base + OMAP44XX_EMIF_IRQSTATUS_SYS);
-	__raw_writel(temp, base + OMAP44XX_EMIF_IRQSTATUS_LL);
-
-	/* Enable the relevant interrupts for both LL and SYS*/
-	__raw_writel(temp, base + OMAP44XX_EMIF_IRQENABLE_SET_SYS);
-	__raw_writel(temp, base + OMAP44XX_EMIF_IRQENABLE_SET_LL);
-
-	/* Dummy read to make sure writes are complete */
-	__raw_readl(base + OMAP44XX_EMIF_IRQENABLE_SET_LL);
-
-	return 0;
-}
-
 static struct platform_driver omap_emif_driver = {
 	.probe = omap_emif_probe,
 	.driver = {
@@ -1278,8 +1211,6 @@ static struct platform_driver omap_emif_driver = {
 		   },
 
 	.shutdown = emif_driver_shutdown,
-	.suspend = emif_driver_suspend,
-	.resume = emif_driver_resume,
 };
 
 static int __init omap_emif_register(void)

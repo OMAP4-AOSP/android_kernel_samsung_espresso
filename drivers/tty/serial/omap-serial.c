@@ -62,6 +62,7 @@ static bool uart_pm_qos_enable;
 
 #define SET_UART_PM_QOS_DELAY 10
 #define CLEAR_UART_PM_QOS_DELAY -1
+#endif
 
 #ifdef CONFIG_OMAP4_DPLL_CASCADING
 
