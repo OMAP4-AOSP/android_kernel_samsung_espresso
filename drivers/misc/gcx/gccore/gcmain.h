@@ -44,6 +44,17 @@ struct gccorecontext {
 	/* GPU IRQ line. */
 	int irqline;
 
+	/* Capabilities and characteristics. */
+	unsigned int gcmodel;
+	unsigned int gcrevision;
+	unsigned int gcdate;
+	unsigned int gctime;
+	union gcfeatures gcfeatures;
+	union gcfeatures0 gcfeatures0;
+	union gcfeatures1 gcfeatures1;
+	union gcfeatures2 gcfeatures2;
+	union gcfeatures3 gcfeatures3;
+
 	/* Virtual pointer to the GPU register bank. */
 	void *regbase;
 
@@ -65,7 +76,7 @@ struct gccorecontext {
 
 	/* Power mode flags. */
 	bool clockenabled;
-	bool pulseskipping;
+	int pulseskipping;
 
 	/* MMU and command buffer managers. */
 	struct gcmmu gcmmu;

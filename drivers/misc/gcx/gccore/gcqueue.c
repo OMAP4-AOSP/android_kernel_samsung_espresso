@@ -567,8 +567,8 @@ static int gccmdthread(void *_gccorecontext)
 		/* Wait for ready signal. If 'ready' is signaled before the
 		 * call times out, signaled is set to a value greater then
 		 * zero. If the call times out, signaled is set to zero. */
-		signaled = wait_for_completion_interruptible_timeout(&gcqueue->ready,
-						       timeout);
+		signaled = wait_for_completion_interruptible_timeout(
+			&gcqueue->ready, timeout);
 		GCDBG(GCZONE_THREAD, "wait(ready) = %d.\n", signaled);
 
 		if (signaled < 0)
@@ -696,6 +696,7 @@ static int gccmdthread(void *_gccorecontext)
 		/* MMU error? */
 		if (try_wait_for_completion(&gcqueue->mmuerror)) {
 			static char *mmuerror[] = {
+				"  no error",
 				"  slave not present",
 				"  page not present",
 				"  write violation"
@@ -718,7 +719,7 @@ static int gccmdthread(void *_gccorecontext)
 
 				GCERR("MMU%d is at fault:\n", i);
 				if (mmucode >= countof(mmuerror))
-					GCERR("  unknown state.\n", mmucode);
+					GCERR("  unknown state %d.\n", mmucode);
 				else
 					GCERR("%s.\n", mmuerror[mmucode]);
 
@@ -790,7 +791,16 @@ static int gccmdthread(void *_gccorecontext)
 				GCDBG(GCZONE_THREAD, "thread timedout.\n");
 
 			if (gcqueue->gcmoterminator == NULL) {
+				GCDBG(GCZONE_THREAD, "no work scheduled.\n");
+
+				if (!list_empty(&gcqueue->queue))
+					GCERR("queue is not empty.\n");
+
 				gcqueue->suspend = false;
+
+				/* Set timeout to infinity. */
+				timeout = MAX_SCHEDULE_TIMEOUT;
+
 				GCUNLOCK(&gcqueue->queuelock);
 				continue;
 			}
@@ -821,11 +831,13 @@ static int gccmdthread(void *_gccorecontext)
 				headcmdbuf = list_entry(head,
 							struct gccmdbuf,
 							link);
-			if (!list_empty(&headcmdbuf->events)) {
-				/* found events, there must be
-				* pending interrupts */
-				break;
-			}
+
+				if (!list_empty(&headcmdbuf->events)) {
+					/* Found events, there must be
+					 * pending interrupts. */
+					break;
+				}
+
 				/* Free the entry. */
 				gcqueue_free_cmdbuf(gcqueue, headcmdbuf,
 						    NULL);
@@ -833,13 +845,13 @@ static int gccmdthread(void *_gccorecontext)
 
 			if (!list_empty(&gcqueue->queue)) {
 				GCDBG(GCZONE_THREAD,
-					"aborting shutdown to process events\n");
+				      "aborting shutdown to process events\n");
 				GCUNLOCK(&gcqueue->queuelock);
 				continue;
 			}
 
 			GCDBG(GCZONE_THREAD,
-				"execution finished, shutting down.\n");
+			      "execution finished, shutting down.\n");
 
 			/* Convert WAIT to END. */
 			gcqueue->gcmoterminator->u2.end.cmd.raw
@@ -853,6 +865,7 @@ static int gccmdthread(void *_gccorecontext)
 
 			/* Set idle state. */
 			complete(&gcqueue->stopped);
+
 			gcqueue->suspend = false;
 
 			/* Set timeout to infinity. */
@@ -1637,7 +1650,6 @@ enum gcerror gcqueue_wait_idle(struct gccorecontext *gccorecontext)
 			break;
 		}
 	}
-
 
 	GCEXIT(GCZONE_THREAD);
 	return gcerror;

@@ -1,6 +1,6 @@
 /*
  * Clock Divider Chip (TCXO) support
- * 
+ *
  * Copyright (C) 2010 Texas Instruments, Inc.
  * Written by Rajendra Nayak <rnayak@ti.com>
  *
