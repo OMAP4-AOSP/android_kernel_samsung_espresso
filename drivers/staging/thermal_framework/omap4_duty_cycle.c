@@ -31,7 +31,6 @@
 #include <linux/mutex.h>
 #include <linux/platform_device.h>
 #include <linux/omap4_duty_cycle_governor.h>
-
 #include <linux/omap4_duty_cycle.h>
 #include <plat/omap_device.h>
 
@@ -100,6 +99,7 @@ static void omap4_duty_enter_normal(void)
 
 	if (duty_desc.cool_device != NULL)
 		duty_desc.cool_device(NULL, 0);
+
 }
 
 static void omap4_duty_exit_cool_wq(struct work_struct *work)
@@ -164,7 +164,7 @@ static void omap4_duty_enter_heating(void)
 	state = OMAP4_DUTY_HEATING;
 
 	queue_delayed_work(duty_wq, &work_exit_heat,
-			msecs_to_jiffies(duty_desc.heating_budget));
+				msecs_to_jiffies(duty_desc.heating_budget));
 }
 
 static void omap4_duty_enter_heat_wq(struct work_struct *work)

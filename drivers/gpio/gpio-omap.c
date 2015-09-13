@@ -184,15 +184,13 @@ static int _get_gpio_dataout(struct gpio_bank *bank, int gpio)
 	return (__raw_readl(reg) & GPIO_BIT(bank, gpio)) != 0;
 }
 
-#define MOD_REG_BIT(reg, bit_mask, set)\
+#define MOD_REG_BIT(reg, bit_mask, set)	\
 do {	\
 	int l = __raw_readl(base + reg); \
-	if (set) \
-		l |= bit_mask; \
-	else \
-		l &= ~bit_mask; \
+	if (set) l |= bit_mask; \
+	else l &= ~bit_mask; \
 	__raw_writel(l, base + reg); \
-} while (0)
+} while(0)
 
 /**
  * _set_gpio_debounce - low level gpio debounce time
@@ -489,8 +487,7 @@ static void _disable_gpio_irqbank(struct gpio_bank *bank, int gpio_mask)
 	__raw_writel(l, reg);
 }
 
-static inline void _set_gpio_irqenable(
-		struct gpio_bank *bank, int gpio, int enable)
+static inline void _set_gpio_irqenable(struct gpio_bank *bank, int gpio, int enable)
 {
 	if (enable)
 		_enable_gpio_irqbank(bank, GPIO_BIT(bank, gpio));
@@ -670,7 +667,7 @@ static void gpio_irq_handler(unsigned int irq, struct irq_desc *desc)
 	if (WARN_ON(!isr_reg))
 		goto exit;
 
-	while (1) {
+	while(1) {
 		u32 isr_saved, level_mask = 0;
 		u32 enabled;
 
@@ -1554,7 +1551,7 @@ static int omap2_gpio_set_edge_wakeup(struct gpio_bank *bank, bool suspend)
 	if (active) {
 		if (suspend)
 			pr_info("%s: aborted suspend due to gpio %d\n",
-			    __func__, bank->id * bank->width + __ffs(active));
+				__func__, bank->id * bank->width + __ffs(active));
 		ret = -EBUSY;
 	}
 
@@ -1613,11 +1610,7 @@ int omap2_gpio_prepare_for_idle(int off_mode, bool suspend)
 		if (!bank->mod_usage)
 			continue;
 
-#ifdef CONFIG_ENABLE_GPIO_TO_ALLOW_C2_IN_CAMERA
-		if (bank->loses_context && off_mode)
-#else
 		if (bank->loses_context)
-#endif
 			if (pm_runtime_put_sync_suspend(bank->dev) < 0)
 				dev_err(bank->dev, "%s: GPIO bank %d "
 						"pm_runtime_put_sync failed\n",
@@ -1638,11 +1631,7 @@ void omap2_gpio_resume_after_idle(int off_mode)
 		if (!bank->mod_usage)
 			continue;
 
-#ifdef CONFIG_ENABLE_GPIO_TO_ALLOW_C2_IN_CAMERA
-		if (bank->loses_context && off_mode)
-#else
 		if (bank->loses_context)
-#endif
 			if (pm_runtime_get_sync(bank->dev) < 0)
 				dev_err(bank->dev, "%s: GPIO bank %d "
 						"pm_runtime_get_sync failed\n",
@@ -1684,7 +1673,7 @@ void omap_gpio_save_context(struct gpio_bank *bank)
 
 void omap_gpio_restore_context(struct gpio_bank *bank)
 {
-	if (!bank->saved_context)
+	if(!bank->saved_context)
 		return;
 	__raw_writel(bank->context.wake_en,
 				bank->base + bank->regs->wkup_set);

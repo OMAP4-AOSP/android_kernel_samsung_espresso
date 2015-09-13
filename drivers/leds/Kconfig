@@ -369,6 +369,20 @@ config LEDS_MC13783
 	  This option enable support for on-chip LED drivers found
 	  on Freescale Semiconductor MC13783 PMIC.
 
+config LEDS_OMAP4430_SDP_DISPLAY
+	bool "Display LED support for OMAP4430 SDP"
+	depends on LEDS_CLASS
+	help
+	  This option enables support for display LEDs on the
+          OMAP4430 SDP.
+
+config LEDS_OMAP4430_SDP_KEYPAD
+	bool "Keypad LED support for OMAP4430 SDP"
+	depends on LEDS_CLASS
+	help
+	  This option enables support for keypad LEDs on the
+          OMAP4430 SDP
+
 config LEDS_NS2
 	tristate "LED support for Network Space v2 GPIO LEDs"
 	depends on LEDS_CLASS
@@ -398,14 +412,6 @@ config LEDS_ASIC3
 	  ASIC3 LED GPIOs are inputs, not outputs, thus the leds-gpio driver
 	  cannot be used. This driver supports hardware blinking with an on+off
 	  period from 62ms to 125s. Say Y to enable LEDs on the HP iPAQ hx4700.
-
-config LEDS_MAX77693
-	bool "LED support for the MAX77693"
-	depends on LEDS_CLASS
-	depends on MFD_MAX77693
-	default n
-	help
-	  This option enables support for the LEDs on the MAX77693.
 
 config LEDS_TRIGGERS
 	bool "LED Trigger support"

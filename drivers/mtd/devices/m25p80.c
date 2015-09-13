@@ -764,9 +764,6 @@ static const struct spi_device_id m25p_ids[] = {
 	{ "w25x64", INFO(0xef3017, 0, 64 * 1024, 128, SECT_4K) },
 	{ "w25q64", INFO(0xef4017, 0, 64 * 1024, 128, SECT_4K) },
 
-	/* Fidelix --fm "blocks" are 64K, "sectors" are 4KiB */
-	{ "fm25m08", INFO(0, 0, 64 * 1024, 16, SECT_4K) },
-
 	/* Catalyst / On Semiconductor -- non-JEDEC */
 	{ "cat25c11", CAT25_INFO(  16, 8, 16, 1) },
 	{ "cat25c03", CAT25_INFO(  32, 8, 16, 2) },
