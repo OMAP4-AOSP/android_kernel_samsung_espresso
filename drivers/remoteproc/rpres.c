@@ -77,7 +77,7 @@ void rpres_put(struct rpres *obj)
 EXPORT_SYMBOL(rpres_put);
 
 int rpres_set_constraints(struct rpres *obj, enum rpres_constraint type,
-		long val)
+				long val)
 {
 	int ret;
 	struct rpres_platform_data *pdata = obj->pdev->dev.platform_data;

@@ -371,7 +371,6 @@ static void rpmsg_omx_cb(struct rpmsg_channel *rpdev, void *data, int len,
 	print_hex_dump(KERN_DEBUG, "rpmsg_omx RX: ", DUMP_PREFIX_NONE, 16, 1,
 		       data, len,  true);
 #endif
-
 	switch (hdr->type) {
 	case OMX_CONN_RSP:
 		if (hdr->len < sizeof(*rsp)) {
@@ -590,9 +589,6 @@ long rpmsg_omx_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 		break;
 	}
 #endif
-
-
-
 	default:
 		dev_warn(omxserv->dev, "unhandled ioctl cmd: %d\n", cmd);
 		break;

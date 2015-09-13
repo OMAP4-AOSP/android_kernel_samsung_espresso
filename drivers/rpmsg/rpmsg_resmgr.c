@@ -72,8 +72,7 @@ static const char const *rnames[] = {
 	[RPRM_I2C]		= "I2C",
 };
 
-static const char *rname(u32 type)
-{
+static const char *rname(u32 type) {
 	if (type >= RPRM_MAX)
 		return "(invalid)";
 	return rnames[type];
