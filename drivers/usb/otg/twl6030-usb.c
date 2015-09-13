@@ -30,8 +30,11 @@
 #include <linux/regulator/consumer.h>
 #include <linux/err.h>
 #include <linux/notifier.h>
+#include <linux/power_supply.h>
 #include <linux/slab.h>
 #include <linux/delay.h>
+
+#include <plat/usb.h>
 
 /* usb register definitions */
 #define USB_VENDOR_ID_LSB		0x00
@@ -63,6 +66,7 @@
 #define USB_OTG_ADP_RISE		0x19
 #define USB_OTG_REVISION		0x1A
 
+#define TWL6030_MISC2			0xE5
 #define TWL6030_BACKUP_REG		0xFA
 
 #define STS_HW_CONDITIONS		0x21
@@ -79,6 +83,11 @@
 /* in module TWL6030_MODULE_MAIN_CHARGE */
 
 #define CHARGERUSB_CTRL1		0x8
+#define SUSPEND_BOOT    (1 << 7)
+#define OPA_MODE        (1 << 6)
+#define HZ_MODE         (1 << 5)
+#define TERM            (1 << 4)
+
 
 #define CONTROLLER_STAT1		0x03
 #define	VBUS_DET			BIT(2)
@@ -97,10 +106,13 @@ struct twl6030_usb {
 
 	int			irq1;
 	int			irq2;
+	unsigned int		usb_cinlimit_mA;
 	u8			linkstat;
 	u8			asleep;
+	u8			prev_vbus;
 	bool			irq_enabled;
 	bool			vbus_enable;
+	bool			is_phy_suspended;
 	unsigned long		features;
 };
 
@@ -192,6 +204,7 @@ static int twl6030_start_srp(struct otg_transceiver *x)
 static int twl6030_usb_ldo_init(struct twl6030_usb *twl)
 {
 	char *regulator_name;
+	u8 misc2_data = 0;
 
 	if (twl->features & TWL6032_SUBCLASS)
 		regulator_name = "ldousb";
@@ -228,16 +241,16 @@ static ssize_t twl6030_usb_vbus_show(struct device *dev,
 
 	switch (twl->linkstat) {
 	case USB_EVENT_VBUS:
-	       ret = snprintf(buf, PAGE_SIZE, "vbus\n");
-	       break;
+		ret = snprintf(buf, PAGE_SIZE, "vbus\n");
+		break;
 	case USB_EVENT_ID:
-	       ret = snprintf(buf, PAGE_SIZE, "id\n");
-	       break;
+		ret = snprintf(buf, PAGE_SIZE, "id\n");
+		break;
 	case USB_EVENT_NONE:
-	       ret = snprintf(buf, PAGE_SIZE, "none\n");
-	       break;
+		ret = snprintf(buf, PAGE_SIZE, "none\n");
+		break;
 	default:
-	       ret = snprintf(buf, PAGE_SIZE, "UNKNOWN\n");
+		ret = snprintf(buf, PAGE_SIZE, "UNKNOWN\n");
 	}
 	spin_unlock_irqrestore(&twl->lock, flags);
 
@@ -249,7 +262,8 @@ static irqreturn_t twl6030_usb_irq(int irq, void *_twl)
 {
 	struct twl6030_usb *twl = _twl;
 	int status;
-	u8 vbus_state, hw_state;
+	u8 vbus_state, hw_state, misc2_data;
+	unsigned charger_type;
 
 	hw_state = twl6030_readb(twl, TWL6030_MODULE_ID0, STS_HW_CONDITIONS);
 
@@ -279,7 +293,7 @@ static irqreturn_t twl6030_usb_irq(int irq, void *_twl)
 		}
 	}
 	sysfs_notify(&twl->dev->kobj, NULL, "vbus");
-
+	twl->prev_vbus = vbus_state;
 	return IRQ_HANDLED;
 }
 
@@ -289,7 +303,7 @@ static irqreturn_t twl6030_usbotg_irq(int irq, void *_twl)
 #ifndef CONFIG_USB_MUSB_PERIPHERAL
 	struct twl6030_usb *twl = _twl;
 	int status = USB_EVENT_NONE;
-	u8 hw_state;
+	u8 hw_state, misc2_data;
 
 	hw_state = twl6030_readb(twl, TWL6030_MODULE_ID0, STS_HW_CONDITIONS);
 
@@ -498,6 +512,7 @@ static int __devinit twl6030_usb_probe(struct platform_device *pdev)
 	}
 
 	twl->asleep = 0;
+	twl->is_phy_suspended = true;
 	pdata->phy_init(dev);
 	twl6030_phy_suspend(&twl->otg, 0);
 	twl6030_enable_irq(&twl->otg);
