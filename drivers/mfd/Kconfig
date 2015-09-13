@@ -267,7 +267,7 @@ config TWL6040_CODEC
 
 config MFD_STMPE
 	bool "Support STMicroelectronics STMPE"
-	depends on (I2C=y || SPI_MASTER=y) && GENERIC_HARDIRQS
+	depends on I2C=y && GENERIC_HARDIRQS
 	select MFD_CORE
 	help
 	  Support for the STMPE family of I/O Expanders from
@@ -287,23 +287,6 @@ config MFD_STMPE
 		GPIO: stmpe-gpio
 		Keypad: stmpe-keypad
 		Touchscreen: stmpe-ts
-
-menu "STMPE Interface Drivers"
-depends on MFD_STMPE
-
-config STMPE_I2C
-	bool "STMPE I2C Inteface"
-	depends on I2C
-	default y
-	help
-	  This is used to enable I2C interface of STMPE
-
-config STMPE_SPI
-	bool "STMPE SPI Inteface"
-	depends on SPI_MASTER
-	help
-	  This is used to enable SPI interface of STMPE
-endmenu
 
 config SEC_STMPE811_ADC
 	bool "Support STE STMPE written by Samsung"
@@ -414,17 +397,6 @@ config MFD_MAX8998
 	  This driver provies common support for accessing the device,
 	  additional drivers must be enabled in order to use the functionality
 	  of the device.
-
-config MFD_MAX77693
-	bool "Maxim Semiconductor MAX77693 PMIC Support"
-	depends on I2C=y && GENERIC_HARDIRQS
-	select MFD_CORE
-	help
-	  Say yes here to support for Maxim Semiconductor MAX77963.
-	  This is a Power Management IC with RTC, Flash, Fuel Gauge, Haptic,
-	  MUIC controls on chip.
-	  This driver provides common support for accessing the device;
-	  additional drivers
 
 config MFD_WM8400
 	tristate "Support Wolfson Microelectronics WM8400"
