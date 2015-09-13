@@ -499,7 +499,6 @@ static irqreturn_t musb_stage0_irq(struct musb *musb, u8 int_usb,
 #ifdef CONFIG_USB_MUSB_HDRC_HCD
 	/* see manual for the order of the tests */
 	if (int_usb & MUSB_INTR_SESSREQ) {
-#ifndef CONFIG_USB_SAMSUNG_OMAP_NOSRQ
 		void __iomem *mbase = musb->mregs;
 
 		if ((devctl & MUSB_DEVCTL_VBUS) == MUSB_DEVCTL_VBUS
@@ -523,9 +522,7 @@ static irqreturn_t musb_stage0_irq(struct musb *musb, u8 int_usb,
 		musb->xceiv->state = OTG_STATE_A_IDLE;
 		MUSB_HST_MODE(musb);
 		musb_platform_set_vbus(musb, 1);
-#else
-		pr_err("%s we don't support session request\n", __func__);
-#endif
+
 		handled = IRQ_HANDLED;
 	}
 
@@ -682,11 +679,7 @@ static irqreturn_t musb_stage0_irq(struct musb *musb, u8 int_usb,
 		}
 		musb_writew(musb->mregs, MUSB_INTRTXE, musb->epmask);
 		musb_writew(musb->mregs, MUSB_INTRRXE, musb->epmask & 0xfffe);
-#ifdef CONFIG_USB_SAMSUNG_OMAP_NOSRQ
-		musb_writeb(musb->mregs, MUSB_INTRUSBE, 0xb7);
-#else
 		musb_writeb(musb->mregs, MUSB_INTRUSBE, 0xf7);
-#endif
 #endif
 		musb->port1_status &= ~(USB_PORT_STAT_LOW_SPEED
 					|USB_PORT_STAT_HIGH_SPEED
@@ -928,18 +921,13 @@ void musb_start(struct musb *musb)
 	/*  Set INT enable registers, enable interrupts */
 	musb_writew(regs, MUSB_INTRTXE, musb->epmask);
 	musb_writew(regs, MUSB_INTRRXE, musb->epmask & 0xfffe);
-#ifdef CONFIG_USB_SAMSUNG_OMAP_NOSRQ
-	musb_writeb(regs, MUSB_INTRUSBE, 0xb7);
-#else
 	musb_writeb(regs, MUSB_INTRUSBE, 0xf7);
-#endif
 
 	musb_writeb(regs, MUSB_TESTMODE, 0);
 
 	/* put into basic highspeed mode and start session */
 	temp = MUSB_POWER_ISOUPDATE | MUSB_POWER_HSENAB;
 					/* MUSB_POWER_ENSUSPEND wedges tusb */
-#ifndef CONFIG_USB_SAMSUNG_OMAP_NORPM
 	if (musb->softconnect)
 		temp |= MUSB_POWER_SOFTCONN;
 	musb_writeb(regs, MUSB_POWER, temp);
@@ -972,7 +960,6 @@ void musb_start(struct musb *musb)
 	}
 	musb_platform_enable(musb);
 	musb_writeb(regs, MUSB_DEVCTL, devctl);
-#endif
 }
 
 
@@ -1026,13 +1013,7 @@ static void musb_shutdown(struct platform_device *pdev)
 	unsigned long	flags;
 
 	mutex_lock(&musb->musb_lock);
-#ifdef CONFIG_USB_SAMSUNG_OMAP_NORPM
-	musb_platform_async_resume(musb);
-#endif
 	pm_runtime_get_sync(musb->controller);
-#ifdef CONFIG_USB_MUSB_HDRC_HCD
-	musb_gadget_cleanup(musb);
-#endif
 	spin_lock_irqsave(&musb->lock, flags);
 	musb_platform_disable(musb);
 	musb_generic_disable(musb);
@@ -1045,9 +1026,6 @@ static void musb_shutdown(struct platform_device *pdev)
 	mutex_unlock(&musb->musb_lock);
 
 	pm_runtime_put(musb->controller);
-#ifdef CONFIG_USB_SAMSUNG_OMAP_NORPM
-	musb_platform_async_suspend(musb);
-#endif
 	/* FIXME power down */
 }
 
@@ -1972,19 +1950,13 @@ musb_init_controller(struct device *dev, int nIrq, void __iomem *ctrl)
 		status = -ENOMEM;
 		goto fail0;
 	}
-	printk(KERN_INFO "%s: mutex init\n", __func__);
 	mutex_init(&musb->musb_lock);
 	mutex_init(&musb->async_musb_lock);
-#ifndef CONFIG_USB_SAMSUNG_OMAP_NORPM
 	pm_runtime_use_autosuspend(musb->controller);
 	pm_runtime_set_autosuspend_delay(musb->controller, 200);
 	pm_runtime_enable(musb->controller);
-#endif
+
 	spin_lock_init(&musb->lock);
-#ifdef CONFIG_USB_SAMSUNG_OMAP_NORPM
-	musb->async_resume = 0;
-	musb->reserve_async_suspend = 0;
-#endif
 	musb->board_mode = plat->mode;
 	musb->board_set_power = plat->set_power;
 	musb->min_power = plat->min_power;
@@ -2016,9 +1988,6 @@ musb_init_controller(struct device *dev, int nIrq, void __iomem *ctrl)
 		musb->xceiv->io_ops = &musb_ulpi_access;
 	}
 
-#ifdef CONFIG_USB_SAMSUNG_OMAP_NORPM
-	musb_platform_async_resume(musb);
-#endif
 	pm_runtime_get_sync(musb->controller);
 
 #ifndef CONFIG_MUSB_PIO_ONLY
@@ -2133,9 +2102,6 @@ musb_init_controller(struct device *dev, int nIrq, void __iomem *ctrl)
 #endif
 
 	pm_runtime_put(musb->controller);
-#ifdef CONFIG_USB_SAMSUNG_OMAP_NORPM
-	musb_platform_async_suspend(musb);
-#endif
 
 	dev_info(dev, "USB %s mode controller at %p using %s, IRQ %d\n",
 			({char *s;
@@ -2165,9 +2131,6 @@ fail4:
 
 fail3:
 	pm_runtime_put_sync(musb->controller);
-#ifdef CONFIG_USB_SAMSUNG_OMAP_NORPM
-	musb_platform_async_suspend(musb);
-#endif
 
 fail2:
 	if (musb->irq_wake)
@@ -2235,17 +2198,11 @@ static int __exit musb_remove(struct platform_device *pdev)
 	 *  - Peripheral mode: peripheral is deactivated (or never-activated)
 	 *  - OTG mode: both roles are deactivated (or never-activated)
 	 */
-#ifdef CONFIG_USB_SAMSUNG_OMAP_NORPM
-	musb_platform_async_resume(musb);
-#endif
 	pm_runtime_get_sync(musb->controller);
 	musb_exit_debugfs(musb);
 	musb_shutdown(pdev);
 
 	pm_runtime_put(musb->controller);
-#ifdef CONFIG_USB_SAMSUNG_OMAP_NORPM
-	musb_platform_async_suspend(musb);
-#endif
 	musb_free(musb);
 	iounmap(ctrl_base);
 	device_init_wakeup(&pdev->dev, 0);
@@ -2404,7 +2361,6 @@ static int musb_suspend(struct device *dev)
 	struct platform_device *pdev = to_platform_device(dev);
 	unsigned long	flags;
 	struct musb	*musb = dev_to_musb(&pdev->dev);
-#ifndef CONFIG_USB_SAMSUNG_OMAP_NORPM
 	if (pm_runtime_suspended(dev))
 		return 0;
 	spin_lock_irqsave(&musb->lock, flags);
@@ -2421,7 +2377,6 @@ static int musb_suspend(struct device *dev)
 	musb_save_context(musb);
 
 	spin_unlock_irqrestore(&musb->lock, flags);
-#endif
 	return 0;
 }
 
@@ -2429,7 +2384,6 @@ static int musb_resume_noirq(struct device *dev)
 {
 	struct platform_device *pdev = to_platform_device(dev);
 	struct musb	*musb = dev_to_musb(&pdev->dev);
-#ifndef CONFIG_USB_SAMSUNG_OMAP_NORPM
 	if (pm_runtime_suspended(dev))
 		return 0;
 	musb_restore_context(musb);
@@ -2438,7 +2392,6 @@ static int musb_resume_noirq(struct device *dev)
 	 * unless for some reason the whole soc powered down or the USB
 	 * module got reset through the PSC (vs just being disabled).
 	 */
-#endif
 	return 0;
 }
 
@@ -2496,32 +2449,6 @@ int musb_async_resume(struct musb *musb)
 	return 0;
 }
 
-#ifdef CONFIG_USB_SAMSUNG_OMAP_NORPM
-int musb_add_hcd(struct musb *musb)
-{
-	int ret = 0;
-	struct usb_hcd	*hcd = musb_to_hcd(musb);
-
-	pr_info("%s +\n", __func__);
-	ret = usb_add_hcd(musb_to_hcd(musb), -1, 0);
-	if (ret < 0)
-		pr_err("%s: usb_add_hcd error ret=%d\n", __func__, ret);
-
-	hcd->self.uses_pio_for_control = 1;
-	hcd->self.dma_align = 1;
-	pr_info("%s -\n", __func__);
-	return ret;
-}
-
-int musb_remove_hcd(struct musb *musb)
-{
-	int ret = 0;
-	pr_info("%s +\n", __func__);
-	usb_remove_hcd(musb_to_hcd(musb));
-	pr_info("%s -\n", __func__);
-	return ret;
-}
-#endif
 #else
 #define	MUSB_DEV_PM_OPS	NULL
 #endif

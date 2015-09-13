@@ -308,10 +308,6 @@ struct musb_platform_ops {
 				dma_addr_t *dma_addr, u32 *len);
 	int	(*vbus_reset)(struct musb *musb);
 	int (*otg_notifications)(struct musb *musb, unsigned long event);
-#ifdef CONFIG_USB_SAMSUNG_OMAP_NORPM
-	int	(*async_resume)(struct musb *musb);
-	int	(*async_suspend)(struct musb *musb);
-#endif
 };
 
 /*

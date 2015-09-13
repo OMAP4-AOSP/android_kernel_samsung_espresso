@@ -55,7 +55,6 @@ static struct otgwl_lock vbus_lock;
 static void otgwl_hold(struct otgwl_lock *lock)
 {
 	if (!lock->held) {
-		pr_info("otg: otgwl_hold\n");
 		wake_lock(&lock->wakelock);
 		lock->held = true;
 	}
@@ -63,7 +62,6 @@ static void otgwl_hold(struct otgwl_lock *lock)
 
 static void otgwl_temporary_hold(struct otgwl_lock *lock)
 {
-	pr_info("otg: otgwl_temporary_hold\n");
 	wake_lock_timeout(&lock->wakelock,
 			  msecs_to_jiffies(TEMPORARY_HOLD_TIME));
 	lock->held = false;
@@ -72,7 +70,6 @@ static void otgwl_temporary_hold(struct otgwl_lock *lock)
 static void otgwl_drop(struct otgwl_lock *lock)
 {
 	if (lock->held) {
-		pr_info("otg: otgwl_drop\n");
 		wake_unlock(&lock->wakelock);
 		lock->held = false;
 	}
@@ -92,8 +89,8 @@ static void otgwl_handle_event(unsigned long event)
 
 	switch (event) {
 	case USB_EVENT_VBUS:
-	case USB_EVENT_ENUMERATED:
 	case USB_EVENT_ID:
+	case USB_EVENT_ENUMERATED:
 		otgwl_hold(&vbus_lock);
 		break;
 
