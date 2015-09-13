@@ -476,11 +476,12 @@ static s32 __analize_area(enum tiler_fmt fmt, u32 width, u32 height,
 		return -EINVAL;
 
 	/* Note: Some values have been validated prior to calling this function
-	 * alignment is always <= PAGE_SIZE
-	 * offs is always < PAGE_SIZE
-	 * This is a requirement due to some u32->u16 conversions and avoids
-	 * having to worry about overflow while doing calculations
-	 */
+	   alignment is always <= PAGE_SIZE
+	   offs is always < PAGE_SIZE
+	   This is a requirement due to some u32->u16 conversions and avoids
+	   having to worry about overflow while doing calculations
+	*/
+
 	if (fmt == TILFMT_PAGE) {
 		/* check for invalid allocation size, width > container size */
 		if (width > (PAGE_SIZE * tiler.width * tiler.height))
