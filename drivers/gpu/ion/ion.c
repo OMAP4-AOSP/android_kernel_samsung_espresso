@@ -1124,8 +1124,8 @@ static long ion_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 		if (copy_from_user(&data, (void __user *)arg, sizeof(data)))
 			return -EFAULT;
 		if (!ion_handle_validate(client, data.handle)) {
-			pr_err("%s: invalid handle passed to cache flush "
-				"ioctl.\n", __func__);
+			pr_err("%s: invalid handle passed to cache flush ioctl.\n",
+			       __func__);
 			mutex_unlock(&client->lock);
 			return -EINVAL;
 		}
@@ -1146,8 +1146,8 @@ static long ion_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 		if (copy_from_user(&data, (void __user *)arg, sizeof(data)))
 			return -EFAULT;
 		if (!ion_handle_validate(client, data.handle)) {
-			pr_err("%s: invalid handle passed to cache inval"
-				" ioctl.\n", __func__);
+			pr_err("%s: invalid handle passed to cache inval ioctl.\n",
+			       __func__);
 			mutex_unlock(&client->lock);
 			return -EINVAL;
 		}
@@ -1273,7 +1273,7 @@ void ion_device_add_heap(struct ion_device *dev, struct ion_heap *heap)
 
 		if (heap->id < entry->id) {
 			p = &(*p)->rb_left;
-		} else if (heap->id > entry->id) {
+		} else if (heap->id > entry->id ) {
 			p = &(*p)->rb_right;
 		} else {
 			pr_err("%s: can not insert multiple heaps with "
