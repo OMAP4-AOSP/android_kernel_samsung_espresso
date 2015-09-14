@@ -477,7 +477,7 @@ static int soc_dsp_fe_dai_startup(struct snd_pcm_substream *fe_substream)
 	mutex_lock(&fe->card->dsp_mutex);
 
 	runtime_update = fe->dsp[stream].runtime_update;
-	fe->dsp[stream].runtime_update = SND_SOC_DSP_UPDATE_FE;
+        fe->dsp[stream].runtime_update = SND_SOC_DSP_UPDATE_FE;
 
 	ret = soc_dsp_be_dai_startup(fe, fe_substream->stream);
 	if (ret < 0)
