@@ -675,6 +675,7 @@ int tf_start(struct tf_comm *comm,
 	cpumask_t saved_cpu_mask;
 	cpumask_t local_cpu_mask = CPU_MASK_NONE;
 
+	/* OMAP4 Secure ROM Code can only be called from CPU0. */
 	cpu_set(0, local_cpu_mask);
 	sched_getaffinity(0, &saved_cpu_mask);
 	ret_affinity = sched_setaffinity(0, &local_cpu_mask);

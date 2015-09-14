@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010 Trusted Logic S.A.
+ * Copyright (c) 2011 Trusted Logic S.A.
  * All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or
