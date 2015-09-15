@@ -66,6 +66,10 @@
 #define		TMP102_TLOW_REG		0x02
 #define		TMP102_THIGH_REG	0x03
 
+/* Addresses scanned */
+static const unsigned short normal_i2c[] = { 0x48, 0x49, 0x4a, 0x4b, 0x4c,
+				0x4d, 0x4e, 0x4f, I2C_CLIENT_END };
+
 /*
  * omap_temp_sensor structure
  * @iclient - I2c client pointer
@@ -78,12 +82,10 @@ struct tmp102_temp_sensor {
 	struct device *dev;
 	struct mutex sensor_mutex;
 	struct thermal_dev *therm_fw;
-	struct tmp102_platform_data *pdata;
 	u16 config_orig;
 	unsigned long last_update;
 	int temp[3];
 	int debug_temp;
-	struct platform_device *siop_pdev;
 };
 
 /* SMBus specifies low byte first, but the TMP102 returns high byte first,
@@ -118,207 +120,7 @@ static const u8 tmp102_reg[] = {
 	TMP102_TLOW_REG,
 	TMP102_THIGH_REG,
 };
-#if defined(CONFIG_SAMSUNG_SIOP_SUPPORT)
 
-#define SIOP_LEVEL0_TEMP	0
-/*42C*/
-#define SIOP_LEVEL1_TEMP	560
-/*45C*/
-#define SIOP_LEVEL2_TEMP	600
-/*48C*/
-#define SIOP_LEVEL3_TEMP	670
-
-#define SIOP_HYTERESIS		30
-
-#define SIOP_LEVEL_COUNT	4
-struct sec_siop_info {
-	struct tmp102_temp_sensor *tmp102;
-	int siop_level_threshold[SIOP_LEVEL_COUNT];
-	int siop_hysteresis;
-};
-
-static ssize_t sec_therm_show_temperature(struct device *dev,
-				   struct device_attribute *attr,
-				   char *buf)
-{
-	struct sec_siop_info *info = dev_get_drvdata(dev);
-	struct tmp102_temp_sensor *tmp102 = info->tmp102;
-
-	return sprintf(buf, "%d\n", tmp102->therm_fw->current_temp/100);
-}
-
-static ssize_t sec_therm_show_temp_adc(struct device *dev,
-				   struct device_attribute *attr,
-				   char *buf)
-{
-	struct sec_siop_info *info = dev_get_drvdata(dev);
-	struct tmp102_temp_sensor *tmp102 = info->tmp102;
-
-	return sprintf(buf, "%d\n", tmp102->therm_fw->current_temp);
-}
-
-#define sysfs_siop_level(l) \
-static ssize_t sec_siop_show_level##l(struct device *dev,	\
-			struct device_attribute *attr,			\
-			char *buf)	\
-{						\
-	struct sec_siop_info *info = dev_get_drvdata(dev);\
-	return sprintf(buf, "%d\n", info->siop_level_threshold[l]);	\
-}	\
-static ssize_t sec_siop_store_level##l(struct device *dev,\
-			struct device_attribute *attr,	\
-			char *buf, size_t count)		\
-{	\
-						\
-	int ret;			\
-	unsigned long val;	\
-	struct sec_siop_info *info = dev_get_drvdata(dev);\
-					\
-	ret = strict_strtoul(buf, 0, &val);	\
-	if (ret < 0)					\
-		return ret;					\
-									\
-	info->siop_level_threshold[l] = val;	\
-	return count;					\
-}
-
-sysfs_siop_level(0)
-sysfs_siop_level(1)
-sysfs_siop_level(2)
-sysfs_siop_level(3)
-
-#define siop_device_attr(num) \
-static DEVICE_ATTR(siop_level##num, S_IRUGO | S_IWUSR, \
-		sec_siop_show_level##num,		\
-		sec_siop_store_level##num)
-
-static DEVICE_ATTR(temperature, S_IRUGO, sec_therm_show_temperature, NULL);
-static DEVICE_ATTR(temp_adc, S_IRUGO, sec_therm_show_temp_adc, NULL);
-static DEVICE_ATTR(siop_level0, S_IRUGO,
-		sec_siop_show_level0,
-		sec_siop_store_level0);
-
-siop_device_attr(1);
-siop_device_attr(2);
-siop_device_attr(3);
-
-static struct attribute *sec_therm_attributes[] = {
-	&dev_attr_temperature.attr,
-	&dev_attr_temp_adc.attr,
-	&dev_attr_siop_level0.attr,
-	&dev_attr_siop_level1.attr,
-	&dev_attr_siop_level2.attr,
-	&dev_attr_siop_level3.attr,
-	NULL
-};
-
-static const struct attribute_group sec_therm_group = {
-	.attrs = sec_therm_attributes,
-};
-
-static int find_samsung_siop_level(struct sec_siop_info *info, int increase)
-{
-	unsigned int level = 0;
-	int i = 0;
-	int hysteresis = (increase) ? 0 : SIOP_HYTERESIS;
-	int current_temp = info->tmp102->therm_fw->current_temp/100;
-
-	for (i = 0 ; i < SIOP_LEVEL_COUNT ; i++) {
-		if (current_temp >=
-				(info->siop_level_threshold[i] - hysteresis))
-			level = i;
-	}
-
-
-	return level;
-}
-static void notify_change_of_temperature(struct tmp102_temp_sensor *tmp102)
-{
-	char temp_buf[20];
-	char siop_buf[20];
-	char *envp[2];
-	int env_offset = 0;
-	int siop_level = 0;
-	int ret = 0;
-	static int prev_temp ;
-	struct sec_siop_info *info = dev_get_drvdata(&tmp102->siop_pdev->dev);
-
-	if (tmp102->therm_fw->current_temp/1000 == prev_temp/1000)
-		return;
-
-	snprintf(temp_buf, sizeof(temp_buf), "TEMPERATURE=%d",
-			tmp102->therm_fw->current_temp/100);
-	envp[env_offset++] = temp_buf;
-
-	siop_level = find_samsung_siop_level(info,
-			(tmp102->therm_fw->current_temp/100 > prev_temp/100));
-	snprintf(siop_buf, sizeof(siop_buf),
-			"SIOP_LEVEL=%d", siop_level);
-	envp[env_offset++] = siop_buf;
-
-	envp[env_offset] = NULL;
-
-	dev_info(&tmp102->siop_pdev->dev, "%s: uevent: %s\n",
-					__func__, temp_buf);
-	dev_info(&tmp102->siop_pdev->dev, "%s: uevent: %s\n",
-					__func__, siop_buf);
-
-	ret = kobject_uevent_env(&tmp102->siop_pdev->dev.kobj,
-			KOBJ_CHANGE, envp);
-	if (ret < 0)
-		dev_err(&tmp102->siop_pdev->dev,
-				"Uevent Notify fail [%d]\n", ret);
-
-	prev_temp = tmp102->therm_fw->current_temp;
-
-	return;
-}
-
-
-static int __devinit samsung_siop_init(struct tmp102_temp_sensor *tmp102)
-{
-	int ret = 0;
-	struct sec_siop_info *siop_info;
-	tmp102->siop_pdev = platform_device_alloc("sec-thermistor", -1);
-
-	siop_info = kmalloc(sizeof(struct sec_siop_info), GFP_KERNEL);
-	ret = platform_device_add(tmp102->siop_pdev);
-	if (ret)
-		goto fail_register;
-
-	if (!siop_info) {
-		ret = -ENOMEM;
-		goto fail_sysfs;
-	}
-	siop_info->tmp102 = tmp102;
-	siop_info->siop_level_threshold[0] = SIOP_LEVEL0_TEMP;
-	siop_info->siop_level_threshold[1] = SIOP_LEVEL1_TEMP;
-	siop_info->siop_level_threshold[2] = SIOP_LEVEL2_TEMP;
-	siop_info->siop_level_threshold[3] = SIOP_LEVEL3_TEMP;
-
-	platform_set_drvdata(tmp102->siop_pdev, siop_info);
-
-
-	ret = sysfs_create_group(&tmp102->siop_pdev->dev.kobj,
-						&sec_therm_group);
-	if (ret)
-		goto fail_sysfs;
-
-
-	dev_info(&tmp102->siop_pdev->dev, "Samsung SIOP init\n");
-
-	return 0;
-
-fail_sysfs:
-	platform_device_put(tmp102->siop_pdev);
-fail_register:
-	return ret;
-}
-#else
-static int __devinit samsung_siop_init
-	(struct tmp102_temp_sensor *tmp102) { return 0; }
-
-#endif
 static int tmp102_read_current_temp(struct device *dev)
 {
 	int index = 0;
@@ -328,7 +130,7 @@ static int tmp102_read_current_temp(struct device *dev)
 	tmp102 = i2c_get_clientdata(client);
 
 	mutex_lock(&tmp102->sensor_mutex);
-	if (time_after(jiffies, tmp102->last_update + 4 * HZ)) {
+	if (time_after(jiffies, tmp102->last_update + HZ / 3)) {
 		int status = tmp102_read_reg(client, tmp102_reg[index]);
 		if (status > -1)
 			tmp102->temp[index] = tmp102_reg_to_mC(status);
@@ -341,23 +143,11 @@ static int tmp102_read_current_temp(struct device *dev)
 
 static int tmp102_get_temp(struct thermal_dev *tdev)
 {
-	int current_temp = 0;
 	struct platform_device *pdev = to_platform_device(tdev->dev);
 	struct tmp102_temp_sensor *tmp102 = platform_get_drvdata(pdev);
-	current_temp =	tmp102_read_current_temp(tdev->dev);
 
-	if (current_temp < 0)
-		current_temp = 0;
-
-
-	if (current_temp/1000 != tmp102->therm_fw->current_temp/1000)
-		dev_info(&pdev->dev, "temperature = %d\n", current_temp);
-
-	tmp102->therm_fw->current_temp = current_temp;
-
-#if defined(CONFIG_SAMSUNG_SIOP_SUPPORT)
-	notify_change_of_temperature(tmp102);
-#endif
+	tmp102->therm_fw->current_temp =
+			tmp102_read_current_temp(tdev->dev);
 
 	return tmp102->therm_fw->current_temp;
 }
@@ -411,7 +201,6 @@ static DEVICE_ATTR(debug_user, S_IWUSR | S_IRUGO, tmp102_show_temp_user_space,
 static DEVICE_ATTR(temp1_input, S_IRUGO, tmp102_temp_sensor_read_temp,
 			  NULL);
 
-
 static struct attribute *tmp102_temp_sensor_attributes[] = {
 	&dev_attr_temp1_input.attr,
 	&dev_attr_debug_user.attr,
@@ -433,8 +222,6 @@ static int __devinit tmp102_temp_sensor_probe(
 		struct i2c_client *client, const struct i2c_device_id *id)
 {
 	struct tmp102_temp_sensor *tmp102;
-	struct tmp102_platform_data *tmp102_data = NULL;
-
 	int ret = 0;
 
 	if (!i2c_check_functionality(client->adapter,
@@ -454,16 +241,8 @@ static int __devinit tmp102_temp_sensor_probe(
 	tmp102->iclient = client;
 	tmp102->dev = &client->dev;
 
-	if (client->dev.platform_data) {
-		tmp102_data = client->dev.platform_data;
-		tmp102->pdata = tmp102_data;
-	}
-
 	kobject_uevent(&client->dev.kobj, KOBJ_ADD);
 	i2c_set_clientdata(client, tmp102);
-
-	if (tmp102_data && tmp102_data->power_on)
-		tmp102_data->power_on(true);
 
 	ret = tmp102_read_reg(client, TMP102_CONF_REG);
 	if (ret < 0) {
@@ -507,15 +286,9 @@ static int __devinit tmp102_temp_sensor_probe(
 		goto therm_fw_alloc_err;
 	}
 
-
-	ret = samsung_siop_init(tmp102);
-
 	dev_info(&client->dev, "initialized\n");
-	if (ret)
-		goto sysfs_create_err;
 
-
-	return ret;
+	return 0;
 
 sysfs_create_err:
 	thermal_sensor_dev_unregister(tmp102->therm_fw);
@@ -524,8 +297,6 @@ restore_config_err:
 	tmp102_write_reg(client, TMP102_CONF_REG, tmp102->config_orig);
 therm_fw_alloc_err:
 free_err:
-	if (tmp102_data && tmp102_data->power_on)
-		tmp102_data->power_on(false);
 	mutex_destroy(&tmp102->sensor_mutex);
 	kfree(tmp102);
 
@@ -551,14 +322,6 @@ static int __devexit tmp102_temp_sensor_remove(struct i2c_client *client)
 	kfree(tmp102);
 
 	return 0;
-}
-
-static void tmp102_temp_sensor_shutdown(struct i2c_client *client)
-{
-	struct tmp102_temp_sensor *tmp102 = i2c_get_clientdata(client);
-
-	if (tmp102->pdata && tmp102->pdata->power_on)
-		tmp102->pdata->power_on(false);
 }
 
 #ifdef CONFIG_PM
@@ -610,7 +373,6 @@ static struct i2c_driver tmp102_driver = {
 	.class		= I2C_CLASS_HWMON,
 	.probe = tmp102_temp_sensor_probe,
 	.remove = tmp102_temp_sensor_remove,
-	.shutdown = tmp102_temp_sensor_shutdown,
 	.suspend = tmp102_temp_sensor_suspend,
 	.resume = tmp102_temp_sensor_resume,
 	.driver = {
@@ -618,6 +380,7 @@ static struct i2c_driver tmp102_driver = {
 	},
 	.id_table	= tmp102_id,
 	.detect		= tmp102_detect,
+	.address_list	= normal_i2c,
 };
 
 static int __init tmp102_init(void)

@@ -41,10 +41,9 @@
 
 /* TODO: Define this via a configurable file */
 #define HYSTERESIS_VALUE 2000
-#define NORMAL_TEMP_MONITORING_RATE 2000
+#define NORMAL_TEMP_MONITORING_RATE 1000
 #define FAST_TEMP_MONITORING_RATE 250
 #define DECREASE_MPU_FREQ_PERIOD 2000
-#define UNTHROTTLE_IN_ALERT_ZONE_PERIOD 120000
 
 #define OMAP_GRADIENT_SLOPE_4460    348
 #define OMAP_GRADIENT_CONST_4460  -9301
@@ -56,7 +55,7 @@
 #define OMAP_GRADIENT_CONST_W_PCB_4460  -393
 #define OMAP_GRADIENT_SLOPE_W_PCB_4470  1063
 #define OMAP_GRADIENT_CONST_W_PCB_4470  -477
-#define AVERAGE_NUMBER	      10
+#define AVERAGE_NUMBER	      20
 
 struct omap_die_governor {
 	struct thermal_dev *temp_sensor;
@@ -64,7 +63,6 @@ struct omap_die_governor {
 	int report_rate;
 	int panic_zone_reached;
 	int decrease_mpu_freq_period;
-	int unthrottle_mpu_period;
 	int cooling_level;
 	int hotspot_temp_upper;
 	int hotspot_temp_lower;
@@ -76,8 +74,6 @@ struct omap_die_governor {
 	int avg_is_valid;
 	struct delayed_work average_cpu_sensor_work;
 	struct delayed_work decrease_mpu_freq_work;
-	struct delayed_work unthrottle_mpu_work;
-	void *unthrottle_mpu_work_data;
 	int gradient_slope;
 	int gradient_const;
 	int gradient_slope_w_pcb;
@@ -309,13 +305,6 @@ static void start_panic_guard(void)
 		msecs_to_jiffies(omap_gov->decrease_mpu_freq_period));
 }
 
-static void start_alert_guard(void)
-{
-	pr_debug("[%s] Scheduling unthrottling work\n", __func__);
-	schedule_delayed_work(&omap_gov->unthrottle_mpu_work,
-		msecs_to_jiffies(omap_gov->unthrottle_mpu_period));
-}
-
 static int omap_cpu_thermal_manager(struct list_head *cooling_list, int temp)
 {
 	int cpu_temp, zone = NO_ACTION;
@@ -381,19 +370,6 @@ static int omap_cpu_thermal_manager(struct list_head *cooling_list, int temp)
 		else
 			cancel_delayed_work(&omap_gov->decrease_mpu_freq_work);
 
-		/*
-		 * If CPU is coming from panic zone & staying at alert zone
-		 * for more than 2min unthrottle it to increase performance.
-		 */
-		if ((omap_gov->prev_zone == PANIC_ZONE) &&
-							(zone == ALERT_ZONE)) {
-			omap_gov->unthrottle_mpu_work_data = cooling_list;
-			start_alert_guard();
-		} else if (omap_gov->prev_zone != zone) {
-			pr_debug("[%s] Canceling the timer\n", __func__);
-			cancel_delayed_work(&omap_gov->unthrottle_mpu_work);
-		}
-
 		if ((omap_gov->prev_zone != zone) || (zone == PANIC_ZONE)) {
 			pr_info("%s:sensor %d avg sensor %d pcb ",
 				 __func__, temp,
@@ -421,29 +397,6 @@ static void decrease_mpu_freq_fn(struct work_struct *work)
 
 	omap_gov->sensor_temp = thermal_request_temp(omap_gov->temp_sensor);
 	thermal_sensor_set_temp(omap_gov->temp_sensor);
-}
-
-/*
- * Unthrottle the CPU if it stayed more than 2min in Alert zone
- */
-static void increase_mpu_freq_fn(struct work_struct *work)
-{
-	struct omap_die_governor *omap_gov;
-	struct list_head *cooling_list;
-	omap_gov = container_of(work, struct omap_die_governor,
-					unthrottle_mpu_work.work);
-	cooling_list = (struct list_head *)omap_gov->unthrottle_mpu_work_data;
-	if (omap_gov->cooling_level) {
-		omap_gov->cooling_level -= 1;
-		pr_info("[%s] CPU was more than %d-sec in ALERT_ZONE unthrottling",
-			__func__, omap_gov->unthrottle_mpu_period/1000);
-		if (omap_gov->prev_zone == ALERT_ZONE) {
-			thermal_device_call_all(cooling_list, cool_device,
-						omap_gov->cooling_level);
-		}
-		if (omap_gov->cooling_level)
-			start_alert_guard();
-	}
 }
 
 /*
@@ -595,12 +548,9 @@ static int __init omap_die_governor_init(void)
 			  average_cpu_sensor_delayed_work_fn);
 	INIT_DELAYED_WORK(&omap_gov->decrease_mpu_freq_work,
 			  decrease_mpu_freq_fn);
-	INIT_DELAYED_WORK(&omap_gov->unthrottle_mpu_work,
-			  increase_mpu_freq_fn);
 
 	omap_gov->average_period = NORMAL_TEMP_MONITORING_RATE;
 	omap_gov->decrease_mpu_freq_period = DECREASE_MPU_FREQ_PERIOD;
-	omap_gov->unthrottle_mpu_period = UNTHROTTLE_IN_ALERT_ZONE_PERIOD;
 	omap_gov->avg_is_valid = 0;
 
 	if (register_pm_notifier(&omap_die_pm_notifier))

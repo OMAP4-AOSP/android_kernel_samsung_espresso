@@ -22,10 +22,3 @@ config OMAP4_TMP102_SENSOR
 	help
 	  Enabling this config will give support for the tmp102
 	  temp sensor for the OMAP platform.
-
-config SAMSUNG_SIOP_SUPPORT
-	bool "Samsung SIOP Interface"
-	depends on OMAP4_TMP102_SENSOR && OMAP_THERMAL
-	help
-	  Enabling this config will give support for the tmp102
-	  temp sensor for the OMAP platform.
