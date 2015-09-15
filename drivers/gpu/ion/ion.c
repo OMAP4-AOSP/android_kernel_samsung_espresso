@@ -84,7 +84,7 @@ static struct ion_buffer *ion_buffer_create(struct ion_heap *heap,
 	}
 	buffer->dev = dev;
 	buffer->size = len;
-	buffer->map_cacheable = false;
+	buffer->cached = false;
 	mutex_init(&buffer->lock);
 	ion_buffer_add(dev, buffer);
 	return buffer;
@@ -1044,7 +1044,7 @@ static long ion_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 		}
 
 		if (cmd == ION_IOC_MAP)
-			data.handle->buffer->map_cacheable = data.cacheable;
+			data.handle->buffer->cached = data.cacheable;
 		data.fd = ion_ioctl_share(filp, client, data.handle);
 		mutex_unlock(&client->lock);
 		if (copy_to_user((void __user *)arg, &data, sizeof(data)))
@@ -1092,7 +1092,7 @@ static long ion_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 			mutex_unlock(&client->lock);
 			return -EINVAL;
 		}
-		data.handle->buffer->map_cacheable = data.map_cacheable;
+		data.handle->buffer->cached = data.cached;
 		data.fd = ion_ioctl_share(filp, client, data.handle);
 		mutex_unlock(&client->lock);
 		if (copy_to_user((void __user *)arg, &data, sizeof(data)))

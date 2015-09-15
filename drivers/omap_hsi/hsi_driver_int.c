@@ -545,7 +545,7 @@ int hsi_do_cawake_process(struct hsi_port *pport)
 
 		/* Check for possible mismatch (race condition) */
 		if (unlikely(pport->cawake_status)) {
-			dev_dbg(hsi_ctrl->dev,
+			dev_warn(hsi_ctrl->dev,
 				"Missed previous CAWAKE falling edge...\n");
 			spin_unlock(&hsi_ctrl->lock);
 			hsi_port_event_handler(pport, HSI_EVENT_CAWAKE_DOWN,
@@ -586,7 +586,7 @@ int hsi_do_cawake_process(struct hsi_port *pport)
 			return -EAGAIN;
 		}
 		if (unlikely(!pport->cawake_status)) {
-			dev_dbg(hsi_ctrl->dev,
+			dev_warn(hsi_ctrl->dev,
 				"Missed previous CAWAKE rising edge...\n");
 			spin_unlock(&hsi_ctrl->lock);
 			hsi_port_event_handler(pport, HSI_EVENT_CAWAKE_UP,

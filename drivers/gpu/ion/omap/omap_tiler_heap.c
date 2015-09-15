@@ -370,7 +370,7 @@ int omap_tiler_heap_map_user(struct ion_heap *heap, struct ion_buffer *buffer,
 		ret = remap_pfn_range(vma, addr,
 				 __phys_to_pfn(info->tiler_addrs[0]),
 				(vma->vm_end - vma->vm_start),
-				(buffer->map_cacheable ?
+				(buffer->cached ?
 				(vma->vm_page_prot)
 				: pgprot_noncached(vma->vm_page_prot)));
 	} else {
@@ -401,7 +401,7 @@ int omap_tiler_cache_operation(struct ion_buffer *buffer, size_t len,
 		pr_err("%s(): buffer is NULL\n", __func__);
 		return -EINVAL;
 	}
-	if (!buffer->map_cacheable) {
+	if (!buffer->cached) {
 		pr_err("%s(): buffer not mapped as cacheable\n", __func__);
 		return -EINVAL;
 	}

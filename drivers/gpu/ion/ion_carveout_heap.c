@@ -118,7 +118,7 @@ int ion_carveout_heap_map_user(struct ion_heap *heap, struct ion_buffer *buffer,
 	return remap_pfn_range(vma, vma->vm_start,
 			       __phys_to_pfn(buffer->priv_phys) + vma->vm_pgoff,
 			       buffer->size,
-			       (buffer->map_cacheable ? (vma->vm_page_prot)
+			       (buffer->cached ? (vma->vm_page_prot)
 			       : pgprot_writecombine(vma->vm_page_prot)));
 }
 
@@ -130,7 +130,7 @@ static void per_cpu_cache_flush_arm(void *arg)
 int ion_carveout_heap_cache_operation(struct ion_buffer *buffer, size_t len,
 			unsigned long vaddr, enum cache_operation cacheop)
 {
-	if (!buffer || !buffer->map_cacheable) {
+	if (!buffer || !buffer->cached) {
 		pr_err("%s(): buffer not mapped as cacheable\n",
 			__func__);
 		return -EINVAL;

@@ -854,7 +854,7 @@ static ssize_t mem_read(struct file *file, char __user *buf,
 	return mem_rw(file, buf, count, ppos, 0);
 }
 
-#define mem_write NULL 
+#define mem_write NULL
 
 #ifndef mem_write
 /* This is a security hazard */

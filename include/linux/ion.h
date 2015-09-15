@@ -311,7 +311,7 @@ struct ion_custom_data {
 /**
  * struct ion_map_data - metadata passed to/from userspace for mapping handle
  * @handle:	a handle
- * @map_cacheable: if the handle should be mapped cachable
+ * @cached: if the handle should be mapped cachable
  * @fd: a file descriptor representing that handle
  *
  * For ION_IOC_MAP_CACHEABLE, userspace populates the handle field with
@@ -320,7 +320,7 @@ struct ion_custom_data {
  */
 struct ion_map_data {
 	struct ion_handle *handle;
-	unsigned char map_cacheable;
+	unsigned char cached;
 	int fd;
 	unsigned char cacheable;
 };

@@ -143,7 +143,7 @@ struct ion_buffer {
 	void *vaddr;
 	int dmap_cnt;
 	struct scatterlist *sglist;
-	bool map_cacheable;
+	bool cached;
 };
 
 /**

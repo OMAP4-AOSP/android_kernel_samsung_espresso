@@ -393,8 +393,7 @@ int read_ti_4xxx_edid(struct hdmi_ip_data *ip_data, u8 *pedid, u16 max_length);
 void hdmi_ti_4xxx_wp_video_start(struct hdmi_ip_data *ip_data, bool start);
 int hdmi_ti_4xxx_pll_program(struct hdmi_ip_data *ip_data,
 			struct hdmi_pll_info *fmt);
-int hdmi_ti_4xxx_set_pll_pwr(struct hdmi_ip_data *ip_data,
-					enum hdmi_pll_pwr val);
+int hdmi_ti_4xxx_set_pll_pwr(struct hdmi_ip_data *ip_data, enum hdmi_pll_pwr val);
 void hdmi_ti_4xxx_basic_configure(struct hdmi_ip_data *ip_data,
 			struct hdmi_config *cfg);
 int hdmi_ti_4xxx_rxdet(struct hdmi_ip_data *ip_data);
