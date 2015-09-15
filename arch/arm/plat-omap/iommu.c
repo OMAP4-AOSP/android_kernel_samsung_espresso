@@ -863,7 +863,7 @@ static void _set_latency_cstr(struct iommu *obj, bool set)
 	return;
 }
 
- /**
+/**
  * iommu_get - Get iommu handler
  * @name:	target iommu name
  **/

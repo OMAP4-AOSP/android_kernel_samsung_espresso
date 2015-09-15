@@ -2420,7 +2420,7 @@ static int rt6_fill_node(struct net *net,
 	if (n) {
 		if (nla_put(skb, RTA_GATEWAY, 16, &n->primary_key) < 0) {
 			rcu_read_unlock();
-			goto nla_put_failure; 
+			goto nla_put_failure;
 		}
 	}
 	rcu_read_unlock();
