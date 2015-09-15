@@ -360,4 +360,3 @@ Contact: Djamil Elaidi <d-elaidi@ti.com>
 
 Copyright (C) 2008 Nokia Corporation.
 Copyright (C) 2011 Texas Instruments, Inc.
-
