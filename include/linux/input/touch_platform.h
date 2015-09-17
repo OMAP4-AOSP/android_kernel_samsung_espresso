@@ -1,7 +1,5 @@
 /*
  * Copyright (C) 2010 Motorola Mobility, Inc.
- * Modified by Cypress Semiconductor 2011-2012
- *    - increase touch_settings.size from uint8_t to uint32_t
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -24,45 +22,42 @@
 
 #include <linux/types.h>
 
-enum {
-	GPIO_TOUCH_nINT = 0,
-	GPIO_TOUCH_EN,
-	GPIO_TOUCH_SCL,
-	GPIO_TOUCH_SDA
-};
+/* platform related defines */
+#define CY_I2C_NAME     "cyttsp4-i2c"
+#define CY_I2C_TCH_ADR	0x67
+#define CY_I2C_LDR_ADR	0x69
+
 
 struct touch_settings {
-	const uint8_t *data;
-	uint32_t size;
-	uint8_t tag;
+	const uint8_t   *data;
+	uint8_t         size;
+	uint8_t         tag;
 } __packed;
 
 struct touch_firmware {
-	const uint8_t *img;
-	uint32_t size;
-	const uint8_t *ver;
-	uint8_t vsize;
-} __packed;
+	const uint8_t   *img;
+	uint32_t        size;
+	const uint8_t   *ver;
+	uint8_t         vsize;
+} __attribute__ ((packed));
 
 struct touch_framework {
-	const uint16_t *abs;
-	uint8_t size;
-	uint8_t enable_vkeys;
+	const uint16_t  *abs;
+	uint8_t         size;
+	uint8_t         enable_vkeys;
 } __packed;
 
 struct touch_platform_data {
-	struct touch_settings *sett[256];
-	struct touch_firmware *fw;
-	struct touch_framework *frmwrk;
+	struct touch_settings   *sett[256];
+	struct touch_firmware   *fw;
+	struct touch_framework  *frmwrk;
 
-	uint8_t addr[2];
-	uint16_t flags;
+	uint8_t         addr[2];
+	uint16_t        flags;
 
-	int (*hw_reset) (void);
-	void (*hw_power) (bool);
-	int (*hw_recov) (int);
-	int (*irq_stat) (void);
-	int (*led_power) (bool);
+	int         (*hw_reset)(void);
+	int         (*hw_recov)(int);
+	int         (*irq_stat)(void);
 } __packed;
 
-#endif				/* _LINUX_TOUCH_PLATFORM_H */
+#endif /* _LINUX_TOUCH_PLATFORM_H */

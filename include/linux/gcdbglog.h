@@ -58,6 +58,7 @@ struct gcmmucontext;
 #define GCDUMPBUFFER(...)
 #define GCDUMPARENA(...)
 #define GCDUMPARENAS(...)
+#define GCDUMPMMU(...)
 #endif
 
 #if !GCDEBUG_ENABLE
@@ -215,6 +216,9 @@ do { \
 #define GCDUMPBUFFER(zone, ptr, gpuaddr, datasize) \
 	gc_dump_cmd_buffer(&GCDBGFILTER, zone, ptr, gpuaddr, datasize)
 
+#define GCDUMPMMU(zone, gcmmucontext) \
+	gc_dump_mmu(&GCDBGFILTER, zone, gcmmucontext)
+
 #endif
 
 
@@ -261,13 +265,6 @@ do { \
  * Command buffer parser.
  */
 
-struct gcrect {
-	int l;
-	int t;
-	int r;
-	int b;
-};
-
 struct gcsurfaceinfo {
 	unsigned int width;
 	unsigned int height;
@@ -276,6 +273,13 @@ struct gcsurfaceinfo {
 	unsigned int swizzle;
 	unsigned int format;
 	unsigned int bpp;
+};
+
+struct gcrect {
+	int left;
+	int top;
+	int right;
+	int bottom;
 };
 
 struct gcsourceinfo {
@@ -362,8 +366,6 @@ void gc_dump_phys_surface(struct gcdbgfilter *filter, unsigned int zone,
 			  unsigned int gpuaddr);
 
 /* Dump MMU content. */
-void gc_dump_mmu_arenas(struct gcdbgfilter *filter, unsigned int zone,
-			char *message, struct list_head *head);
 void gc_dump_mmu(struct gcdbgfilter *filter, unsigned int zone,
 		 struct gcmmucontext *gcmmucontext);
 

@@ -36,13 +36,6 @@
  */
 #define BQ2415x_RESET_TIMER		0x38
 
-struct bq2415x_charger_callbacks {
-	void (*set_charge_current)(struct bq2415x_charger_callbacks *ptr,
-						int cable_type);
-	void (*set_termination_current)(struct bq2415x_charger_callbacks *ptr,
-						int term_type);
-};
-
 /* BQ24153 / BQ24156 / BQ24158 */
 /* Status/Control Register */
 #define REG_STATUS_CONTROL		0x00
@@ -75,7 +68,6 @@ struct bq2415x_charger_callbacks {
 
 #define BQ24153 (1 << 3)
 #define BQ24156 (1 << 6)
-#define BQ24157 (1 << 7)
 #define BQ24158 (1 << 8)
 
 #define BQ2415x_WATCHDOG_TIMEOUT	20000
@@ -84,20 +76,6 @@ struct bq2415x_platform_data {
 	int max_charger_currentmA;
 	int max_charger_voltagemV;
 	int termination_currentmA;
-	int cin_limit_current;
-	int charge_ac_current;
-	int charge_usb_current;
-	int first_term_currentmA;
-	/* int second_term_currentmA; */
-	void (*set_charge)(int flag);
-	void (*enable_irq_handler)(void);
-	void (*set_full_charge)(void);
-	void (*register_callbacks)(struct bq2415x_charger_callbacks *ptr);
-	int ta_gpio;
-	int ta_irq;
-	int ta_enable_gpio;
-	int vf_gpio;
-	int vf_irq;
 };
 
 #endif

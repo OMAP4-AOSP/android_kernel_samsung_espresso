@@ -221,17 +221,6 @@ enum rproc_event {
 	RPROC_PRELOAD,
 };
 
-/*
- * struct rproc_trace - remoteproc trace structure
- *
- * @size: size of the buffer
- * @buf: pointer to the trace buffer
- */
-struct rproc_trace {
-	unsigned size;
-	void *buf;
-};
-
 #define RPROC_MAX_NAME	100
 
 /*
@@ -290,7 +279,6 @@ struct rproc {
 	int last_trace_len0, last_trace_len1;
 	void *cdump_buf0, *cdump_buf1;
 	int cdump_len0, cdump_len1;
-	struct mutex tlock;
 	struct completion firmware_loading_complete;
 	struct work_struct error_work;
 	struct blocking_notifier_head nbh;
