@@ -981,7 +981,7 @@ int omap_device_scale(struct device *req_dev, struct device *target_dev,
 	}
 #endif
 	/* I would like CPU to be active always at this point */
-	pm_qos_update_request(&omap_dvfs_pm_qos_handle, 1);
+	pm_qos_update_request(&omap_dvfs_pm_qos_handle, 0);
 
 	rcu_read_lock();
 	opp = opp_find_freq_ceil(target_dev, &freq);

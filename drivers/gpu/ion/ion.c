@@ -904,8 +904,7 @@ err:
 static int ion_flush_cached(struct ion_handle *handle, size_t size,
 			   unsigned long vaddr)
 {
-	struct ion_buffer *buffer = handle->buffer;
-	struct ion_client *client;
+	struct ion_buffer *buffer;
 	int ret;
 
 	if (!handle->buffer->heap->ops->flush_user) {
@@ -913,6 +912,8 @@ static int ion_flush_cached(struct ion_handle *handle, size_t size,
 				__func__);
 		return -EINVAL;
 	}
+
+	buffer = handle->buffer;
 
 	mutex_lock(&buffer->lock);
 	/* now flush buffer mapped to userspace */
@@ -930,8 +931,7 @@ static int ion_flush_cached(struct ion_handle *handle, size_t size,
 static int ion_inval_cached(struct ion_handle *handle, size_t size,
 			   unsigned long vaddr)
 {
-	struct ion_buffer *buffer = handle->buffer;
-	struct ion_client *client;
+	struct ion_buffer *buffer;
 	int ret;
 
 	if (!handle->buffer->heap->ops->inval_user) {
@@ -939,6 +939,8 @@ static int ion_inval_cached(struct ion_handle *handle, size_t size,
 				__func__);
 		return -EINVAL;
 	}
+
+	buffer = handle->buffer;
 
 	mutex_lock(&buffer->lock);
 	/* now flush buffer mapped to userspace */
@@ -950,19 +952,6 @@ static int ion_inval_cached(struct ion_handle *handle, size_t size,
 		return ret;
 	}
 
-	return 0;
-}
-
-static int ion_map_gralloc(struct ion_client *client, void *grallocHandle,
-			   struct ion_handle **handleY)
-{
-	struct ion_client *pvr_ion_client;
-	struct ion_buffer *ionbuff;
-	int fd = (int) grallocHandle;
-
-//	*handleY = PVRSRVExportFDToIONHandle(fd, &pvr_ion_client);//Temporary fix
-	ionbuff = ion_share(pvr_ion_client, *handleY);
-	*handleY = ion_import(client, ionbuff);
 	return 0;
 }
 
@@ -1077,43 +1066,6 @@ static long ion_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 				sizeof(struct ion_custom_data)))
 			return -EFAULT;
 		return dev->custom_ioctl(client, data.cmd, data.arg);
-	}
-
-	case ION_IOC_MAP_CACHEABLE:
-	{
-		struct ion_map_data data;
-
-		if (copy_from_user(&data, (void __user *)arg, sizeof(data)))
-			return -EFAULT;
-		mutex_lock(&client->lock);
-		if (!ion_handle_validate(client, data.handle)) {
-			pr_err("%s: invalid handle passed to share ioctl.\n",
-			       __func__);
-			mutex_unlock(&client->lock);
-			return -EINVAL;
-		}
-		data.handle->buffer->cached = data.cached;
-		data.fd = ion_ioctl_share(filp, client, data.handle);
-		mutex_unlock(&client->lock);
-		if (copy_to_user((void __user *)arg, &data, sizeof(data)))
-			return -EFAULT;
-		break;
-	}
-
-	case ION_IOC_MAP_GRALLOC:
-	{
-		struct ion_map_gralloc_to_ionhandle_data data;
-		int ret;
-		if (copy_from_user(&data, (void __user *)arg, sizeof(data)))
-			return -EFAULT;
-		ret = ion_map_gralloc(client, data.gralloc_handle,
-					&data.handleY);
-		if (ret)
-			return ret;
-		if (copy_to_user((void __user *)arg, &data,
-				 sizeof(data)))
-			return -EFAULT;
-		break;
 	}
 
 	case ION_IOC_FLUSH_CACHED:

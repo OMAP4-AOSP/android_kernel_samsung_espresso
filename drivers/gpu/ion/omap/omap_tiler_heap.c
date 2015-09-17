@@ -372,13 +372,13 @@ int omap_tiler_heap_map_user(struct ion_heap *heap, struct ion_buffer *buffer,
 				(vma->vm_end - vma->vm_start),
 				(buffer->cached ?
 				(vma->vm_page_prot)
-				: pgprot_noncached(vma->vm_page_prot)));
+				: pgprot_writecombine(vma->vm_page_prot)));
 	} else {
 		for (i = vma->vm_pgoff; i < n_pages; i++, addr += PAGE_SIZE) {
 			ret = remap_pfn_range(vma, addr,
 				 __phys_to_pfn(info->tiler_addrs[i]),
 				PAGE_SIZE,
-				vma->vm_page_prot);
+				pgprot_writecombine(vma->vm_page_prot));
 			if (ret)
 				return ret;
 		}

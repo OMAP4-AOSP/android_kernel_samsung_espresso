@@ -1003,7 +1003,7 @@ static int _wait_target_ready(struct omap_hwmod *oh)
 	if (cpu_is_omap24xx() || cpu_is_omap34xx()) {
 		ret = omap2_cm_wait_module_ready(oh->prcm.omap2.module_offs,
 						 oh->prcm.omap2.idlest_reg_id,
-						oh->prcm.omap2.idlest_idle_bit);
+						 oh->prcm.omap2.idlest_idle_bit);
 	} else if (cpu_is_omap44xx()) {
 		ret = omap4_cm_wait_module_ready(oh->prcm.omap4.clkctrl_reg);
 	} else {
@@ -1138,11 +1138,11 @@ static int _read_hardreset(struct omap_hwmod *oh, const char *name)
 		return ret;
 
 	if (cpu_is_omap24xx() || cpu_is_omap34xx()) {
-		return omap2_prm_is_hardreset_asserted(
-			oh->prcm.omap2.module_offs, ohri.st_shift);
+		return omap2_prm_is_hardreset_asserted(oh->prcm.omap2.module_offs,
+						       ohri.st_shift);
 	} else if (cpu_is_omap44xx()) {
-		return omap4_prm_is_hardreset_asserted(
-			oh->prcm.omap4.rstctrl_reg, ohri.rst_shift);
+		return omap4_prm_is_hardreset_asserted(oh->prcm.omap4.rstctrl_reg,
+						       ohri.rst_shift);
 	} else {
 		return -EINVAL;
 	}
@@ -1642,8 +1642,15 @@ int omap_hwmod_softreset(struct omap_hwmod *oh)
 	if (!oh || !(oh->_sysc_cache))
 		return -EINVAL;
 
-	_ocp_softreset(oh);
-	return 0;
+	v = oh->_sysc_cache;
+	ret = _set_softreset(oh, &v);
+	if (ret)
+		goto error;
+	/* Use raw write here to avoid sysc cache update */
+	_write_sysconfig_raw(v, oh);
+
+error:
+	return ret;
 }
 
 /**
@@ -2027,10 +2034,6 @@ int omap_hwmod_reset(struct omap_hwmod *oh)
 
 	spin_lock_irqsave(&oh->_lock, flags);
 	r = _reset(oh);
-	if (oh->class->sysc) {
-		_update_sysc_cache(oh);
-		_enable_sysc(oh);
-	}
 	spin_unlock_irqrestore(&oh->_lock, flags);
 
 	return r;

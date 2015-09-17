@@ -44,11 +44,11 @@ static void dump_ipu_registers(struct rproc *rproc)
 	char buf[64];
 	struct pt_regs regs;
 
-	if (!rproc->cdump1.buf)
+	if (!rproc->cdump_buf1)
 		return;
 
 	remoteproc_fill_pt_regs(&regs,
-			(struct exc_regs *)rproc->cdump1.buf);
+			(struct exc_regs *)rproc->cdump_buf1);
 
 	pr_info("REGISTER DUMP FOR REMOTEPROC %s\n", rproc->name);
 	pr_info("PC is at %08lx\n", instruction_pointer(&regs));
@@ -83,7 +83,7 @@ static void dump_dsp_registers(struct rproc *rproc)
 {
 	struct exc_dspRegs *regs;
 
-	regs = (struct exc_dspRegs *)rproc->cdump0.buf;
+	regs = (struct exc_dspRegs *)rproc->cdump_buf0;
 
 	pr_info("REGISTER DUMP FOR REMOTEPROC %s\n", rproc->name);
 	pr_info("PC is at %08x\n", regs->IRP);

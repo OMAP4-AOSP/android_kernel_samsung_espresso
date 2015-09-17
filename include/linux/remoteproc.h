@@ -284,9 +284,12 @@ struct rproc {
 	int state;
 	struct mutex lock;
 	struct dentry *dbg_dir;
-	struct rproc_trace trace0, trace1;
-	struct rproc_trace last_trace0, last_trace1;
-	struct rproc_trace cdump0, cdump1;
+	char *trace_buf0, *trace_buf1;
+	char *last_trace_buf0, *last_trace_buf1;
+	int trace_len0, trace_len1;
+	int last_trace_len0, last_trace_len1;
+	void *cdump_buf0, *cdump_buf1;
+	int cdump_len0, cdump_len1;
 	struct mutex tlock;
 	struct completion firmware_loading_complete;
 	struct work_struct error_work;
