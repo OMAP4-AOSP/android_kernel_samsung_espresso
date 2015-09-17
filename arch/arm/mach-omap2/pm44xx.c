@@ -208,23 +208,19 @@ void syscontrol_lpddr_clk_io_errata(bool enable)
 	if (!is_pm44xx_erratum(LPDDR_CLK_IO_i736))
 		return;
 
-	v = omap4_ctrl_pad_readl(
-			OMAP4_CTRL_MODULE_PAD_CORE_CONTROL_LPDDR2IO1_2);
+	v = omap4_ctrl_pad_readl(OMAP4_CTRL_MODULE_PAD_CORE_CONTROL_LPDDR2IO1_2);
 	if (enable)
 		v &= ~OMAP4_LPDDR2IO1_GR10_WD_MASK;
 	else
 		v |= LPDDR_WD_PULL_DOWN << OMAP4_LPDDR2IO1_GR10_WD_SHIFT;
-	omap4_ctrl_pad_writel(v,
-			OMAP4_CTRL_MODULE_PAD_CORE_CONTROL_LPDDR2IO1_2);
+	omap4_ctrl_pad_writel(v, OMAP4_CTRL_MODULE_PAD_CORE_CONTROL_LPDDR2IO1_2);
 
-	v = omap4_ctrl_pad_readl(
-			OMAP4_CTRL_MODULE_PAD_CORE_CONTROL_LPDDR2IO2_2);
+	v = omap4_ctrl_pad_readl(OMAP4_CTRL_MODULE_PAD_CORE_CONTROL_LPDDR2IO2_2);
 	if (enable)
 		v &= ~OMAP4_LPDDR2IO2_GR10_WD_MASK;
 	else
 		v |= LPDDR_WD_PULL_DOWN << OMAP4_LPDDR2IO1_GR10_WD_SHIFT;
-	omap4_ctrl_pad_writel(v,
-			OMAP4_CTRL_MODULE_PAD_CORE_CONTROL_LPDDR2IO2_2);
+	omap4_ctrl_pad_writel(v, OMAP4_CTRL_MODULE_PAD_CORE_CONTROL_LPDDR2IO2_2);
 }
 
 void omap4_trigger_ioctrl(void)
@@ -242,10 +238,9 @@ void omap4_trigger_ioctrl(void)
 	/* Trigger WUCLKIN enable */
 	omap4_prminst_rmw_inst_reg_bits(OMAP4430_WUCLK_CTRL_MASK, OMAP4430_WUCLK_CTRL_MASK,
 		OMAP4430_PRM_PARTITION, OMAP4430_PRM_DEVICE_INST, OMAP4_PRM_IO_PMCTRL_OFFSET);
-
 	omap_test_timeout((((omap4_prminst_read_inst_reg(OMAP4430_PRM_PARTITION,
-						OMAP4430_PRM_DEVICE_INST,
-						OMAP4_PRM_IO_PMCTRL_OFFSET) &
+						   OMAP4430_PRM_DEVICE_INST,
+						   OMAP4_PRM_IO_PMCTRL_OFFSET) &
 				OMAP4430_WUCLK_STATUS_MASK) >>
 				OMAP4430_WUCLK_STATUS_SHIFT) == 1),
 			MAX_IOPAD_LATCH_TIME, i);
@@ -259,8 +254,8 @@ void omap4_trigger_ioctrl(void)
 
 	/* Ensure this is cleared */
 	omap_test_timeout((((omap4_prminst_read_inst_reg(OMAP4430_PRM_PARTITION,
-						OMAP4430_PRM_DEVICE_INST,
-						OMAP4_PRM_IO_PMCTRL_OFFSET) &
+						   OMAP4430_PRM_DEVICE_INST,
+						   OMAP4_PRM_IO_PMCTRL_OFFSET) &
 				OMAP4430_WUCLK_STATUS_MASK) >>
 				OMAP4430_WUCLK_STATUS_SHIFT) == 0),
 			MAX_IOPAD_LATCH_TIME, i);
@@ -1173,12 +1168,14 @@ static void __init syscontrol_setup_regs(void)
 	v = omap4_ctrl_pad_readl(OMAP4_CTRL_MODULE_PAD_CORE_CONTROL_LPDDR2IO1_3);
 	v &= ~(OMAP4_LPDDR21_VREF_EN_CA_MASK | OMAP4_LPDDR21_VREF_EN_DQ_MASK);
 	v |= OMAP4_LPDDR21_VREF_AUTO_EN_CA_MASK | OMAP4_LPDDR21_VREF_AUTO_EN_DQ_MASK;
-        omap4_ctrl_pad_writel(v, OMAP4_CTRL_MODULE_PAD_CORE_CONTROL_LPDDR2IO1_3);
+	omap4_ctrl_pad_writel(v,
+		OMAP4_CTRL_MODULE_PAD_CORE_CONTROL_LPDDR2IO1_3);
 
 	v = omap4_ctrl_pad_readl(OMAP4_CTRL_MODULE_PAD_CORE_CONTROL_LPDDR2IO2_3);
 	v &= ~(OMAP4_LPDDR21_VREF_EN_CA_MASK | OMAP4_LPDDR21_VREF_EN_DQ_MASK);
 	v |= OMAP4_LPDDR21_VREF_AUTO_EN_CA_MASK | OMAP4_LPDDR21_VREF_AUTO_EN_DQ_MASK;
-        omap4_ctrl_pad_writel(v, OMAP4_CTRL_MODULE_PAD_CORE_CONTROL_LPDDR2IO2_3);
+	omap4_ctrl_pad_writel(v,
+		OMAP4_CTRL_MODULE_PAD_CORE_CONTROL_LPDDR2IO2_3);
 
 	syscontrol_lpddr_clk_io_errata(false);
 

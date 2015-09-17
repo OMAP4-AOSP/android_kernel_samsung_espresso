@@ -120,6 +120,7 @@ static irqreturn_t l3_interrupt_handler(int irq, void *_l3)
 					source_name, readl(slave_addr));
 
 				l3_dump_targ_context(base + regoffset);
+
 				/* clear the std error log*/
 				clear = std_err_main | CLEAR_STDERR_LOG;
 				writel(clear, std_err_main_addr);

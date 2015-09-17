@@ -549,7 +549,7 @@ static u32 omap_rpmsg_get_features(struct virtio_device *vdev)
 {
 	/* for now, use hardcoded bitmap. later this should be provided
 	 * by the firmware itself */
-	return 1 << VIRTIO_RPMSG_F_NS;
+	return (1 << VIRTIO_RPMSG_F_NS);
 }
 
 static void omap_rpmsg_finalize_features(struct virtio_device *vdev)

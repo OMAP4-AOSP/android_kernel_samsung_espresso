@@ -200,8 +200,9 @@ static int _omap_mux_get_by_name(struct omap_mux_partition *partition,
 		}
 	}
 
-	if (found == 1)
+	if (found == 1) {
 		return found_mode;
+	}
 
 	if (found > 1) {
 		pr_err("%s: Multiple signal paths (%i) for %s\n", __func__,

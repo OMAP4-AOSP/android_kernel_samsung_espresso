@@ -23,11 +23,11 @@
 #define PHYS_ADDR_SMC_MEM  (omap_smc_addr())
 #define PHYS_ADDR_ION_HEAP_SECURE_INPUT_MEM  (omap_ion_heap_secure_input_addr())
 #define PHYS_ADDR_ION_HEAP_SECURE_OUTPUT_WFDHDCP_MEM  \
-                       (omap_ion_heap_secure_output_wfdhdcp_addr())
-#define PHYS_ADDR_DUCATI_MEM   (omap_ducati_heap_addr())
-#define PHYS_ADDR_ION_HEAP_TILER_MEM   (omap_ion_heap_tiler_mem_addr())
-#define PHYS_ADDR_ION_HEAP_NONSECURE_TILER_MEM \
-                       (omap_ion_heap_nonsec_tiler_mem_addr())
+			(omap_ion_heap_secure_output_wfdhdcp_addr())
+#define PHYS_ADDR_DUCATI_MEM	(omap_ducati_heap_addr())
+#define PHYS_ADDR_ION_HEAP_TILER_MEM	(omap_ion_heap_tiler_mem_addr())
+#define PHYS_ADDR_ION_HEAP_NONSECURE_TILER_MEM	\
+			(omap_ion_heap_nonsec_tiler_mem_addr())
 
 #define PHYS_ADDR_SMC_SIZE (omap_smc_size())
 #define OMAP4_ION_HEAP_SECURE_INPUT_SIZE (omap_ion_heap_secure_input_size())
@@ -35,8 +35,9 @@
 			(omap_ion_heap_secure_output_wfdhdcp_size())
 #define PHYS_ADDR_DUCATI_SIZE (omap_ducati_heap_size())
 #define OMAP4_ION_HEAP_TILER_SIZE (omap_ion_heap_tiler_mem_size())
-#define OMAP4_ION_HEAP_NONSECURE_TILER_SIZE    \
-                       (omap_ion_heap_nonsec_tiler_mem_size())
+#define OMAP4_ION_HEAP_NONSECURE_TILER_SIZE	\
+			(omap_ion_heap_nonsec_tiler_mem_size())
+
 
 struct omap_ion_platform_data {
 	struct ion_platform_data *ion;

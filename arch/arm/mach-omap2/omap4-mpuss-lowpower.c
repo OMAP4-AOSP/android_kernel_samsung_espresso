@@ -687,10 +687,9 @@ cpu_prepare:
 		if (omap_type() != OMAP2_DEVICE_TYPE_GP) {
 			/*
 			 * Dummy dispatcher call after OSWR and OFF
-			 * Restore the right return Kernel address (with MMU on)
-			 * for subsequent calls to secure ROM. Otherwise the
-			 * return address will be to a PA return address and
-			 * the system will hang.
+			 * Restore the right return Kernel address (with MMU on) for
+			 * subsequent calls to secure ROM. Otherwise the return address
+			 * will be to a PA return address and the system will hang.
 			 */
 			omap4_secure_dispatcher(PPA_SERVICE_0,
 						FLAG_START_CRITICAL,

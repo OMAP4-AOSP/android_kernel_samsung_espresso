@@ -231,9 +231,9 @@ struct clk_notifier {
  * current rate (this was done to optimize the implementation).
  */
 struct clk_notifier_data {
-	struct clk	*clk;
-	unsigned long	old_rate;
-	unsigned long	new_rate;
+       struct clk              *clk;
+       unsigned long           old_rate;
+       unsigned long           new_rate;
 };
 
 /*

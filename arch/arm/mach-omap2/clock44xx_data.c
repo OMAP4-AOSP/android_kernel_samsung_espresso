@@ -4079,7 +4079,6 @@ static int omap4_virt_dsp_set_rate(struct clk *clk, unsigned long rate)
 	return 0;
 };
 
-
 int __init omap4xxx_clk_init(void)
 {
 	struct omap_clk *c;

@@ -385,15 +385,15 @@ static struct bq2415x_platform_data sdp4430_bqdata = {
  * is in sleep states.
  */
 static struct cdc_tcxo_platform_data sdp4430_cdc_data = {
-       .buf = {
-               CDC_TCXO_REQ4INT | CDC_TCXO_REQ1INT |
-               CDC_TCXO_REQ4POL | CDC_TCXO_REQ3POL |
-               CDC_TCXO_REQ2POL | CDC_TCXO_REQ1POL,
-               CDC_TCXO_MREQ4 | CDC_TCXO_MREQ3 |
-               CDC_TCXO_MREQ2 | CDC_TCXO_MREQ1,
-               CDC_TCXO_LDOEN1,
-               0,
-       },
+	.buf = {
+		CDC_TCXO_REQ4INT | CDC_TCXO_REQ1INT |
+		CDC_TCXO_REQ4POL | CDC_TCXO_REQ3POL |
+		CDC_TCXO_REQ2POL | CDC_TCXO_REQ1POL,
+		CDC_TCXO_MREQ4 | CDC_TCXO_MREQ3 |
+		CDC_TCXO_MREQ2 | CDC_TCXO_MREQ1,
+		CDC_TCXO_LDOEN1,
+		0,
+	},
 };
 
 static struct i2c_board_info __initdata sdp4430_i2c_boardinfo[] = {
@@ -401,13 +401,13 @@ static struct i2c_board_info __initdata sdp4430_i2c_boardinfo[] = {
 		I2C_BOARD_INFO("bq24156", 0x6a),
 		.platform_data = &sdp4430_bqdata,
 	},
-        {
-                I2C_BOARD_INFO("cdc_tcxo_driver", 0x6c),
-                .platform_data = &sdp4430_cdc_data,
-        },
 	{
 		I2C_BOARD_INFO("tps6130x", 0x33),
 		.platform_data = &twl6040_vddhf,
+	},
+	{
+		I2C_BOARD_INFO("cdc_tcxo_driver", 0x6c),
+		.platform_data = &sdp4430_cdc_data,
 	},
 };
 

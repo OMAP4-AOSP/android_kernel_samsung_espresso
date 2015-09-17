@@ -84,7 +84,6 @@ void __init omap1_i2c_mux_pins(int bus_id);
 void __init omap2_i2c_mux_pins(int bus_id);
 
 void omap2_i2c_pullup(int bus_id, enum omap_i2c_pullup_values pullup);
-
 int omap_i2c_reset(struct omap_hwmod *oh);
 
 #endif /* __ASM__ARCH_OMAP_I2C_H */

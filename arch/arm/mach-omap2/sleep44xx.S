@@ -52,15 +52,14 @@
  * @a: bits 31:08 of omap_rev
  */
 .macro OMAP4_REV_CMP a
-        ldr     r0, =OMAP44XX_SAR_RAM_BASE
-        ldr     r1, [r0, #OMAP_REV_OFFSET]
-        lsr     r2, r1, #8
-        and     r2, r2, #0xffffff
-        ldr     r3, =\a
-        cmp     r2, r3
+	ldr	r0, =OMAP44XX_SAR_RAM_BASE
+	ldr	r1, [r0, #OMAP_REV_OFFSET]
+	lsr	r2, r1, #8
+	and	r2, r2, #0xffffff
+	ldr	r3, =\a
+	cmp	r2, r3
 .endm
 
-/*
 /*
  * To load POR which was saved in SAR RAM
  */
@@ -347,7 +346,7 @@ ENTRY(omap4_cpu_resume)
 	ldr	r8, =OMAP44XX_SAR_RAM_BASE
 	ldr	r9, [r8, #OMAP_TYPE_OFFSET]
 	/*
-	 * CPU1 must check if CPU0 is alive/awaken.
+	 * CPU1 must check if CPU0 is alive/awake,
 	 * if PL310 is OFF, MPUSS was OFF and CPU0 is still off,
 	 * CPU1 must go to sleep and wait for CPU0.
 	 * Only CPU0 should enable cache controller.
@@ -364,7 +363,6 @@ is_cpu0_up:
 	and	r0, #0x0f
 	cmp	r0, #1				@ is CPU0 already UP?
 	beq	cpu1_configure_cp15
-
 	/*
 	 * When CPU1 is released to control of HLOS in the case of OSWR
 	 * and OFF mode, PPA below v1.7.3[1] is not performing all
@@ -425,7 +423,6 @@ is_cpu0_up:
 	 * from OFF mode, However, for many PPA services we need
 	 * CPU0, so, we ask CPU1 to loop back to stagger CPU1 behind CPU0
 	 */
-	/* If we entered here, we did not do a clean WFI? Loopback for safety */
 	b omap4_cpu_resume
 cpu1_configure_cp15:
 	/*
@@ -504,23 +501,22 @@ check_por:
 	ldr	r0, =OMAP44XX_SAR_RAM_BASE  @ Check DEVICE type
 	ldr	r1, [r0, #OMAP_TYPE_OFFSET]
 	cmp	r1, #0x1                   @ Check for HS device
-	bne	check_por_gp	
+	bne	check_por_gp
 	ldr	r0, =PPA_SERVICE_PL310_POR @ Setup PPA HAL call
 	ldr	r1, =OMAP44XX_SAR_RAM_BASE
 	ldr	r4, [r1, #L2X0_PREFETCHCTRL_OFFSET]
 	adr	r3, POR_params
 	str	r4, [r3, #0x04]
 	LM_CALL_PPA_SERVICE_PA
-
-        b       skip_por
+	b	skip_por
 check_por_gp:
-        OMAP4_REV_CMP 0x443022
-        blt     skip_por  @ for GP POR setup possible only on >= OMAP4430ES2.2
-        ldr     r3, =OMAP44XX_SAR_RAM_BASE
-        ldr     r0, [r3, #L2X0_PREFETCHCTRL_OFFSET]
-        ldr     r12, =0x113                     @ Setup L2 POR value
-        dsb
-        smc     #0
+	OMAP4_REV_CMP 0x443022
+	blt	skip_por  @ for GP POR setup possible only on >= OMAP4430ES2.2
+	ldr	r3, =OMAP44XX_SAR_RAM_BASE
+	ldr	r0, [r3, #L2X0_PREFETCHCTRL_OFFSET]
+	ldr	r12, =0x113			@ Setup L2 POR value
+	dsb
+	smc	#0
 skip_por:
 	ldr	r3, =OMAP44XX_SAR_RAM_BASE
 	ldr	r0, [r3, #L2X0_AUXCTRL_OFFSET]
