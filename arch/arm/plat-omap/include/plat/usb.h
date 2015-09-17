@@ -122,6 +122,7 @@ extern void usbhs_init(const struct usbhs_omap_board_data *pdata);
 extern int omap4430_phy_power(struct device *dev, int ID, int on);
 extern int omap4430_phy_init(struct device *dev);
 extern int omap4430_phy_exit(struct device *dev);
+extern int omap4_charger_detect(void);
 extern int omap4430_phy_suspend(struct device *dev, int suspend);
 extern int omap4430_usbhs_update_sar(void);
 extern int omap4430_phy_is_active(struct device *dev);

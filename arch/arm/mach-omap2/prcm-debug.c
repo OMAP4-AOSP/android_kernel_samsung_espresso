@@ -1566,17 +1566,8 @@ static void prcmdebug_dump_pd(struct seq_file *sf, struct d_pwrd_info *pd,
 			OMAP4430_LASTPOWERSTATEENTERED_SHIFT;
 
 		if (flags & PRCMDEBUG_LASTSLEEP &&
-		   (prevst == PWRDM_POWER_OFF || prevst == PWRDM_POWER_RET) &&
-			((!strcmp(pd->name, "PD_CORE")	||
-				!strcmp(pd->name, "PD_MPU")	||
-				!strcmp(pd->name, "PD_L4_PER")	||
-				!strcmp(pd->name, "PD_L3_INIT"))))
+		    (prevst == PWRDM_POWER_OFF || prevst == PWRDM_POWER_RET))
 			return;
-
-		if (flags & PRCMDEBUG_LASTSLEEP &&
-		    (currst == PWRDM_POWER_OFF || currst == PWRDM_POWER_RET)) {
-			return;
-		}
 
 		if (flags & PRCMDEBUG_ON &&
 		    (currst == PWRDM_POWER_OFF || currst == PWRDM_POWER_RET))

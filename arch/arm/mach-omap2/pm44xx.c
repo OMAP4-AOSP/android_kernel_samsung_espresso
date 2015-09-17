@@ -24,14 +24,8 @@
 #include <linux/regulator/machine.h>
 
 #include <asm/hardware/gic.h>
-#include <asm/mach-types.h>
-
 #include <mach/omap4-common.h>
-
-#ifdef CONFIG_OMAP_HSI_DEVICE
 #include <plat/omap_hsi.h>
-#endif
-
 #include <plat/common.h>
 #include <plat/temperature_sensor.h>
 #include <plat/usb.h>
@@ -197,8 +191,6 @@ static int iva_toggle_wa_applied;
 u16 pm44xx_errata;
 #define is_pm44xx_erratum(erratum) (pm44xx_errata & OMAP4_PM_ERRATUM_##erratum)
 
-static void omap4_prcm_control_lpddr_strength(bool off_mode);
-
 #define MAX_IOPAD_LATCH_TIME 1000
 
 void syscontrol_lpddr_clk_io_errata(bool enable)
@@ -262,7 +254,6 @@ void omap4_trigger_ioctrl(void)
 	if (i == MAX_IOPAD_LATCH_TIME)
 		pr_err("%s: Max IO latch time reached for WUCLKIN disable\n",
 			__func__);
-
 	return;
 }
 
@@ -329,7 +320,7 @@ void omap4_enter_sleep(unsigned int cpu, unsigned int power_state, bool suspend)
 			OMAP_VC_CHANNEL_AUTO_TRANSITION_RETENTION);
 	}
 
-	if (core_next_state < PWRDM_POWER_INACTIVE) {
+	if (core_next_state < PWRDM_POWER_ON) {
 		/*
 		 * Note: IVA can hit RET outside of cpuidle and hence this is
 		 * not the right optimal place to enable IVA AUTO RET. But since
@@ -392,8 +383,6 @@ void omap4_enter_sleep(unsigned int cpu, unsigned int power_state, bool suspend)
 		omap4_cm_prepare_off();
 		omap4_dpll_prepare_off();
 
-
-		omap4_prcm_control_lpddr_strength(true);
 		/* Extend Non-EMIF I/O isolation */
 		omap4_prminst_rmw_inst_reg_bits(OMAP4430_ISOOVR_EXTEND_MASK,
 			OMAP4430_ISOOVR_EXTEND_MASK, OMAP4430_PRM_PARTITION,
@@ -419,7 +408,7 @@ void omap4_enter_sleep(unsigned int cpu, unsigned int power_state, bool suspend)
 	}
 
 abort_device_off:
-	if (core_next_state < PWRDM_POWER_INACTIVE) {
+	if (core_next_state < PWRDM_POWER_ON) {
 		/* See note above */
 		omap_vc_set_auto_trans(core_voltdm,
 				OMAP_VC_CHANNEL_AUTO_TRANSITION_DISABLE);
@@ -479,7 +468,6 @@ abort_device_off:
 	}
 
 	omap2_gpio_resume_after_idle(omap4_device_next_state_off());
-	omap4_prcm_control_lpddr_strength(false);
 
 	if (omap4_device_next_state_off()) {
 		/* Disable the extension of Non-EMIF I/O isolation */
@@ -740,7 +728,7 @@ static inline u8 get_achievable_state(u8 available_states, u8 req_min_state,
  * Program pwrst and logic state of the requested pwrdm.
  */
 static int _set_pwrdm_state(struct power_state *pwrst, u32 state,
-			   u32 logic_state)
+			    u32 logic_state)
 {
 	u32 als;
 	bool parent_power_domain = false;
@@ -847,19 +835,6 @@ static int omap4_restore_pwdms_after_suspend(void)
 			       pwrst->pwrdm->name, pwrst->next_state,
 			       pstate, cstate);
 			ret = -1;
-		}
-
-		/*
-		 * REVISIT:
-		 * In ES2.2, the mp3/FM currents are high ~7mA after off mode
-		 * due to per target state ON instead of RET (L4PER_PWRSTCTRL)
-		 * The below check ensures that the per_next_state is as RET
-		 */
-		if ((omap_rev() == OMAP4430_REV_ES2_2) &&
-			(!strcmp(pwrst->pwrdm->name, "l4per_pwrdm"))) {
-				omap_set_pwrdm_state(pwrst->pwrdm,
-					pwrst->saved_state);
-			continue;
 		}
 
 		if (!strcmp(pwrst->pwrdm->name, "l3init_pwrdm")) {
@@ -1130,36 +1105,7 @@ static u32 __init _usec_to_val_scrm(unsigned long rate, u32 usec,
 	return (val << shift) & mask;
 
 }
-static void omap4_prcm_control_lpddr_strength(bool off_mode)
-{
 
-	u32 v;
-
-	if (off_mode) {
-		v = omap4_ctrl_pad_readl(
-				OMAP4_CTRL_MODULE_PAD_CORE_CONTROL_LPDDR2IO1_2);
-		v |= 0x2<<OMAP4_LPDDR2IO1_GR10_WD_SHIFT;
-		omap4_ctrl_pad_writel(v,
-				OMAP4_CTRL_MODULE_PAD_CORE_CONTROL_LPDDR2IO1_2);
-		v = omap4_ctrl_pad_readl(
-				OMAP4_CTRL_MODULE_PAD_CORE_CONTROL_LPDDR2IO2_2);
-		v |= 0x2<<OMAP4_LPDDR2IO2_GR10_WD_SHIFT;
-		omap4_ctrl_pad_writel(v,
-				OMAP4_CTRL_MODULE_PAD_CORE_CONTROL_LPDDR2IO2_2);
-
-	} else {
-		v = omap4_ctrl_pad_readl(
-				OMAP4_CTRL_MODULE_PAD_CORE_CONTROL_LPDDR2IO1_2);
-		v &= ~OMAP4_LPDDR2IO1_GR10_WD_MASK;
-		omap4_ctrl_pad_writel(v,
-				OMAP4_CTRL_MODULE_PAD_CORE_CONTROL_LPDDR2IO1_2);
-		v = omap4_ctrl_pad_readl(
-				OMAP4_CTRL_MODULE_PAD_CORE_CONTROL_LPDDR2IO2_2);
-		v &= ~OMAP4_LPDDR2IO2_GR10_WD_MASK;
-		omap4_ctrl_pad_writel(v,
-				OMAP4_CTRL_MODULE_PAD_CORE_CONTROL_LPDDR2IO2_2);
-	}
-}
 static void __init syscontrol_setup_regs(void)
 {
 	u32 v;
@@ -1177,8 +1123,7 @@ static void __init syscontrol_setup_regs(void)
 	omap4_ctrl_pad_writel(v,
 		OMAP4_CTRL_MODULE_PAD_CORE_CONTROL_LPDDR2IO2_3);
 
-	syscontrol_lpddr_clk_io_errata(false);
-
+	syscontrol_lpddr_clk_io_errata(true);
 }
 
 static void __init prcm_setup_regs(void)
@@ -1381,36 +1326,19 @@ static irqreturn_t prcm_interrupt_handler (int irq, void *dev_id)
 	irqstatus_mpu = omap4_prm_read_inst_reg(OMAP4430_PRM_OCP_SOCKET_INST,
 					 OMAP4_PRM_IRQSTATUS_MPU_OFFSET);
 
-	/* FIXME: this should be ENABLED for all OMAP44XX family */
-	if (!cpu_is_omap443x()) {
-		/* Clear the interrupt */
-		irqstatus_mpu &= irqenable_mpu;
-		omap4_prm_write_inst_reg(irqstatus_mpu,
-					OMAP4430_PRM_OCP_SOCKET_INST,
+	/* Clear the interrupt status before clearing the source events */
+	irqstatus_mpu &= irqenable_mpu;
+	omap4_prm_write_inst_reg(irqstatus_mpu, OMAP4430_PRM_OCP_SOCKET_INST,
 					OMAP4_PRM_IRQSTATUS_MPU_OFFSET);
-	}
 
 	/* Check if a IO_ST interrupt */
 	if (irqstatus_mpu & OMAP4430_IO_ST_MASK) {
-
-#ifdef CONFIG_OMAP_HSI_DEVICE
 		/* Check if HSI caused the IO wakeup */
 		omap_hsi_io_wakeup_check();
-#endif
-
 		omap_uart_resume_idle();
 		usbhs_wakeup();
 		omap_debug_uart_resume_idle();
 		omap4_trigger_ioctrl();
-	}
-
-	/* FIXME: this should be REMOVED for all OMAP44XX family */
-	if (cpu_is_omap443x()) {
-		/* Clear the interrupt */
-		irqstatus_mpu &= irqenable_mpu;
-		omap4_prm_write_inst_reg(irqstatus_mpu,
-					OMAP4430_PRM_OCP_SOCKET_INST,
-					OMAP4_PRM_IRQSTATUS_MPU_OFFSET);
 	}
 
 	return IRQ_HANDLED;
@@ -1542,9 +1470,7 @@ static int __init omap4_pm_init(void)
 {
 	int ret = 0;
 	struct clockdomain *l3_1_clkdm, *l4wkup;
-	struct clockdomain *ducati_clkdm, *l3_2_clkdm;
-	struct clockdomain *l4_per, *l4_cfg, *ivahd_clkdm;
-
+	struct clockdomain *ducati_clkdm, *l3_2_clkdm, *l4_per, *l4_cfg;
 	char *init_devices[] = {"mpu", "iva"};
 	int i;
 
@@ -1608,8 +1534,6 @@ static int __init omap4_pm_init(void)
 	l4_per = clkdm_lookup("l4_per_clkdm");
 	l4_cfg = clkdm_lookup("l4_cfg_clkdm");
 	l4wkup = clkdm_lookup("l4_wkup_clkdm");
-	ivahd_clkdm = clkdm_lookup("ivahd_clkdm");
-
 	if ((!mpuss_clkdm) || (!emif_clkdm) || (!l3_1_clkdm) || (!l4wkup) ||
 		(!l3_2_clkdm) || (!ducati_clkdm) || (!l4_per) || (!l4_cfg) ||
 		(!abe_clkdm))
@@ -1628,10 +1552,7 @@ static int __init omap4_pm_init(void)
 		ret |= clkdm_add_wkdep(mpuss_clkdm, l4_cfg);
 		ret |= clkdm_add_wkdep(ducati_clkdm, l4_per);
 		ret |= clkdm_add_wkdep(ducati_clkdm, l4_cfg);
-		ret |= clkdm_add_wkdep(ducati_clkdm, emif_clkdm);
-		ret |= clkdm_add_wkdep(ivahd_clkdm, emif_clkdm);
 		ret |= clkdm_add_wkdep(mpuss_clkdm, l4wkup);
-
 		if (ret) {
 			pr_err("Failed to add MPUSS -> L3/EMIF, DUCATI -> L3"
 			       " and MPUSS -> L4* wakeup dependency\n");

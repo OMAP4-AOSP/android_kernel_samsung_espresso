@@ -14,7 +14,7 @@
 #include <asm/smp_scu.h>
 #include <asm/memory.h>
 #include <asm/hardware/cache-l2x0.h>
-#include <asm/cache.h>
+
 #include <plat/omap44xx.h>
 #include <mach/omap4-common.h>
 
@@ -713,7 +713,6 @@ ENTRY(omap_bus_sync)
 	ldmfd	sp!, {r9, pc}
 ENDPROC(omap_bus_sync)
 
-.align L1_CACHE_SHIFT
 ENTRY(omap_do_wfi)
 	stmfd	sp!, {lr}
 	/* Drain interconnect write buffers. */

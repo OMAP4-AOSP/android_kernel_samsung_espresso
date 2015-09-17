@@ -26,8 +26,4 @@
 
 #define TMP102_SENSOR_NAME "tmp102_sensor"
 
-struct tmp102_platform_data {
-	void (*power_on) (bool);
-};
-
 #endif

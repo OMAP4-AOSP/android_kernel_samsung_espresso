@@ -113,7 +113,7 @@ void gic_dist_enable(void)
 }
 void gic_dist_disable(void)
 {
-	__raw_writel(0, gic_dist_base_addr + GIC_DIST_CTRL);
+	__raw_writel(0, gic_dist_base_addr + GIC_CPU_CTRL);
 }
 
 void gic_timer_retrigger(void)

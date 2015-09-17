@@ -85,17 +85,11 @@ done:
 
 int __init omap_devinit_temp_sensor(void)
 {
-	if (!cpu_is_omap446x() && !cpu_is_omap443x() && !cpu_is_omap447x())
+	if (!cpu_is_omap446x() && !cpu_is_omap447x())
 		return 0;
-	if (cpu_is_omap443x()) {
-		if (omap4_has_mpu_1_2ghz())
-			return omap_hwmod_for_each_by_class("bandgap",
+
+	return omap_hwmod_for_each_by_class("thermal_sensor",
 			temp_sensor_dev_init, NULL);
-		else
-			return 0;
-	} else
-		return omap_hwmod_for_each_by_class("thermal_sensor",
-				temp_sensor_dev_init, NULL);
 }
 
 arch_initcall(omap_devinit_temp_sensor);

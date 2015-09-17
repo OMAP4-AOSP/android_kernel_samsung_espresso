@@ -32,8 +32,9 @@
 #include <linux/notifier.h>
 #include <linux/memblock.h>
 #include <linux/remoteproc.h>
-#include <linux/io.h>
 #include <linux/delay.h>
+
+#include <asm/io.h>
 
 #include <plat/rpmsg.h>
 #include <plat/mailbox.h>

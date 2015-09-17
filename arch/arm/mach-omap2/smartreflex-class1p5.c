@@ -445,7 +445,7 @@ static int sr_class1p5_enable(struct voltagedomain *voltdm,
 	work_data->work_active = true;
 	work_data->num_calib_triggers = 0;
 	/* Dont interrupt me untill calibration is complete */
-	pm_qos_update_request(&work_data->qos, 1);
+	pm_qos_update_request(&work_data->qos, 0);
 	/* program the workqueue and leave it to calibrate offline.. */
 	schedule_delayed_work(&work_data->work,
 			      msecs_to_jiffies(SR1P5_SAMPLING_DELAY_MS *

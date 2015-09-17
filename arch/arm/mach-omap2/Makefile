@@ -267,6 +267,14 @@ obj-$(CONFIG_MACH_IGEP0020)		+= board-igep0020.o \
 obj-$(CONFIG_MACH_OMAP3_TOUCHBOOK)	+= board-omap3touchbook.o \
 					   hsmmc.o
 obj-$(CONFIG_MACH_OMAP_4430SDP)		+= board-4430sdp.o \
+					   board-blaze-touch.o \
+					   board-blaze-panel.o \
+					   board-blaze-keypad.o \
+					   board-blaze-sensors.o \
+					   board-blaze-modem.o \
+					   board-44xx-identity.o \
+					   board-44xx-power.o \
+					   board-44xx-serial.o \
 					   hsmmc.o \
 					   omap_phy_internal.o \
 					   omap4_apps_brd_id.o
@@ -285,6 +293,7 @@ obj-$(CONFIG_MACH_OMAP4_PANDA)		+= board-omap4panda.o \
 					   board-44xx-identity.o \
 					   omap4_apps_brd_id.o \
 					   omap_phy_internal.o
+
 obj-$(CONFIG_MACH_OMAP3517EVM)		+= board-am3517evm.o \
 					   omap_phy_internal.o \
 
@@ -321,15 +330,18 @@ obj-y					+= $(disp-m) $(disp-y)
 obj-y					+= common-board-devices.o
 
 obj-$(CONFIG_OMAP_REMOTE_PROC)		+= remoteproc.o
+
 obj-$(CONFIG_OMAP_HSI_DEVICE)		+= omap_hsi.o
 obj-$(CONFIG_ION_OMAP)			+= omap4_ion.o
 obj-$(CONFIG_ARCH_OMAP4)		+= omap_dmm.o
 obj-$(CONFIG_OMAP_FIQ_DEBUGGER)		+= omap_fiq_debugger.o
-obj-$(CONFIG_OMAP_RAM_CONSOLE)         += omap_ram_console.o
-obj-$(CONFIG_ARCH_OMAP4)		+= omap_gcxxx.o
 
 ifeq ($(CONFIG_OMAP_REBOOT_REASON),y)
 obj-$(CONFIG_ARCH_OMAP4)		+= omap4-reboot-reason.o
 endif
+
+obj-$(CONFIG_OMAP_RAM_CONSOLE)		+= omap_ram_console.o
+obj-$(CONFIG_ARCH_OMAP4)		+= omap_gcxxx.o
+obj-$(CONFIG_OMAP_RFKILL_STE_MODEM)	+= omap-rfkill-ste.o
 
 include arch/arm/mach-omap2/Makefile.sec

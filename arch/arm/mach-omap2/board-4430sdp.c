@@ -14,7 +14,6 @@
 
 #include <linux/gpio.h>
 #include <linux/spi/spi.h>
-#include <linux/hwspinlock.h>
 #include <linux/i2c/twl.h>
 #include <linux/i2c/bq2415x.h>
 #include <linux/gpio_keys.h>
