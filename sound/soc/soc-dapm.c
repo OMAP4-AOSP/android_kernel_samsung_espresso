@@ -1246,28 +1246,7 @@ static void dapm_seq_run_coalesced(struct snd_soc_dapm_context *dapm,
 
 	list_for_each_entry(w, pending, power_list) {
 		cur_mask = 1 << w->shift;
-		/*
-		 * PLM: p120531-0358
-		 * CSR: OMAPS00270627
-		 * As a work around, just continue instead of BUG_ON
-		 * when reg's are different to avoid Power on/off test
-		 * BUG panic failure.
-		 *
-		 * REVIST:
-		 * BUG_ON(reg != w->reg);
-		 */
-		if (reg != w->reg) {
-			pr_info(" [%s] reg = %x w->reg = %x\n",
-				 __func__, reg, w->reg);
-
-			if (w->codec)
-				pr_info(" [%s] codec_name = %s\n",
-					__func__, w->codec->name);
-			else if (w->platform)
-				pr_info(" [%s] platform_name = %s\n",
-					__func__, w->platform->name);
-			continue;
-		}
+		BUG_ON(reg != w->reg);
 
 		if (w->invert)
 			power = !w->power;
@@ -1575,7 +1554,7 @@ static int dapm_power_widgets(struct snd_soc_dapm_context *dapm, int event)
 			break;
 		case SND_SOC_DAPM_STREAM_STOP:
 #warning need re-work
-			if (dapm->codec && dapm->codec->active)
+			if (dapm->codec)
 				dapm->dev_power = !!dapm->codec->active;
 			else
 				dapm->dev_power = 0;
@@ -3139,6 +3118,7 @@ static void soc_dapm_shutdown_codec(struct snd_soc_dapm_context *dapm)
 			snd_soc_dapm_set_bias_level(dapm,
 						    SND_SOC_BIAS_STANDBY);
 	}
+
 	mutex_unlock(&card->power_mutex);
 }
 

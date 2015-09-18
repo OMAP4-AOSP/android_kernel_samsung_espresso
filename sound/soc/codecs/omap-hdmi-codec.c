@@ -347,7 +347,7 @@ static int hdmi_audio_trigger(struct snd_pcm_substream *substream, int cmd,
 static int hdmi_audio_startup(struct snd_pcm_substream *substream,
 				  struct snd_soc_dai *dai)
 {
-	if (!omapdss_hdmi_is_edid_set() && !omapdss_hdmi_get_mode()) {
+	if (!omapdss_hdmi_get_mode()) {
 		pr_err("Current video settings do not support audio.\n");
 		return -EIO;
 	}

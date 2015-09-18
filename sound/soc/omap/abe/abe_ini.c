@@ -312,8 +312,7 @@ void omap_abe_build_scheduler_table(struct omap_abe *abe)
 	abe->MultiFrame[13][5] = 0; /*ABE_TASK_ID(C_ABE_FW_TASK_IO_BT_VX_DL)*/
 
 	abe->MultiFrame[14][3] = 0; /*ABE_TASK_ID(C_ABE_FW_TASK_IO_DMIC)*/
-	abe->MultiFrame[14][4] =
-		ABE_TASK_ID(C_ABE_FW_TASK_BT_DL_48_8_FIR_FW_COMPAT);
+	abe->MultiFrame[14][4] = ABE_TASK_ID(C_ABE_FW_TASK_BT_DL_48_8_FIR_FW_COMPAT);
 
 	abe->MultiFrame[15][0] = 0; /*ABE_TASK_ID(C_ABE_FW_TASK_IO_MM_EXT_OUT)*/
 	abe->MultiFrame[15][3] = 0; /*ABE_TASK_ID(C_ABE_FW_TASK_IO_BT_VX_UL)*/
@@ -333,10 +332,8 @@ void omap_abe_build_scheduler_table(struct omap_abe *abe)
 	/*         MM_UL is moved to OPP 100% */
 	abe->MultiFrame[19][6] = 0; /*ABE_TASK_ID(C_ABE_FW_TASK_IO_MM_UL)*/
 
-	/*ABE_TASK_ID(C_ABE_FW_TASK_IO_TONES_DL)*/
-	abe->MultiFrame[20][0] = 0;
-	/*ABE_TASK_ID(C_ABE_FW_TASK_ASRC_MM_EXT_IN)*/
-	abe->MultiFrame[20][6] = 0;
+	abe->MultiFrame[20][0] = 0; /*ABE_TASK_ID(C_ABE_FW_TASK_IO_TONES_DL)*/
+	abe->MultiFrame[20][6] = 0; /*ABE_TASK_ID(C_ABE_FW_TASK_ASRC_MM_EXT_IN)*/
 
 	abe->MultiFrame[21][1] = ABE_TASK_ID(C_ABE_FW_TASK_DEBUGTRACE_VX_ASRCs);
 	abe->MultiFrame[21][2] = ABE_TASK_ID(C_ABE_FW_TASK_CHECK_IIR_RIGHT_8K);
