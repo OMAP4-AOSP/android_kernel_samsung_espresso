@@ -48,11 +48,6 @@
 #define GPADCS		(1 << 1)
 #define GPADCR		(1 << 0)
 
-#define REG_MISC1               0xE4
-#define VAC_MEAS                0x04
-#define VBAT_MEAS               0x02
-#define BB_MEAS                 0x01
-
 #define SCALE				(1 << 15)
 
 struct twl6030_chnl_calib {
@@ -734,16 +729,6 @@ static int _twl6032_gpadc_conversion(struct twl6030_gpadc_request *req,
 		goto out;
 	}
 
-	if (the_gpadc->features & TWL6034_SUBCLASS) {
-		int twl6034_nochan = BIT(5) | BIT(6) | BIT(9) | BIT(10) |
-					BIT(11) | BIT(14) | BIT(16) | BIT(17) |
-					BIT(18);
-		if (req->channels & twl6034_nochan) {
-			ret = -EINVAL;
-			goto out;
-		}
-	}
-
 	for (i = 0; i < TWL6032_GPADC_MAX_CHANNELS; i++)
 		if (req->channels & BIT(i))
 			channelcnt++;
@@ -1297,132 +1282,6 @@ static int twl6032_calibration(struct twl6030_gpadc_data *gpadc)
 	return 0;
 }
 
-static int twl6034_calibration(struct twl6030_gpadc_data *gpadc)
-{
-	int chn, d1 = 0, d2 = 0, b, k, gain, x1, x2;
-	u8 trim_regs[17];
-	int ret;
-
-	ret = twl_i2c_read(TWL6030_MODULE_ID2, trim_regs + 1,
-			TWL6032_GPADC_TRIM1, 16);
-	if (ret < 0)
-		return ret;
-
-	/* Loop to calculate the value needed for returning voltages from
-	 * GPADC not values.
-	 *
-	 * gain is calculated to 3 decimal places fixed point.
-	 */
-	for (chn = 0; chn < TWL6032_GPADC_MAX_CHANNELS; chn++) {
-
-		switch (chn) {
-		case 0:
-		case 1:
-		case 3:
-		case 4:
-		case 12:
-		case 13:
-			/* D1 */
-			d1 = trim_regs[1];
-			if (d1 & 0x80)
-				d1 |= 0xFFFFFF00;
-
-			/* D2 */
-			d2 = trim_regs[2];
-			if (d2 & 0x80)
-				d2 |= 0xFFFFFF00;
-			break;
-		case 2:
-			/* D1 */
-			d1 = trim_regs[3];
-			if (d1 & 0x80)
-				d1 |= 0xFFFFFF00;
-
-			/* D2 */
-			d2 = trim_regs[4];
-			if (d2 & 0x80)
-				d2 |= 0xFFFFFF00;
-			break;
-		case 7:
-			/* D1 */
-			d1 = trim_regs[5];
-			if (d1 & 0x80)
-				d1 |= 0xFFFFFF00;
-
-			/* D2 */
-			d2 = trim_regs[6];
-			if (d2 & 0x80)
-				d2 |= 0xFFFFFF00;
-			break;
-		case 8:
-			/* D1 */
-			d1 = trim_regs[7];
-			if (d1 & 0x80)
-				d1 |= 0xFFFFFF00;
-
-			/* D2 */
-			d2 = trim_regs[8];
-			if (d2 & 0x80)
-				d2 |= 0xFFFFFF00;
-			break;
-		default:
-			/* No data for other channels */
-			continue;
-		}
-
-		dev_dbg(gpadc->dev, "GPADC d1   for Chn: %d = %d\n", chn, d1);
-		dev_dbg(gpadc->dev, "GPADC d2   for Chn: %d = %d\n", chn, d2);
-
-		/* Gain */
-		gain = ((twl6032_ideal[chn].v2 -
-			twl6032_ideal[chn].v1) * 1000) /
-			((twl6032_ideal[chn].code2 -
-			twl6032_ideal[chn].code1));
-
-		x1 = twl6032_ideal[chn].code1;
-		x2 = twl6032_ideal[chn].code2;
-
-		/* k */
-		k = 1000 + (((d2 - d1) * 1000) / (x2 - x1));
-
-		/* b */
-		b = (d1 * 1000) - (k - 1000) * x1;
-
-		gpadc->twl6032_cal_tbl[chn].gain = gain;
-		gpadc->twl6032_cal_tbl[chn].gain_error = k;
-		gpadc->twl6032_cal_tbl[chn].offset_error = b;
-
-		dev_dbg(gpadc->dev, "GPADC x1   for Chn: %d = %d\n", chn, x1);
-		dev_dbg(gpadc->dev, "GPADC x2   for Chn: %d = %d\n", chn, x2);
-		dev_dbg(gpadc->dev, "GPADC Gain for Chn: %d = %d\n", chn, gain);
-		dev_dbg(gpadc->dev, "GPADC k    for Chn: %d = %d\n", chn, k);
-		dev_dbg(gpadc->dev, "GPADC b    for Chn: %d = %d\n", chn, b);
-
-	}
-
-	return 0;
-}
-
-/*
- * On other Phoenix Platforms this is performed in the battery/charger driver
- * but twl6034 has no charger so we need to enable these here.
- */
-static int twl6034enable_measure(void)
-{
-	int ret = 0;
-	u8 rd_reg = 0;
-
-	ret = twl_i2c_read_u8(TWL6030_MODULE_ID0, &rd_reg, REG_MISC1);
-	if (ret)
-		return ret;
-
-	rd_reg = rd_reg | VBAT_MEAS | BB_MEAS;
-	ret = twl_i2c_write_u8(TWL6030_MODULE_ID0, rd_reg, REG_MISC1);
-
-	return ret;
-}
-
-
 static int __devinit twl6030_gpadc_probe(struct platform_device *pdev)
 {
 	struct twl6030_gpadc_data *gpadc;
@@ -1497,23 +1356,10 @@ static int __devinit twl6030_gpadc_probe(struct platform_device *pdev)
 	mutex_init(&gpadc->lock);
 	INIT_WORK(&gpadc->ws, twl6030_gpadc_work);
 
-	switch (gpadc->features & (TWL6032_SUBCLASS | TWL6034_SUBCLASS)) {
-	case TWL6032_SUBCLASS:
+	if (gpadc->features & TWL6032_SUBCLASS)
 		ret = twl6032_calibration(gpadc);
-		break;
-	case TWL6032_SUBCLASS|TWL6034_SUBCLASS:
-		ret = twl6034enable_measure();
-		if (ret) {
-			dev_err(&pdev->dev,
-				"Failed to set measure registers\n");
-			goto err_calib;
-		}
-		ret = twl6034_calibration(gpadc);
-		break;
-	default:
+	else
 		ret = twl6030_calibration();
-	}
-
 	if (ret < 0) {
 		dev_err(&pdev->dev, "Failed to read calibration registers\n");
 		goto err_calib;
