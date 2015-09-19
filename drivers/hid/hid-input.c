@@ -304,8 +304,7 @@ static void hidinput_configure_usage(struct hid_input *hidinput, struct hid_fiel
 		goto ignore;
 
 	case HID_UP_KEYBOARD:
-		/*set_bit(EV_REP, input->evbit); */
-			/* SS_BLUETOOTH(js80.hong) 2012.03.17 */
+		set_bit(EV_REP, input->evbit);
 
 		if ((usage->hid & HID_USAGE) < 256) {
 			if (!hid_keyboard[usage->hid & HID_USAGE]) goto ignore;
