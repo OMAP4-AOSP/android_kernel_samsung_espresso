@@ -61,6 +61,7 @@ static ssize_t hdmi_edid_show(struct device *dev,
 {
 	return omapdss_hdmi_get_edid(buf);
 }
+
 static ssize_t hdmi_s3d_mode_show(struct device *dev,
 		struct device_attribute *attr, char *buf)
 {
@@ -99,8 +100,8 @@ static ssize_t hdmi_s3d_mode_show(struct device *dev,
 }
 
 static ssize_t hdmi_s3d_mode_store(struct device *dev,
-				struct device_attribute *attr,
-				const char *buf, size_t size)
+		struct device_attribute *attr,
+		const char *buf, size_t size)
 {
 	unsigned long s3d_mode;
 	int r = kstrtoul(buf, 0, &s3d_mode);
@@ -128,10 +129,12 @@ static ssize_t hdmi_s3d_enable_store(struct device *dev,
 		const char *buf, size_t size)
 {
 	int enable;
+
 	int r = kstrtoint(buf, 0, &enable);
 	if (r)
 		return -EINVAL;
 	enable = !!enable;
+
 	omapdss_hdmi_enable_s3d(enable);
 
 	return size;
@@ -144,14 +147,15 @@ static ssize_t hdmi_s3d_enable_show(struct device *dev,
 	r = omapdss_hdmi_get_s3d_enable();
 	return snprintf(buf, PAGE_SIZE, "%d\n", r);
 }
+
 static DEVICE_ATTR(s3d_enable, S_IRUGO | S_IWUSR, hdmi_s3d_enable_show,
 							hdmi_s3d_enable_store);
 static DEVICE_ATTR(s3d_type, S_IRUGO | S_IWUSR, hdmi_s3d_mode_show,
 							hdmi_s3d_mode_store);
-
 static DEVICE_ATTR(edid, S_IRUGO, hdmi_edid_show, NULL);
 static DEVICE_ATTR(deepcolor, S_IRUGO | S_IWUSR, hdmi_deepcolor_show,
 							hdmi_deepcolor_store);
+
 static struct attribute *hdmi_panel_attrs[] = {
 	&dev_attr_s3d_enable.attr,
 	&dev_attr_s3d_type.attr,
@@ -163,39 +167,6 @@ static struct attribute *hdmi_panel_attrs[] = {
 static struct attribute_group hdmi_panel_attr_group = {
 	.attrs = hdmi_panel_attrs,
 };
-
-#ifdef CONFIG_OMAP2_HDMI_FORCED_TIMING
-static ssize_t hdmi_timing_show(struct device *dev,
-			struct device_attribute *attr, char *buf)
-{
-	return sprintf(buf, "%d\n", hdmi_get_forced_timing());
-}
-
-static ssize_t hdmi_timing_store(struct device *dev,
-					struct device_attribute *attr,
-					const char *buf, size_t size)
-{
-	int ret, timing_idx;
-
-	if (buf == NULL)
-		return 0;
-
-	ret = kstrtoint(buf, 0, &timing_idx);
-	if (ret)
-		return size;
-
-	DSSINFO("forced_timing: %d\n", timing_idx);
-	if (timing_idx > 0 && timing_idx < 64)
-		hdmi_set_forced_timing(timing_idx);
-	else
-		hdmi_set_forced_timing(0);
-
-	return size;
-}
-
-static DEVICE_ATTR(sec_timing, 0664,
-		hdmi_timing_show, hdmi_timing_store);
-#endif
 
 static int hdmi_panel_probe(struct omap_dss_device *dssdev)
 {
@@ -217,11 +188,6 @@ static int hdmi_panel_probe(struct omap_dss_device *dssdev)
 	if (sysfs_create_group(&dssdev->dev.kobj, &hdmi_panel_attr_group))
 		DSSERR("failed to create sysfs entries\n");
 
-#ifdef CONFIG_OMAP2_HDMI_FORCED_TIMING
-	if (device_create_file(&dssdev->dev, &dev_attr_sec_timing))
-		DSSERR("failed to create forced_timing file\n");
-#endif
-
 	DSSDBG("hdmi_panel_probe x_res= %d y_res = %d\n",
 		dssdev->panel.timings.x_res,
 		dssdev->panel.timings.y_res);
@@ -231,9 +197,6 @@ static int hdmi_panel_probe(struct omap_dss_device *dssdev)
 static void hdmi_panel_remove(struct omap_dss_device *dssdev)
 {
 	sysfs_remove_group(&dssdev->dev.kobj, &hdmi_panel_attr_group);
-#ifdef CONFIG_OMAP2_HDMI_FORCED_TIMING
-	device_remove_file(&dssdev->dev, &dev_attr_sec_timing);
-#endif
 }
 
 static int hdmi_panel_enable(struct omap_dss_device *dssdev)
@@ -288,9 +251,7 @@ static int hdmi_panel_suspend(struct omap_dss_device *dssdev)
 	}
 
 	dssdev->state = OMAP_DSS_DISPLAY_SUSPENDED;
-/* Do not send HPD uevent when sleep and resume
-	hdmi_panel_hpd_handler(0);
-*/
+
 	omapdss_hdmi_display_disable(dssdev);
 err:
 	mutex_unlock(&hdmi.hdmi_lock);
@@ -346,9 +307,6 @@ static void hdmi_hotplug_detect_worker(struct work_struct *work)
 
 	mutex_lock(&hdmi.hdmi_lock);
 	if (state == HPD_STATE_OFF) {
-#ifdef CONFIG_OMAP_HDMI_AUDIO_CH_EVENT
-		hdmi_send_audio_info(0);
-#endif
 		switch_set_state(&hdmi.hpd_switch, 0);
 		hdmi_inform_hpd_to_cec(false);
 		if (dssdev->state == OMAP_DSS_DISPLAY_ACTIVE) {
@@ -379,18 +337,13 @@ static void hdmi_hotplug_detect_worker(struct work_struct *work)
 					dssdev->panel.monspecs.max_y * 10000;
 			hdmi_inform_hpd_to_cec(true);
 			switch_set_state(&hdmi.hpd_switch, 1);
-#ifdef CONFIG_OMAP_HDMI_AUDIO_CH_EVENT
-			hdmi_send_audio_info(1);
-#endif
 			goto done;
-		} else if (state == HPD_STATE_EDID_TRYLAST) {
-			pr_info("EDID read fail after %d times. Giving up",
-						state - HPD_STATE_START);
+		} else if (state == HPD_STATE_EDID_TRYLAST){
+			pr_info("Failed to read EDID after %d times. Giving up.", state - HPD_STATE_START);
 			goto done;
 		}
 		if (atomic_add_unless(&d->state, 1, HPD_STATE_OFF))
-			queue_delayed_work(my_workq, &d->dwork,
-							msecs_to_jiffies(60));
+			queue_delayed_work(my_workq, &d->dwork, msecs_to_jiffies(60));
 	}
 done:
 	mutex_unlock(&hdmi.hdmi_lock);
@@ -400,8 +353,7 @@ int hdmi_panel_hpd_handler(int hpd)
 {
 	__cancel_delayed_work(&hpd_work.dwork);
 	atomic_set(&hpd_work.state, hpd ? HPD_STATE_START : HPD_STATE_OFF);
-	queue_delayed_work(my_workq, &hpd_work.dwork,
-					msecs_to_jiffies(hpd ? 40 : 30));
+	queue_delayed_work(my_workq, &hpd_work.dwork, msecs_to_jiffies(hpd ? 40 : 30));
 	return 0;
 }
 

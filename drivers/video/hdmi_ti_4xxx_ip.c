@@ -314,9 +314,9 @@ static int hdmi_wait_for_audio_stop(struct hdmi_ip_data *ip_data)
 	while (REG_GET(hdmi_wp_base(ip_data),
 		       HDMI_WP_AUDIO_CTRL, 31, 31) != 0) {
 		msleep(100);
-		if (count++ > 20) {
+		if (count++ > 100) {
 			pr_err("Audio is not turned off "
-			       "even after 2 seconds\n");
+			       "even after 10 seconds\n");
 			return -ETIMEDOUT;
 		}
 	}
@@ -450,7 +450,6 @@ int hdmi_ti_4xxx_phy_init(struct hdmi_ip_data *ip_data, int phy)
 
 	return 0;
 }
-EXPORT_SYMBOL(hdmi_ti_4xxx_phy_init);
 
 void hdmi_ti_4xxx_phy_off(struct hdmi_ip_data *ip_data,
 			enum hdmi_pwrchg_reasons reason)
@@ -458,6 +457,7 @@ void hdmi_ti_4xxx_phy_off(struct hdmi_ip_data *ip_data,
 	hdmi_lib_stop_acr_wa();
 	hdmi_set_phy_pwr(ip_data, HDMI_PHYPWRCMD_OFF, reason);
 }
+EXPORT_SYMBOL(hdmi_ti_4xxx_phy_init);
 EXPORT_SYMBOL(hdmi_ti_4xxx_phy_off);
 
 static int hdmi_core_ddc_edid(struct hdmi_ip_data *ip_data,
@@ -475,7 +475,7 @@ static int hdmi_core_ddc_edid(struct hdmi_ip_data *ip_data,
 	 * right shifted values( The behavior is not consistent and seen only
 	 * with some TV's)
 	 */
-	msleep(100);
+	msleep(300);
 
 	if (!ext) {
 		/* Clk SCL Devices */
@@ -1072,18 +1072,15 @@ void hdmi_ti_4xxx_basic_configure(struct hdmi_ip_data *ip_data,
 		pr_debug("infoframe avi full range\n");
 		REG_FLD_MOD(hdmi_core_sys_base(ip_data),
 				HDMI_CORE_SYS_VID_MODE, 1, 4, 4);
-		REG_FLD_MOD(hdmi_core_sys_base(ip_data),
-				HDMI_CORE_SYS_VID_ACEN, 0, 1, 1);
+		avi_cfg.db3_q_range = HDMI_INFOFRAME_AVI_DB3Q_FR;
 	} else {
 		/* setting for LIMITED RANGE MODE */
 		pr_debug("infoframe avi limited range\n");
 		REG_FLD_MOD(hdmi_core_sys_base(ip_data),
 				HDMI_CORE_SYS_VID_ACEN, 1, 1, 1);
-		REG_FLD_MOD(hdmi_core_sys_base(ip_data),
-				HDMI_CORE_SYS_VID_MODE, 0, 4, 4);
+		avi_cfg.db3_q_range = HDMI_INFOFRAME_AVI_DB3Q_LR;
 	}
 
-	avi_cfg.db3_q_range = HDMI_INFOFRAME_AVI_DB3Q_DEFAULT;
 	avi_cfg.db3_nup_scaling = HDMI_INFOFRAME_AVI_DB3SC_NO;
 	avi_cfg.db4_videocode = cfg->cm.code;
 	avi_cfg.db5_pixel_repeat = HDMI_INFOFRAME_AVI_DB5PR_NO;
@@ -1491,8 +1488,6 @@ void hdmi_ti_4xxx_core_audio_config(struct hdmi_ip_data *ip_data,
 	r = FLD_MOD(r, cfg->i2s_cfg.shift, 0, 0);
 	hdmi_write_reg(hdmi_av_base(ip_data), HDMI_CORE_AV_I2S_IN_CTRL, r);
 
-	hdmi_write_reg(hdmi_av_base(ip_data), HDMI_CORE_AV_SWAP_I2S, 0x29);
-
 	r = hdmi_read_reg(hdmi_av_base(ip_data), HDMI_CORE_AV_I2S_CHST5);
 	r = FLD_MOD(r, cfg->freq_sample, 7, 4);
 	r = FLD_MOD(r, cfg->i2s_cfg.word_length, 3, 1);
@@ -1598,8 +1593,9 @@ int hdmi_ti_4xx_check_aksv_data(struct hdmi_ip_data *ip_data)
 		/* Count number of zero / one */
 		for (j = 0; j < 8; j++)
 			(aksv_data[i] & (0x01 << j)) ? one++ : zero++;
-		pr_info("%x ", aksv_data[i] & 0xFF);
+		pr_debug("%x ", aksv_data[i] & 0xFF);
 	}
+
 	if (one != zero)
 		pr_warn("HDCP: invalid AKSV\n");
 
@@ -1607,6 +1603,7 @@ int hdmi_ti_4xx_check_aksv_data(struct hdmi_ip_data *ip_data)
 		(one == 0) ? HDMI_AKSV_ZERO : HDMI_AKSV_ERROR;
 
 	return ret;
+
 }
 EXPORT_SYMBOL(hdmi_ti_4xx_check_aksv_data);
 

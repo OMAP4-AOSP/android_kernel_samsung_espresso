@@ -508,7 +508,7 @@ static void hdcp_start_frame_cb(void)
 
 	hdcp.hpd_low = 0;
 	hdcp.pending_disable = 0;
-	hdcp.retry_cnt = HDCP_INFINITE_REAUTH;
+	hdcp.retry_cnt = hdcp.en_ctrl->nb_retry;
 	hdcp.pending_start = hdcp_submit_work(HDCP_START_FRAME_EVENT,
 							HDCP_ENABLE_DELAY);
 }
@@ -613,12 +613,9 @@ static long hdcp_enable_ctl(void __user *argp)
 		return -EFAULT;
 	}
 
-	hdcp.hdcp_keys_loaded = true;
-
 	/* Post event to workqueue */
 	if (hdcp_submit_work(HDCP_ENABLE_CTL, 0) == 0)
 		return -EFAULT;
-
 
 	return 0;
 }
@@ -878,6 +875,53 @@ static struct file_operations hdcp_fops = {
 
 struct miscdevice mdev;
 
+static void hdcp_load_keys_cb(const struct firmware *fw, void *context)
+{
+	struct hdcp_enable_control *en_ctrl;
+
+	if (!fw) {
+		pr_err("HDCP: failed to load keys\n");
+		return;
+	}
+
+	if (fw->size != sizeof(en_ctrl->key)) {
+		pr_err("HDCP: encrypted key file wrong size %d\n", fw->size);
+		return;
+	}
+
+	en_ctrl = kmalloc(sizeof(*en_ctrl), GFP_KERNEL);
+	if (!en_ctrl) {
+		pr_err("HDCP: can't allocated space for keys\n");
+		return;
+	}
+
+	memcpy(en_ctrl->key, fw->data, sizeof(en_ctrl->key));
+	en_ctrl->nb_retry = 20;
+
+	hdcp.en_ctrl = en_ctrl;
+	hdcp.retry_cnt = hdcp.en_ctrl->nb_retry;
+	hdcp.hdcp_state = HDCP_ENABLE_PENDING;
+	hdcp.hdcp_keys_loaded = true;
+	pr_info("HDCP: loaded keys\n");
+}
+
+static int hdcp_load_keys(void)
+{
+	int ret;
+
+	ret = request_firmware_nowait(THIS_MODULE, FW_ACTION_HOTPLUG,
+				      "hdcp.keys", mdev.this_device, GFP_KERNEL,
+				      &hdcp, hdcp_load_keys_cb);
+	if (ret < 0) {
+		pr_err("HDCP: request_firmware_nowait failed: %d\n", ret);
+		hdcp.hdcp_keys_loaded = false;
+		return ret;
+	}
+
+	return 0;
+}
+
+
 /*-----------------------------------------------------------------------------
  * Function: hdcp_init
  *-----------------------------------------------------------------------------
@@ -951,13 +995,12 @@ static int __init hdcp_init(void)
 
 	mutex_unlock(&hdcp.lock);
 
-	hdcp.hdcp_keys_loaded = false;
+	hdcp_load_keys();
+
 	return 0;
 
 err_add_driver:
 	misc_deregister(&mdev);
-
-	mutex_unlock(&hdcp.lock);
 
 err_register:
 	mutex_destroy(&hdcp.lock);
