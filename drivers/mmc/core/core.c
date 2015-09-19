@@ -1575,7 +1575,7 @@ static int mmc_do_erase(struct mmc_card *card, unsigned int from,
 			goto out;
 		}
 	} while (!(cmd.resp[0] & R1_READY_FOR_DATA) ||
-		R1_CURRENT_STATE(cmd.resp[0]) == R1_STATE_PRG);
+		 R1_CURRENT_STATE(cmd.resp[0]) == 7);
 out:
 	return err;
 }
