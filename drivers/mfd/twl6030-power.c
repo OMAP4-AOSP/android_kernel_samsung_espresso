@@ -91,58 +91,6 @@ static __initdata struct twl6030_resource_map twl6030_res_map[] = {
 };
 
 /* list of all s/w modifiable resources in TWL6032 */
-static __initdata struct twl6030_resource_map twl6034_res_map[] = {
-	/* PREQx_RES_ASS_A register resources */
-	TWL6032_RES_DATA(RES_SMPS4, "SMPS4", 0, DEV_GRP_P1, BIT(3)),
-	TWL6032_RES_DATA(RES_SMPS3, "SMPS3", 0, DEV_GRP_P1, BIT(2)),
-
-	/* PREQx_RES_ASS_B register resources */
-	TWL6032_RES_DATA(RES_LDOLN, "LDOLN", 1, DEV_GRP_P1, BIT(7)),
-	TWL6032_RES_DATA(RES_LDO7, "LDO7", 1, DEV_GRP_P1, BIT(6)),
-	TWL6032_RES_DATA(RES_LDO6, "LDO6", 1, DEV_GRP_P1, BIT(5)),
-	TWL6032_RES_DATA(RES_LDO5, "LDO5", 1, DEV_GRP_P1, BIT(4)),
-	TWL6032_RES_DATA(RES_LDO4, "LDO4", 1, DEV_GRP_P1, BIT(3)),
-	TWL6032_RES_DATA(RES_LDO3, "LDO3", 1, DEV_GRP_P1, BIT(2)),
-	TWL6032_RES_DATA(RES_LDO2, "LDO2", 1, DEV_GRP_P1, BIT(1)),
-	TWL6032_RES_DATA(RES_LDO1, "LDO1", 1, DEV_GRP_P1, BIT(0)),
-
-	/* PREQx_RES_ASS_C register resources */
-	TWL6032_RES_DATA(RES_VSYSMIN_HI, "VSYSMIN_HI", 2, DEV_GRP_P1, BIT(5)),
-	TWL6032_RES_DATA(RES_32KCLKG, "32KCLKG", 2, DEV_GRP_P1, BIT(4)),
-	TWL6032_RES_DATA(RES_32KCLKAUDIO, "32KCLKAUDIO", 2, DEV_GRP_P1, BIT(3)),
-	TWL6032_RES_DATA(RES_SYSEN, "SYSEN", 2, DEV_GRP_P1, BIT(2)),
-	TWL6032_RES_DATA(RES_REGEN2, "REGEN2", 2, DEV_GRP_P1, BIT(1)),
-	TWL6032_RES_DATA(RES_REGEN, "REGEN1", 2, DEV_GRP_P1, BIT(0)),
-
-
-	/* PREQx_RES_ASS_D register resources */
-	TWL6032_RES_DATA(RES_LDOn15, "LDOn15", 4, DEV_GRP_P1, BIT(7)),
-	TWL6032_RES_DATA(RES_LDOn14, "LDOn14", 4, DEV_GRP_P1, BIT(6)),
-	TWL6032_RES_DATA(RES_LDOn13, "LDOn13", 4, DEV_GRP_P1, BIT(5)),
-	TWL6032_RES_DATA(RES_LDOn12, "LDOn12", 4, DEV_GRP_P1, BIT(4)),
-	TWL6032_RES_DATA(RES_SMPS10, "SMPS10", 4, DEV_GRP_P1, BIT(3)),
-	TWL6032_RES_DATA(RES_SMPS9, "SMPS9", 4, DEV_GRP_P1, BIT(2)),
-	TWL6032_RES_DATA(RES_SMPS8, "SMPS8", 4, DEV_GRP_P1, BIT(1)),
-	TWL6032_RES_DATA(RES_SMPS7, "SMPS7", 4, DEV_GRP_P1, BIT(0)),
-
-	/* PREQx_RES_ASS_E register resources */
-	TWL6032_RES_DATA(RES_LDOn23, "LDON23", 5, DEV_GRP_P1, BIT(7)),
-	TWL6032_RES_DATA(RES_LDOn22, "LDON22", 5, DEV_GRP_P1, BIT(6)),
-	TWL6032_RES_DATA(RES_LDOn21, "LDON21", 5, DEV_GRP_P1, BIT(5)),
-	TWL6032_RES_DATA(RES_LDOn20, "LDON20", 5, DEV_GRP_P1, BIT(4)),
-	TWL6032_RES_DATA(RES_LDOn19, "LDON19", 5, DEV_GRP_P1, BIT(3)),
-	TWL6032_RES_DATA(RES_LDOn18, "LDON18", 5, DEV_GRP_P1, BIT(2)),
-	TWL6032_RES_DATA(RES_LDOn17, "LDON17", 5, DEV_GRP_P1, BIT(1)),
-	TWL6032_RES_DATA(RES_LDOn16, "LDON16", 5, DEV_GRP_P1, BIT(0)),
-
-	/* PREQx_RES_ASS_F register resources */
-	TWL6032_RES_DATA(RES_LDOn28, "LDON28", 6, DEV_GRP_P1, BIT(4)),
-	TWL6032_RES_DATA(RES_LDOn27, "LDON27", 6, DEV_GRP_P1, BIT(3)),
-	TWL6032_RES_DATA(RES_LDOn26, "LDON26", 6, DEV_GRP_P1, BIT(2)),
-	TWL6032_RES_DATA(RES_LDOn25, "LDON25", 6, DEV_GRP_P1, BIT(1)),
-	TWL6032_RES_DATA(RES_LDOn24, "LDON24", 6, DEV_GRP_P1, BIT(0)),
-};
-
 static __initdata struct twl6030_resource_map twl6032_res_map[] = {
 	/* PREQx_RES_ASS_A register resources */
 	TWL6032_RES_DATA(RES_SMPS4, "SMPS4", 0, DEV_GRP_P1, BIT(3)),
@@ -156,7 +104,6 @@ static __initdata struct twl6030_resource_map twl6032_res_map[] = {
 	TWL6032_RES_DATA(RES_LDO3, "LDO3", 1, DEV_GRP_P1, BIT(2)),
 	TWL6032_RES_DATA(RES_LDO2, "LDO2", 1, DEV_GRP_P1, BIT(1)),
 	TWL6032_RES_DATA(RES_LDO1, "LDO1", 1, DEV_GRP_P1, BIT(0)),
-
 	/* PREQx_RES_ASS_C register resources */
 	TWL6032_RES_DATA(RES_VSYSMIN_HI, "VSYSMIN_HI", 2, DEV_GRP_P1, BIT(5)),
 	TWL6032_RES_DATA(RES_32KCLKG, "32KCLKG", 2, DEV_GRP_P1, BIT(4)),
@@ -250,50 +197,30 @@ static __init void twl6030_program_map(unsigned long features)
 	int r, i;
 
 	if (features & TWL6032_SUBCLASS) {
-		/*
-		 * mask[0] : for i2c slave address.
-		 * mask[1]-mask[3] : PREQ1_RES_ASS_A - PREQ1_RES_ASS_C
-		 * mask[4] : for i2c slave address.
-		 * mask[5]-mask[7] : PREQ2_RES_ASS_D - PREQ2_RES_ASS_F
+		/**
+		 * mask[0] = 0 for twl_i2c_write
+		 * mask[1]-mask[3]: PREQ1_RES_ASS_A - PREQ1_RES_ASS_C
+		 * mask[4]-mask[6]: PREQ2_RES_ASS_A - PREQ2_RES_ASS_C
+		 * mask[7]-mask[9]: PREQ3_RES_ASS_A - PREQ3_RES_ASS_C
 		 */
 		u8 mask[10];
-		int res_cnt;
 
-		if (features & TWL6034_SUBCLASS) {
-			res = twl6034_res_map;
-			res_cnt = ARRAY_SIZE(twl6034_res_map);
-		} else {
-			res = twl6032_res_map;
-			res_cnt = ARRAY_SIZE(twl6032_res_map);
-		}
-
+		res = twl6032_res_map;
 		memset(&mask[0], 0, 10);
 
-		for (i = 0; i < res_cnt; i++) {
+		for (i = 0; i < ARRAY_SIZE(twl6032_res_map); i++) {
 			/* map back from generic device id to TWL6032 mask */
-			 mask[DEV_GRP_P1_OFFSET + res->base_addr] |= \
+			mask[DEV_GRP_P1_OFFSET + res->base_addr] |= \
 				(res->group & DEV_GRP_P1) ? res->mask : 0;
-
-			if (!(features & TWL6034_SUBCLASS)) {
-				mask[DEV_GRP_P2_OFFSET + res->base_addr] |= \
+			mask[DEV_GRP_P2_OFFSET + res->base_addr] |= \
 				(res->group & DEV_GRP_P2) ? res->mask : 0;
-				mask[DEV_GRP_P3_OFFSET + res->base_addr] |= \
+			mask[DEV_GRP_P3_OFFSET + res->base_addr] |= \
 				(res->group & DEV_GRP_P3) ? res->mask : 0;
-			 }
-
 			res++;
 		}
 
-
-		if (features & TWL6034_SUBCLASS)  {
-			r |= twl_i2c_write(TWL6030_MODULE_ID0, &mask[0],
-					TWL6032_PREQ1_RES_ASS_A, 3);
-			r |= twl_i2c_write(TWL6030_MODULE_ID0, &mask[4],
-					TWL6034_PREQ1_RES_ASS_D, 3);
-		} else {
-			r = twl_i2c_write(TWL6030_MODULE_ID0, &mask[0],
-					TWL6032_PREQ1_RES_ASS_A, 9);
-		}
+		r = twl_i2c_write(TWL6030_MODULE_ID0, &mask[0],
+			TWL6032_PREQ1_RES_ASS_A, 9);
 
 		if (r)
 			pr_err("%s: Error(%d) programming TWL6032 PREQ "
@@ -319,8 +246,6 @@ static __init void twl6030_program_map(unsigned long features)
 			res++;
 		}
 	}
-
-	return;
 }
 
 static __init void twl6030_update_system_map
@@ -349,10 +274,7 @@ static __init void twl6030_update_map(struct twl4030_resconfig *res_list, \
 	struct twl6030_resource_map *cur_twl6030_res = twl6030_res_map;
 	int twl6030_res_cnt = ARRAY_SIZE(twl6030_res_map);
 
-	if (features & TWL6034_SUBCLASS) {
-		cur_twl6030_res = twl6034_res_map;
-		twl6030_res_cnt = ARRAY_SIZE(twl6034_res_map);
-	} else if (features & TWL6032_SUBCLASS) {
+	if (features & TWL6032_SUBCLASS) {
 		cur_twl6030_res = twl6032_res_map;
 		twl6030_res_cnt = ARRAY_SIZE(twl6032_res_map);
 	}

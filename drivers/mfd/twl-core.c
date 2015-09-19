@@ -139,7 +139,7 @@
 
 /* Last - for index max*/
 #define TWL4030_MODULE_LAST		TWL4030_MODULE_SECURED_REG
-#define TWL6030_MODULE_LAST		TWL6034_MODULE_LDO2
+#define TWL6030_MODULE_LAST		TWL6030_MODULE_SLAVE_RES
 
 #define TWL_NUM_SLAVES		4
 
@@ -221,7 +221,6 @@
 #define TWL6030_BASEADD_PIH		0x00D0
 #define TWL6030_BASEADD_CHARGER		0x00E0
 #define TWL6032_BASEADD_CHARGER		0x00DA
-#define TWL6034_BASEADD_LDO2		0x0040
 
 /* subchip/slave 2 0x4A - DFT */
 #define TWL6030_BASEADD_DIEID		0x00C0
@@ -246,6 +245,7 @@
 #define TWL4030_VAUX2		BIT(0)	/* pre-5030 voltage ranges */
 #define TPS_SUBSET		BIT(1)	/* tps659[23]0 have fewer LDOs */
 #define TWL5031			BIT(2)  /* twl5031 has different registers */
+#define TWL6030_CLASS		BIT(3)	/* TWL6030 class */
 
 /* need to access USB_PRODUCT_ID_LSB to identify which 6030 varient we are */
 #define USB_PRODUCT_ID_LSB	0x02
@@ -370,7 +370,6 @@ static struct twl_mapping twl6030_map[] = {
 	{ SUB_CHIP_ID0, TWL6030_BASEADD_MEM },
 	{ SUB_CHIP_ID1, TWL6032_BASEADD_CHARGER },
 	{ SUB_CHIP_ID0, TWL6030_BASEADD_PM_SLAVE_RES },
-	{ SUB_CHIP_ID1, TWL6034_BASEADD_LDO2},
 };
 
 /*----------------------------------------------------------------------*/
@@ -709,7 +708,7 @@ add_children(struct twl4030_platform_data *pdata, unsigned long features,
 		if (IS_ERR(child))
 			return PTR_ERR(child);
 	}
-	if (twl_has_bci() && pdata->bci && !(features & TWL6034_SUBCLASS)) {
+	if (twl_has_bci() && pdata->bci) {
 		pdata->bci->features = features;
 		pdata->bci->errata = errata;
 		child = add_child(1, "twl6030_bci",
@@ -815,8 +814,7 @@ add_children(struct twl4030_platform_data *pdata, unsigned long features,
 			usb3v1.dev = child;
 		}
 	}
-	if (twl_has_usb() && pdata->usb && twl_class_is_6030()
-		&& !(features & TWL6034_SUBCLASS)) {
+	if (twl_has_usb() && pdata->usb && twl_class_is_6030()) {
 
 		static struct regulator_consumer_supply usb3v3;
 		int regulator;
@@ -855,8 +853,7 @@ add_children(struct twl4030_platform_data *pdata, unsigned long features,
 		/* we need to connect regulators to this transceiver */
 		if (twl_has_regulator() && child)
 			usb3v3.dev = child;
-	} else if (twl_has_regulator() && twl_class_is_6030() &
-			!(features & TWL6034_SUBCLASS)) {
+	} else if (twl_has_regulator() && twl_class_is_6030()) {
 		if (features & TWL6032_SUBCLASS)
 			child = add_regulator(TWL6032_REG_LDOUSB,
 						pdata->ldousb, features);
@@ -1065,7 +1062,6 @@ add_children(struct twl4030_platform_data *pdata, unsigned long features,
 		if (IS_ERR(child))
 			return PTR_ERR(child);
 
-
 		child = add_regulator(TWL6030_REG_VMEM, pdata->vmem,
 					features);
 		if (IS_ERR(child))
@@ -1107,7 +1103,7 @@ add_children(struct twl4030_platform_data *pdata, unsigned long features,
 
 	/* twl6032 smps */
 	if (twl_has_regulator() && twl_class_is_6030() &&
-		(features & (TWL6032_SUBCLASS | TWL6034_SUBCLASS))) {
+		(features & (TWL6032_SUBCLASS))) {
 		child = add_regulator(TWL6032_REG_SMPS3, pdata->smps3,
 					features);
 		if (IS_ERR(child))
@@ -1124,33 +1120,9 @@ add_children(struct twl4030_platform_data *pdata, unsigned long features,
 			return PTR_ERR(child);
 	}
 
-	/* twl6034 smps */
-	if (twl_has_regulator() && twl_class_is_6030() &&
-	    (features & TWL6032_SUBCLASS) && (features & TWL6034_SUBCLASS)) {
-		child = add_regulator(TWL6034_REG_SMPSN7, pdata->smps7,
-					features);
-		if (IS_ERR(child))
-			return PTR_ERR(child);
-
-		child = add_regulator(TWL6034_REG_SMPSN8, pdata->smps8,
-					features);
-		if (IS_ERR(child))
-			return PTR_ERR(child);
-
-		child = add_regulator(TWL6034_REG_SMPSN9, pdata->smps9,
-					features);
-		if (IS_ERR(child))
-			return PTR_ERR(child);
-
-		child = add_regulator(TWL6034_REG_SMPSN10, pdata->smps10,
-					features);
-		if (IS_ERR(child))
-			return PTR_ERR(child);
-	}
-
 	/* twl6032 regulators */
 	if (twl_has_regulator() && twl_class_is_6030() &&
-			(features & (TWL6032_SUBCLASS | TWL6034_SUBCLASS))) {
+			(features & TWL6032_SUBCLASS)) {
 		child = add_regulator(TWL6032_REG_LDO5, pdata->ldo5,
 					features);
 		if (IS_ERR(child))
@@ -1187,95 +1159,6 @@ add_children(struct twl4030_platform_data *pdata, unsigned long features,
 			return PTR_ERR(child);
 
 		child = add_regulator(TWL6032_REG_LDO3, pdata->ldo3,
-					features);
-		if (IS_ERR(child))
-			return PTR_ERR(child);
-	}
-
-	/* twl6034 regulators */
-	if (twl_has_regulator() && twl_class_is_6030() &&
-	    (features & TWL6032_SUBCLASS) && (features & TWL6034_SUBCLASS)) {
-		child = add_regulator(TWL6034_REG_LDON12, pdata->ldo12,
-					features);
-		if (IS_ERR(child))
-			return PTR_ERR(child);
-
-		child = add_regulator(TWL6034_REG_LDON13, pdata->ldo13,
-					features);
-		if (IS_ERR(child))
-			return PTR_ERR(child);
-
-		child = add_regulator(TWL6034_REG_LDON14, pdata->ldo14,
-					features);
-		if (IS_ERR(child))
-			return PTR_ERR(child);
-
-		child = add_regulator(TWL6034_REG_LDON15, pdata->ldo15,
-					features);
-		if (IS_ERR(child))
-			return PTR_ERR(child);
-
-		child = add_regulator(TWL6034_REG_LDON16, pdata->ldo16,
-					features);
-		if (IS_ERR(child))
-			return PTR_ERR(child);
-
-		child = add_regulator(TWL6034_REG_LDON17, pdata->ldo17,
-					features);
-		if (IS_ERR(child))
-			return PTR_ERR(child);
-
-		child = add_regulator(TWL6034_REG_LDON18, pdata->ldo18,
-					features);
-		if (IS_ERR(child))
-			return PTR_ERR(child);
-
-		child = add_regulator(TWL6034_REG_LDON19, pdata->ldo19,
-					features);
-		if (IS_ERR(child))
-			return PTR_ERR(child);
-
-		child = add_regulator(TWL6034_REG_LDON20, pdata->ldo20,
-					features);
-		if (IS_ERR(child))
-			return PTR_ERR(child);
-
-		child = add_regulator(TWL6034_REG_LDON21, pdata->ldo21,
-					features);
-		if (IS_ERR(child))
-			return PTR_ERR(child);
-
-		child = add_regulator(TWL6034_REG_LDON22, pdata->ldo22,
-					features);
-		if (IS_ERR(child))
-			return PTR_ERR(child);
-
-		child = add_regulator(TWL6034_REG_LDON23, pdata->ldo23,
-					features);
-		if (IS_ERR(child))
-			return PTR_ERR(child);
-
-		child = add_regulator(TWL6034_REG_LDON24, pdata->ldo24,
-					features);
-		if (IS_ERR(child))
-			return PTR_ERR(child);
-
-		child = add_regulator(TWL6034_REG_LDON25, pdata->ldo25,
-					features);
-		if (IS_ERR(child))
-			return PTR_ERR(child);
-
-		child = add_regulator(TWL6034_REG_LDON26, pdata->ldo26,
-					features);
-		if (IS_ERR(child))
-			return PTR_ERR(child);
-
-		child = add_regulator(TWL6034_REG_LDON27, pdata->ldo27,
-					features);
-		if (IS_ERR(child))
-			return PTR_ERR(child);
-
-		child = add_regulator(TWL6034_REG_LDON28, pdata->ldo28,
 					features);
 		if (IS_ERR(child))
 			return PTR_ERR(child);
@@ -1577,7 +1460,6 @@ static const struct i2c_device_id twl_ids[] = {
 	{ "tps65920", TPS_SUBSET },	/* fewer LDOs; no codec or charger */
 	{ "twl6030", TWL6030_CLASS },	/* "Phoenix power chip" */
 	{ "twl6032", TWL6030_CLASS | TWL6032_SUBCLASS }, /* Phoenix lite */
-	{ "twl6034", TWL6030_CLASS | TWL6032_SUBCLASS | TWL6034_SUBCLASS },
 	{ /* end of list */ },
 };
 MODULE_DEVICE_TABLE(i2c, twl_ids);

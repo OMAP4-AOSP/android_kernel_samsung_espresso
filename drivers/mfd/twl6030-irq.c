@@ -54,8 +54,6 @@
  *
  */
 
-static unsigned long twl603x_features;
-
 static int twl6030_interrupt_mapping_table[24] = {
 	PWR_INTR_OFFSET,	/* Bit 0	PWRON			*/
 	PWR_INTR_OFFSET,	/* Bit 1	RPWRON			*/
@@ -240,7 +238,9 @@ static irqreturn_t handle_twl6030_vlow(int irq, void *unused)
 	       2300 + (vbatmin_hi_threshold - 0b110) * 50);
 
 #if 1 /* temporary */
-	WARN_ON_ONCE(1);
+	pr_err("%s: disabling BAT_VLOW interrupt\n", __func__);
+	disable_irq_nosync(twl6030_irq_base + TWL_VLOW_INTR_OFFSET);
+	WARN_ON(1);
 #else
 	pr_emerg("handle_twl6030_vlow: kernel_power_off()\n");
 	kernel_power_off();
@@ -351,9 +351,9 @@ int twl6030_mmc_card_detect_config(void)
 	ret = twl_i2c_write_u8(TWL6030_MODULE_ID0,
 			(MMC_MINS_DEB_MASK | MMC_MEXT_DEB_MASK),
 			TWL6030_MMCDEBOUNCING);
-	if (ret < 0) {
-		pr_err("twl16030: Failed to write MMC_MEXT_DEB_MASK %d\n",
-								ret);
+	if (ret < 0){
+		pr_err("twl6030: Failed to write MMC_MEXT_DEB_MASK %d\n",
+									ret);
 		return ret;
 	}
 
@@ -365,8 +365,6 @@ int twl6030_mmc_card_detect(struct device *dev, int slot)
 {
 	int ret = -EIO;
 	u8 read_reg = 0;
-	u8 read_reg_addr = TWL6030_MMCCTRL;
-
 	struct platform_device *pdev = to_platform_device(dev);
 
 	if (pdev->id) {
@@ -376,16 +374,12 @@ int twl6030_mmc_card_detect(struct device *dev, int slot)
 		pr_err("Unknown MMC controller %d in %s\n", pdev->id, __func__);
 		return ret;
 	}
-
-	if (twl603x_features & TWL6034_SUBCLASS)
-		read_reg_addr = TWL6034_MMCCTRL;
-
 	/*
 	 * BIT0 of MMC_CTRL on TWL6030 provides card status for MMC1
 	 * 0 - Card not present ,1 - Card present
 	 */
 	ret = twl_i2c_read_u8(TWL6030_MODULE_ID0, &read_reg,
-						read_reg_addr);
+						TWL6030_MMCCTRL);
 	if (ret >= 0)
 		ret = read_reg & STS_MMC;
 	return ret;
@@ -459,7 +453,6 @@ int twl6030_vlow_init(int vlow_irq)
 	return 0;
 }
 
-
 int twl6030_init_irq(int irq_num, unsigned irq_base, unsigned irq_end,
 			unsigned long features)
 {
@@ -470,12 +463,8 @@ int twl6030_init_irq(int irq_num, unsigned irq_base, unsigned irq_end,
 
 	static struct irq_chip	twl6030_irq_chip;
 
-	twl603x_features = features;
-
 	if (features & TWL6032_SUBCLASS)
 		twl6030_interrupt_mapping = twl6032_interrupt_mapping_table;
-
-
 
 	mask[1] = 0xFF;
 	mask[2] = 0xFF;
