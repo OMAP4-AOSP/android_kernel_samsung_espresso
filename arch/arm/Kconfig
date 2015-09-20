@@ -1038,10 +1038,6 @@ config ARM_TIMER_SP804
 
 source arch/arm/mm/Kconfig
 
-config ARM_PLD_SIZE_SHIFT
-	int "Data Pre-Load size shift (5 => 32, 6 => 64)"
-	default 5
-
 config IWMMXT
 	bool "Enable iWMMXt support"
 	depends on CPU_XSCALE || CPU_XSC3 || CPU_MOHAWK || CPU_PJ4
