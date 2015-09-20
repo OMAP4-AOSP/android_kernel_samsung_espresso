@@ -117,10 +117,8 @@
 #define twl_has_watchdog()        false
 #endif
 
-#if defined(CONFIG_TWL4030_CODEC) ||		\
-	defined(CONFIG_TWL4030_CODEC_MODULE) ||	\
-	defined(CONFIG_SND_SOC_TWL6040) ||	\
-	defined(CONFIG_SND_SOC_TWL6040_MODULE)
+#if defined(CONFIG_TWL4030_CODEC) || defined(CONFIG_TWL4030_CODEC_MODULE) ||\
+	defined(CONFIG_SND_SOC_TWL6040) || defined(CONFIG_SND_SOC_TWL6040_MODULE)
 #define twl_has_codec()	true
 #else
 #define twl_has_codec()	false
@@ -1165,8 +1163,7 @@ add_children(struct twl4030_platform_data *pdata, unsigned long features,
 	}
 
 	if (twl_has_bci() && pdata->bci &&
-		!(features & (TPS_SUBSET | TWL5031)) &&
-		(features & TWL6030_CLASS)) {
+			!(features & (TPS_SUBSET | TWL5031)) && (features & TWL6030_CLASS)) {
 		child = add_child(3, "twl4030_bci",
 				pdata->bci, sizeof(*pdata->bci), false,
 				/* irq0 = CHG_PRES, irq1 = BCI */

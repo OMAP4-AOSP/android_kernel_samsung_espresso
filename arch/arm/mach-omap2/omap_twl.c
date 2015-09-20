@@ -85,6 +85,7 @@
 
 /* Pull down control */
 #define TWL6030_REG_CFG_SMPS_PD		0xF6
+
 static bool is_offset_valid;
 static u8 smps_offset;
 /*
@@ -96,6 +97,7 @@ static bool __initdata twl_sr_enable_autoinit;
 #define TWL4030_DCDC_GLOBAL_CFG        0x06
 #define REG_SMPS_OFFSET         0xE0
 #define SMARTREFLEX_ENABLE     BIT(3)
+
 /**
  * struct twl_reg_setup_array - NULL terminated array giving configuration
  * @addr:	reg address to write to
@@ -451,6 +453,7 @@ static int __init twl_set_sr(struct voltagedomain *voltdm)
 		r = omap3_twl_set_sr_bit(true);
 	return r;
 }
+
 static int __init twl6030_set_offset(struct voltagedomain *voltdm)
 {
 	/*
@@ -588,6 +591,7 @@ static int __init twl_set_4460vcore(struct voltagedomain *voltdm)
 {
 	return _twl_set_regs("OMAP4460 ", omap4460_twl6030_setup);
 }
+
 #define OMAP3_TWL4030_USED	(CHIP_GE_OMAP3430ES2 |	\
 				CHIP_GE_OMAP3630ES1_1 |	\
 				CHIP_IS_OMAP3630ES1)
