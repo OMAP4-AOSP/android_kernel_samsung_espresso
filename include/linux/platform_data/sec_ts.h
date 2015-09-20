@@ -81,6 +81,5 @@ struct sec_ts_platform_data {
 	u32 gpio_sda;
 	void (*set_ta_mode)(int *);
 	void (*set_power)(bool);
-	void (*set_dvfs)(bool);
 };
 #endif

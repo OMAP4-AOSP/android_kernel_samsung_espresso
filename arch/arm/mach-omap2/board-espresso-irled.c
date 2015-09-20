@@ -16,7 +16,6 @@
 #include <linux/delay.h>
 #include <linux/gpio.h>
 #include <asm/mach-types.h>
-#include <mach/cpufreq_limits.h>
 
 #include "mux.h"
 #include "omap_muxtbl.h"
@@ -66,14 +65,6 @@ static void irled_work(struct work_struct *work)
 	unsigned int j;
 	int ret;
 
-	ret =
-	    omap_cpufreq_max_limit(DVFS_LOCK_ID_IR_LED, ir_data.cpu_frequency);
-	ret |=
-	    omap_cpufreq_min_limit(DVFS_LOCK_ID_IR_LED, ir_data.cpu_frequency);
-
-	if (unlikely(ret < 0))
-		pr_err("irled: failed to lock cpufreq\n");
-
 	gpio_direction_output(irled_gpios[GPIO_IRDA_EN].gpio, 1);
 
 	__udelay(1000);
@@ -121,9 +112,6 @@ static void irled_work(struct work_struct *work)
 	__udelay(off);
 
 	local_irq_enable();
-
-	omap_cpufreq_min_limit_free(DVFS_LOCK_ID_IR_LED);
-	omap_cpufreq_max_limit_free(DVFS_LOCK_ID_IR_LED);
 
 	gpio_direction_output(irled_gpios[GPIO_IRDA_EN].gpio, 0);
 }
