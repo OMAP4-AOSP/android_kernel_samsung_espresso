@@ -274,20 +274,6 @@ static void __cpuinit smp_store_cpu_info(unsigned int cpuid)
 }
 
 /*
- * Skip the secondary calibration on architectures sharing clock
- * with primary cpu. Archs can use ARCH_SKIP_SECONDARY_CALIBRATE
- * for this.
- */
-static inline int skip_secondary_calibrate(void)
-{
-#ifdef CONFIG_ARCH_SKIP_SECONDARY_CALIBRATE
-	return 0;
-#else
-	return -ENXIO;
-#endif
-}
-
-/*
  * This is the secondary CPU boot entry.  We're using this CPUs
  * idle thread stack, but a set of temporary page tables.
  */
@@ -296,6 +282,8 @@ asmlinkage void __cpuinit secondary_start_kernel(void)
 	struct mm_struct *mm = &init_mm;
 	unsigned int cpu = smp_processor_id();
 	static bool booted;
+
+	printk("CPU%u: Booted secondary processor\n", cpu);
 
 	/*
 	 * All kernel threads share the same mm context; grab a
@@ -308,8 +296,6 @@ asmlinkage void __cpuinit secondary_start_kernel(void)
 	enter_lazy_tlb(mm, current);
 	local_flush_tlb_all();
 
-	printk("CPU%u: Booted secondary processor\n", cpu);
-
 	cpu_init();
 	preempt_disable();
 	trace_hardirqs_off();
@@ -321,7 +307,7 @@ asmlinkage void __cpuinit secondary_start_kernel(void)
 
 	notify_cpu_starting(cpu);
 
-	if (!booted && skip_secondary_calibrate())
+	if (!booted)
 		calibrate_delay();
 	booted = true;
 
@@ -340,7 +326,6 @@ asmlinkage void __cpuinit secondary_start_kernel(void)
 	local_irq_enable();
 	local_fiq_enable();
 
-	printk(KERN_INFO"CPU%u: Booting Complete Secondary processor\n", cpu);
 	/*
 	 * OK, it's off to the idle thread for us
 	 */
