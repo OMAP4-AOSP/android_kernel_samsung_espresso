@@ -390,15 +390,6 @@ void omap4_espresso_tsp_ta_detect(int cable_type)
 
 void __init omap4_espresso_input_init(void)
 {
-	u32 boardtype = omap4_espresso_get_board_type();
-
-	if (boardtype == SEC_MACHINE_ESPRESSO_WIFI)
-		espresso_ts_pdata.model_name = "P3110";
-	else if (boardtype == SEC_MACHINE_ESPRESSO_USA_BBY)
-		espresso_ts_pdata.model_name = "P3113";
-	else
-		espresso_ts_pdata.model_name = "P3100";
-
 	espresso_gpio_keypad_gpio_init();
 	espresso_tsp_gpio_init();
 	espresso_ts_panel_setup();
