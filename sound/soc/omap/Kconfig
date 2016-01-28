@@ -203,8 +203,5 @@ config SND_OMAP_SOC_WM8994
 	help
 	  Say Y if you want to add support for SoC audio on omap4 + wm1811 board
 
-config SND_USE_SUB_MIC
-	bool "Use SUB_MIC"
-
 config SND_EAR_GND_SEL
 	bool "Use EAR_GND_SEL"
