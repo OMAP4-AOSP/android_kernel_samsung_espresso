@@ -149,7 +149,7 @@ static void tsp_set_power(bool on)
 
 		omap_mux_set_gpio(OMAP_PIN_INPUT | OMAP_MUX_MODE3,
 			tsp_gpios[GPIO_TOUCH_nINT].gpio);
-		if (espresso_is_espresso10()) msleep(300);
+		if (board_is_espresso10()) msleep(300);
 	} else {
 		pr_debug("tsp: power off.\n");
 		gpio_set_value(tsp_gpios[GPIO_TOUCH_EN].gpio, 0);
@@ -164,7 +164,7 @@ static void tsp_set_power(bool on)
 
 		omap_mux_set_gpio(OMAP_PIN_INPUT | OMAP_MUX_MODE3,
 			tsp_gpios[GPIO_TOUCH_nINT].gpio);
-		if (espresso_is_espresso10()) msleep(50);
+		if (board_is_espresso10()) msleep(50);
 	}
 	return;
 }
@@ -301,7 +301,7 @@ static void __init espresso_tsp_gpio_init(void)
 		tsp_gpios[i].gpio =
 			omap_muxtbl_get_gpio_by_name(tsp_gpios[i].label);
 
-	if (espresso_is_espresso10())
+	if (board_is_espresso10())
 		tsp_gpios[GPIO_TOUCH_EN].flags = GPIOF_DIR_OUT;
 
 	gpio_request_array(tsp_gpios, ARRAY_SIZE(tsp_gpios));
@@ -309,7 +309,7 @@ static void __init espresso_tsp_gpio_init(void)
 	espresso_i2c3_boardinfo[0].irq =
 				gpio_to_irq(tsp_gpios[GPIO_TOUCH_nINT].gpio);
 
-	if (espresso_is_espresso10()) {
+	if (board_is_espresso10()) {
 		espresso_ts_pdata.gpio_en = tsp_gpios[GPIO_TOUCH_EN].gpio;
 		espresso10_i2c3_boardinfo[0].irq =
 				gpio_to_irq(tsp_gpios[GPIO_TOUCH_nINT].gpio);
@@ -348,7 +348,7 @@ static void __init espresso_ts_panel_setup(void)
 	for (i = 0; i < ARRAY_SIZE(ts_panel_gpios); i++)
 		panel_id |= gpio_get_value(ts_panel_gpios[i].gpio) << i;
 
-	if (espresso_is_espresso10()) {
+	if (board_is_espresso10()) {
 		espresso_ts_pdata.fw_name = "synaptics/p5100.fw";
 		espresso_ts_pdata.fw_info = &espresso10_tsp_fw_info,
 		espresso_ts_pdata.rx_channel_no	= 42,
@@ -364,7 +364,7 @@ static void __init espresso_ts_panel_setup(void)
 
 void omap4_espresso_tsp_ta_detect(int cable_type)
 {
-	if (espresso_is_espresso10()) {
+	if (board_is_espresso10()) {
 		switch (cable_type) {
 		case CABLE_TYPE_AC:
 			espresso_ts_pdata.ta_state = CABLE_TA;
@@ -394,7 +394,7 @@ void __init omap4_espresso_input_init(void)
 	espresso_tsp_gpio_init();
 	espresso_ts_panel_setup();
 
-	if (!espresso_is_espresso10()) {
+	if (!board_is_espresso10()) {
 		i2c_register_board_info(3, espresso_i2c3_boardinfo,
 				ARRAY_SIZE(espresso_i2c3_boardinfo));
 	} else {
