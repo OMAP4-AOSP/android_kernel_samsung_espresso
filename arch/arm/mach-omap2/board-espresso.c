@@ -146,10 +146,10 @@ static __init int setup_board_type(char *str)
 	}
 
 	/*
-	 * P51xx bootloaders pass lcd_id=1,
+	 * P51xx bootloaders pass lcd_id=1 and on some older lcd_id=0,
 	 * everything else is P31xx.
 	 */
-	if (lcd_id != 1)
+	if (lcd_id > 1)
 		_board_is_espresso10 = false;
 
 	return 0;
