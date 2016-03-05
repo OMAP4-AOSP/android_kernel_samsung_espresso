@@ -128,27 +128,6 @@ static struct scatterlist *mmc_alloc_sg(int sg_len, int *err)
 	return sg;
 }
 
-static void mmc_queue_setup_discard(struct request_queue *q,
-				    struct mmc_card *card)
-{
-	unsigned max_discard;
-
-	max_discard = mmc_calc_max_discard(card);
-	if (!max_discard)
-		return;
-
-	queue_flag_set_unlocked(QUEUE_FLAG_DISCARD, q);
-	q->limits.max_discard_sectors = max_discard;
-	if (card->erased_byte == 0)
-		q->limits.discard_zeroes_data = 1;
-	q->limits.discard_granularity = card->pref_erase << 9;
-	/* granularity must not be greater than max. discard */
-	if (card->pref_erase > max_discard)
-		q->limits.discard_granularity = 0;
-	if (mmc_can_secure_erase_trim(card))
-		queue_flag_set_unlocked(QUEUE_FLAG_SECDISCARD, q);
-}
-
 /**
  * mmc_init_queue - initialise a queue structure.
  * @mq: mmc queue
@@ -183,8 +162,16 @@ int mmc_init_queue(struct mmc_queue *mq, struct mmc_card *card,
 
 	blk_queue_prep_rq(mq->queue, mmc_prep_request);
 	queue_flag_set_unlocked(QUEUE_FLAG_NONROT, mq->queue);
-	if (mmc_can_erase(card))
-		mmc_queue_setup_discard(mq->queue, card);
+	if (mmc_can_erase(card)) {
+		queue_flag_set_unlocked(QUEUE_FLAG_DISCARD, mq->queue);
+		mq->queue->limits.max_discard_sectors = UINT_MAX;
+		if (card->erased_byte == 0)
+			mq->queue->limits.discard_zeroes_data = 1;
+		mq->queue->limits.discard_granularity = card->pref_erase << 9;
+		if (mmc_can_secure_erase_trim(card))
+			queue_flag_set_unlocked(QUEUE_FLAG_SECDISCARD,
+						mq->queue);
+	}
 
 #ifdef CONFIG_MMC_BLOCK_BOUNCE
 	if (host->max_segs == 1) {
