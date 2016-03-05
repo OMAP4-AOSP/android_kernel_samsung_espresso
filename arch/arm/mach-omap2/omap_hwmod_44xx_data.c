@@ -1175,30 +1175,6 @@ static struct omap_hwmod_class omap44xx_bandgap_hwmod_class = {
 };
 
 /* bandgap */
-
-static struct omap_hwmod_addr_space omap44xx_bandgap_addrs[] = {
-	{
-		.pa_start       = 0x4a00232C,
-		.pa_end         = 0x4a002330,
-	},
-};
-
-static struct omap_hwmod omap443x_bandgap_hwmod;
-/* l4_cfg -> ctrl_module_core */
-static struct omap_hwmod_ocp_if omap44xx_l4_cfg__bandgap = {
-	.master         = &omap44xx_l4_cfg_hwmod,
-	.slave          = &omap443x_bandgap_hwmod,
-	.clk            = "l4_div_ck",
-	.addr           = omap44xx_bandgap_addrs,
-	.addr_cnt       = ARRAY_SIZE(omap44xx_bandgap_addrs),
-	.user           = OCP_USER_MPU | OCP_USER_SDMA,
-};
-
-/* ctrl_module_core slave ports */
-static struct omap_hwmod_ocp_if *omap44xx_bandgap_slaves[] = {
-	&omap44xx_l4_cfg__bandgap,
-};
-
 static struct omap_hwmod_opt_clk bandgap443x_opt_clks[] = {
 	{ .role = "fclk", .clk = "bandgap_fclk" },
 };
@@ -1206,9 +1182,6 @@ static struct omap_hwmod_opt_clk bandgap443x_opt_clks[] = {
 static struct omap_hwmod omap443x_bandgap_hwmod = {
 	.name		= "bandgap",
 	.class		= &omap44xx_bandgap_hwmod_class,
-	.main_clk       = "bandgap_fclk",
-	.slaves         = omap44xx_bandgap_slaves,
-	.slaves_cnt     = ARRAY_SIZE(omap44xx_bandgap_slaves),
 	.prcm		= {
 		.omap4 = {
 			.clkctrl_reg = OMAP4430_CM_WKUP_BANDGAP_CLKCTRL,
@@ -5695,6 +5668,7 @@ static struct omap_hwmod_ocp_if *omap44xx_uart3_slaves[] = {
 static struct omap_hwmod omap44xx_uart3_hwmod = {
 	.name		= "uart3",
 	.class		= &omap44xx_uart_hwmod_class,
+	.flags		= (HWMOD_INIT_NO_IDLE | HWMOD_INIT_NO_RESET),
 	.mpu_irqs	= omap44xx_uart3_irqs,
 	.mpu_irqs_cnt	= ARRAY_SIZE(omap44xx_uart3_irqs),
 	.sdma_reqs	= omap44xx_uart3_sdma_reqs,
@@ -6062,7 +6036,7 @@ static struct omap_hwmod_addr_space omap44xx_usbhs_ohci_addrs[] = {
 		.name		= "ohci",
 		.pa_start	= 0x4A064800,
 		.pa_end		= 0x4A064BFF,
-		.flags		= ADDR_MAP_ON_INIT | ADDR_TYPE_RT
+		.flags		= ADDR_MAP_ON_INIT
 	}
 };
 

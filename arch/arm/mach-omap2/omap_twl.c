@@ -611,8 +611,7 @@ static __initdata struct omap_pmic_map omap_twl_map[] = {
 	{
 		.name = "mpu",
 		.omap_chip = OMAP_CHIP_INIT(CHIP_IS_OMAP443X |
-						CHIP_IS_OMAP447X |
-						CHIP_IS_OMAP446X),
+						CHIP_IS_OMAP447X),
 		.pmic_data = &omap443x_447x_mpu_pmic,
 		.special_action = twl6030_set_offset,
 	},
@@ -685,26 +684,12 @@ int __init omap_twl_init(void)
 		pr_info("%s: TWL6032 PMIC SR Addr Change Success!!\n",
 				__func__);
 	}
-	if (cpu_is_omap446x() && is_twl6030_lite()) {
-		omap446x_core_pmic.volt_reg_addr =
-			TWL6032_SMPS2_SR_VOLT_REG;
-		omap446x_core_pmic.cmd_reg_addr =
-			TWL6032_SMPS2_SR_CMD_REG;
-
-
-		omap443x_446x_iva_pmic.volt_reg_addr
-			= TWL6032_SMPS5_SR_VOLT_REG;
-		omap443x_446x_iva_pmic.cmd_reg_addr
-			= TWL6032_SMPS5_SR_CMD_REG;
-		pr_info("%s: TWL6032 PMIC SR Addr Change Success!!\n",
-				__func__);
-	}
 
 	return omap_pmic_register_data(omap_twl_map, desc);
 }
 
 /**
- * omap3_twl_set_sr_bit() - Set/Clear SR bit on TWL
+ * twl6030_set_offset() - setup TWL offset voltages
  * @enable: enable SR mode in twl or not
  *
  * If 'enable' is true, enables Smartreflex bit on TWL 4030 to make sure
