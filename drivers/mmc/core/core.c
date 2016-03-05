@@ -303,8 +303,9 @@ void mmc_set_data_timeout(struct mmc_data *data, const struct mmc_card *card)
 
 		if (data->flags & MMC_DATA_WRITE)
 			/*
-			 * The limit is really 250 ms, but that is
-			 * insufficient for some crappy cards.
+			 * According to SD 3.01 specification
+			 * application note, it is recommended to
+			 * use fixed timeout not less than 500 ms
 			 */
 			limit_us = 500000;
 		else
@@ -1059,7 +1060,7 @@ static void mmc_power_up(struct mmc_host *host)
 	 * This delay should be sufficient to allow the power supply
 	 * to reach the minimum voltage.
 	 */
-	mdelay(10);
+	mmc_delay(10);
 
 	host->ios.clock = host->f_init;
 
@@ -1070,7 +1071,7 @@ static void mmc_power_up(struct mmc_host *host)
 	 * This delay must be at least 74 clock sizes, or 1 ms, or the
 	 * time required to reach a stable voltage.
 	 */
-	mdelay(10);
+	mmc_delay(10);
 
 	mmc_host_clk_release(host);
 }

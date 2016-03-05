@@ -119,7 +119,6 @@
 #define SRD			(1 << 26)
 #define SOFTRESET		(1 << 1)
 #define RESETDONE		(1 << 0)
-#define AUTO_CMD12		(1 << 0)
 #define DMAS			(0x2 << 3)
 #define CAPA_ADMA_SUPPORT       (1 << 19)
 #define ADMA_XFER_VALID		(1 << 0)
@@ -147,6 +146,8 @@
 #define ADMA_MAX_XFER_PER_ROW (60 * 1024)
 #define ADMA_MAX_BLKS_PER_ROW (ADMA_MAX_XFER_PER_ROW / 512)
 
+
+#define AUTO_CMD12		(1 << 0)	/* Auto CMD12 support */
 /*
  * FIXME: Most likely all the data using these _DEVID defines should come
  * from the platform_data, or implemented in controller and slot specific
@@ -401,6 +402,7 @@ static int omap_hsmmc_2_set_power(struct device *dev, int slot, int power_on,
 		mdelay(50);
 		mdelay(50);
 	}
+
 	if (mmc_slot(host).after_set_reg)
 		mmc_slot(host).after_set_reg(dev, slot, power_on, vdd);
 
@@ -570,7 +572,7 @@ static int omap_hsmmc_reg_get(struct omap_hsmmc_host *host)
 			else {
 				ret = PTR_ERR(reg);
 				goto err;
-				}
+			}
 		}
 	} else {
 		host->vcc = reg;
@@ -783,7 +785,6 @@ static int omap_hsmmc_context_restore(struct omap_hsmmc_host *host)
 		hctl = SDVS18;
 		capa = VS18;
 	}
-
 	if (host->dma_type == ADMA_XFER)
 		hctl |= DMAS;
 
@@ -1087,7 +1088,6 @@ omap_hsmmc_xfer_done(struct omap_hsmmc_host *host, struct mmc_data *data)
 	}
 
 	return;
-
 }
 
 static int
@@ -1112,7 +1112,6 @@ omap_hsmmc_errata_i761(struct omap_hsmmc_host *host, struct mmc_command *cmd)
 static void
 omap_hsmmc_cmd_done(struct omap_hsmmc_host *host, struct mmc_command *cmd)
 {
-
 	int err;
 	struct mmc_request *req;
 	req = host->mrq;
@@ -1215,10 +1214,8 @@ static inline void omap_hsmmc_reset_controller_fsm(struct omap_hsmmc_host *host,
 						   unsigned long bit)
 {
 	unsigned long i = 0;
-#ifdef CONFIG_WIWLAN_SDIO
 	unsigned long limit = (loops_per_jiffy *
 				msecs_to_jiffies(MMC_TIMEOUT_MS));
-#endif
 
 	OMAP_HSMMC_WRITE(host->base, SYSCTL,
 			 OMAP_HSMMC_READ(host->base, SYSCTL) | bit);
@@ -1227,7 +1224,6 @@ static inline void omap_hsmmc_reset_controller_fsm(struct omap_hsmmc_host *host,
 	 * OMAP4 ES2 and greater has an updated reset logic.
 	 * Monitor a 0->1 transition first
 	 */
-#ifdef CONFIG_WLAN_SDIO
 	if (mmc_slot(host).features & HSMMC_HAS_UPDATED_RESET) {
 		while ((!(OMAP_HSMMC_READ(host->base, SYSCTL) & bit))
 					&& (i++ < limit))
@@ -1238,17 +1234,6 @@ static inline void omap_hsmmc_reset_controller_fsm(struct omap_hsmmc_host *host,
 	while ((OMAP_HSMMC_READ(host->base, SYSCTL) & bit) &&
 		(i++ < limit))
 		cpu_relax();
-#else
-	if (mmc_slot(host).features & HSMMC_HAS_UPDATED_RESET) {
-		while ((!(OMAP_HSMMC_READ(host, SYSCTL) & bit))
-						&& (i++ < 50))
-			udelay(100);
-	}
-	i = 0;
-	while ((OMAP_HSMMC_READ(host, SYSCTL) & bit) &&
-		(i++ < 50))
-		udelay(100);
-#endif
 
 	if (OMAP_HSMMC_READ(host->base, SYSCTL) & bit)
 		dev_err(mmc_dev(host->mmc),
@@ -1274,10 +1259,6 @@ static void omap_hsmmc_do_irq(struct omap_hsmmc_host *host, int status)
 	dev_dbg(mmc_dev(host->mmc), "IRQ Status is %x\n", status);
 
 	if (status & ERR) {
-
-		dev_warn(mmc_dev(host->mmc), "Status=%x cmd =%d\n",
-		status, (OMAP_HSMMC_READ(host->base, CMD) & 0x3F000000)>>24);
-
 #ifdef CONFIG_MMC_DEBUG
 		omap_hsmmc_report_irq(host, status);
 #endif
@@ -1503,23 +1484,20 @@ static irqreturn_t omap_hsmmc_cd_thread_handler(int irq, void *dev_id)
 		carddetect = -ENOSYS;
 	}
 
-	if (carddetect) {
-		dev_warn(mmc_dev(host->mmc), "New Card Inserted\n");
+	if (carddetect){
 		mmc_detect_change(host->mmc, (HZ * 200) / 1000);
-	} else {
-		/*
-		 * Because of OMAP4 Silicon errate (i705), we have to trun off
-		 * the PBIAS and VMMC for SD card as soon as we get card
-		 * disconnect interrupt. Because of this, we don't wait for
-		 * the higher layer structures to be dismantled before turining
-		 *  off power
-		 */
-		dev_warn(mmc_dev(host->mmc), "Card is Removed\n");
+	}
+	else{
+	/*
+	 * Because of OMAP4 Silicon errata (i705), we have to turn off the
+	 * PBIAS and VMMC for SD card as soon as we get card disconnect
+	 * interrupt. Because of this, we don't wait for all higher layer
+	 * structures to be dismantled before turning off power
+	 */
 		mmc_claim_host(host->mmc);
 		if ((MMC_POWER_OFF != host->power_mode) &&
-			(mmc_slot(host).set_power != NULL)) {
-			mmc_slot(host).set_power(host->dev, host->slot_id,
-								0, 0);
+			(mmc_slot(host).set_power != NULL)){
+			mmc_slot(host).set_power(host->dev, host->slot_id, 0, 0);
 			host->power_mode = MMC_POWER_OFF;
 		}
 		mmc_release_host(host->mmc);
@@ -1767,6 +1745,7 @@ omap_hsmmc_prepare_data(struct omap_hsmmc_host *host, struct mmc_request *req)
 {
 	int ret;
 	int numblks;
+
 	host->data = req->data;
 
 	if (req->data == NULL) {
@@ -1830,7 +1809,8 @@ static void omap_hsmmc_request(struct mmc_host *mmc, struct mmc_request *req)
 		host->reqs_blocked = 0;
 	WARN_ON(host->mrq != NULL);
 
-	/* Because of OMAP4 Silicon errate (i705), we have to turn off the
+	/*
+	 * Because of OMAP4 Silicon errata (i705), we have to turn off the
 	 * PBIAS and VMMC for SD card as soon as we get card disconnect
 	 * interrupt. Because of this, we don't wait for all higher layer
 	 * structures to be dismantled before turning off power. Because
@@ -1842,11 +1822,12 @@ static void omap_hsmmc_request(struct mmc_host *mmc, struct mmc_request *req)
 		req->cmd->error = EIO;
 		if (req->data)
 			req->data->error = -EIO;
-		dev_dbg(mmc_dev(host->mmc),
+		dev_warn(mmc_dev(host->mmc),
 		"Card is no longer present\n");
 		mmc_request_done(mmc, req);
 		return;
 	}
+
 	host->mrq = req;
 	if (req->sbc) {
 		omap_hsmmc_start_command(host, req->sbc, NULL, 0);
@@ -1862,6 +1843,7 @@ static void omap_hsmmc_request(struct mmc_host *mmc, struct mmc_request *req)
 		mmc_request_done(mmc, req);
 		return;
 	}
+
 	omap_hsmmc_start_command(host, req->cmd, req->data, 0);
 }
 
@@ -2907,7 +2889,6 @@ static int omap_hsmmc_suspend(struct device *dev)
 		}
 		if (mmc_slot(host).mmc_data.built_in)
 			host->mmc->pm_flags |= MMC_PM_KEEP_POWER;
-
 		ret = mmc_suspend_host(host->mmc);
 		if (ret == 0) {
 			mmc_claim_host(host->mmc);

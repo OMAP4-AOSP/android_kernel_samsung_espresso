@@ -45,7 +45,6 @@
 #include <asm/uaccess.h>
 
 #include "queue.h"
-#include "../core/core.h"
 
 MODULE_ALIAS("mmc:block");
 #ifdef MODULE_PARAM_PREFIX
@@ -88,17 +87,13 @@ struct mmc_blk_data {
 	struct list_head part;
 
 	unsigned int	flags;
-#define MMC_BLK_CMD23	(1 << 0)	/* SET_BLOCK_COUNT for multiblock */
+#define MMC_BLK_CMD23	(1 << 0)	/* Can do SET_BLOCK_COUNT for multiblock */
 #define MMC_BLK_REL_WR	(1 << 1)	/* MMC Reliable write support */
 
 	unsigned int	usage;
 	unsigned int	read_only;
 	unsigned int	part_type;
 	unsigned int	name_idx;
-#define MMC_BLK_READ		BIT(0)
-#define MMC_BLK_WRITE		BIT(1)
-#define MMC_BLK_DISCARD		BIT(2)
-#define MMC_BLK_SECDISCARD	BIT(3)
 
 	/*
 	 * Only set in main mmc_blk_data associated
@@ -287,7 +282,7 @@ static int mmc_blk_ioctl_cmd(struct block_device *bdev,
 	struct mmc_data data = {0};
 	struct mmc_request mrq = {0};
 	struct scatterlist sg;
-	int err = 0;
+	int err;
 
 	/*
 	 * The caller must have CAP_SYS_RAWIO, and must be calling this on the
@@ -402,8 +397,7 @@ cmd_rel_host:
 	mmc_release_host(card->host);
 
 cmd_done:
-	if (md)
-		mmc_blk_put(md);
+	mmc_blk_put(md);
 	kfree(idata->buf);
 	kfree(idata);
 	return err;
@@ -563,7 +557,6 @@ static int get_card_status(struct mmc_card *card, u32 *status, int retries)
 	return err;
 }
 
-#define ERR_NOMEDIUM	3
 #define ERR_RETRY	2
 #define ERR_ABORT	1
 #define ERR_CONTINUE	0
@@ -635,9 +628,6 @@ static int mmc_blk_cmd_recovery(struct mmc_card *card, struct request *req,
 	u32 status, stop_status = 0;
 	int err, retry;
 
-	if (!mmc_card_inserted(card))
-		return ERR_NOMEDIUM;
-
 	/*
 	 * Try to get card status which indicates both the card state
 	 * and why there was no response.  If the first attempt fails,
@@ -685,10 +675,6 @@ static int mmc_blk_cmd_recovery(struct mmc_card *card, struct request *req,
 	if (brq->cmd.error)
 		return mmc_blk_cmd_error(req, "r/w cmd", brq->cmd.error,
 				prev_cmd_status_valid, status);
-
-	/* Data errors */
-	if (!brq->stop.error)
-		return ERR_CONTINUE;
 
 	/* Now for stop errors.  These aren't fatal to the transfer. */
 	pr_err("%s: error %d sending stop command, original cmd response %#x, card status %#x\n",
@@ -854,14 +840,11 @@ static int mmc_blk_issue_rw_rq(struct mmc_queue *mq, struct request *req)
 	/*
 	 * Reliable writes are used to implement Forced Unit Access and
 	 * REQ_META accesses, and are supported only on MMCs.
-	 *
-	 * XXX: this really needs a good explanation of why REQ_META
-	 * is treated special.
 	 */
 	bool do_rel_wr = ((req->cmd_flags & REQ_FUA) ||
 			  (req->cmd_flags & REQ_META)) &&
-			  (rq_data_dir(req) == WRITE) &&
-			  (md->flags & MMC_BLK_REL_WR);
+		(rq_data_dir(req) == WRITE) &&
+		(md->flags & MMC_BLK_REL_WR);
 
 	do {
 		u32 readcmd, writecmd;
@@ -1010,7 +993,7 @@ static int mmc_blk_issue_rw_rq(struct mmc_queue *mq, struct request *req)
 		if (brq.cmd.resp[0] & CMD_ERRORS) {
 			pr_err("%s: r/w command failed, status = %#x\n",
 				req->rq_disk->disk_name, brq.cmd.resp[0]);
-			goto cmd_abort; 
+			goto cmd_abort;
 		}
 
 		/*
@@ -1076,29 +1059,29 @@ static int mmc_blk_issue_rw_rq(struct mmc_queue *mq, struct request *req)
 
 	return 1;
 
-  cmd_err:
-  	/*
-  	 * If this is an SD card and we're writing, we can first
-  	 * mark the known good sectors as ok.
-  	 *
- 	 * If the card is not SD, we can still ok written sectors
- 	 * as reported by the controller (which might be less than
- 	 * the real number of written sectors, but never more).
- 	 */
- 	if (mmc_card_sd(card)) {
- 		u32 blocks;
- 
- 		blocks = mmc_sd_num_wr_blocks(card);
- 		if (blocks != (u32)-1) {
- 			spin_lock_irq(&md->lock);
- 			ret = __blk_end_request(req, 0, blocks << 9);
- 			spin_unlock_irq(&md->lock);
- 		}
- 	} else {
- 		spin_lock_irq(&md->lock);
- 		ret = __blk_end_request(req, 0, brq.data.bytes_xfered);
- 		spin_unlock_irq(&md->lock);
- 	}
+ cmd_err:
+ 	/*
+ 	 * If this is an SD card and we're writing, we can first
+ 	 * mark the known good sectors as ok.
+ 	 *
+	 * If the card is not SD, we can still ok written sectors
+	 * as reported by the controller (which might be less than
+	 * the real number of written sectors, but never more).
+	 */
+	if (mmc_card_sd(card)) {
+		u32 blocks;
+
+		blocks = mmc_sd_num_wr_blocks(card);
+		if (blocks != (u32)-1) {
+			spin_lock_irq(&md->lock);
+			ret = __blk_end_request(req, 0, blocks << 9);
+			spin_unlock_irq(&md->lock);
+		}
+	} else {
+		spin_lock_irq(&md->lock);
+		ret = __blk_end_request(req, 0, brq.data.bytes_xfered);
+		spin_unlock_irq(&md->lock);
+	}
 
  cmd_abort:
 	spin_lock_irq(&md->lock);
@@ -1126,7 +1109,6 @@ static int mmc_blk_issue_rq(struct mmc_queue *mq, struct request *req)
 #endif
 
 	mmc_claim_host(card->host);
-
 	ret = mmc_blk_part_switch(card, md);
 	if (ret) {
 		ret = 0;
@@ -1184,10 +1166,10 @@ static struct mmc_blk_data *mmc_blk_alloc_req(struct mmc_card *card,
 	if (!subname) {
 		md->name_idx = find_first_zero_bit(name_use, max_devices);
 		__set_bit(md->name_idx, name_use);
-	} else {
+	}
+	else
 		md->name_idx = ((struct mmc_blk_data *)
 				dev_to_disk(parent)->private_data)->name_idx;
-	}
 
 	/*
 	 * Set the read-only status based on the supported commands
@@ -1402,7 +1384,8 @@ static int mmc_add_disk(struct mmc_blk_data *md)
 	return ret;
 }
 
-static const struct mmc_fixup blk_fixups[] = {
+static const struct mmc_fixup blk_fixups[] =
+{
 	MMC_FIXUP("SEM02G", 0x2, 0x100, add_quirk, MMC_QUIRK_INAND_CMD38),
 	MMC_FIXUP("SEM04G", 0x2, 0x100, add_quirk, MMC_QUIRK_INAND_CMD38),
 	MMC_FIXUP("SEM08G", 0x2, 0x100, add_quirk, MMC_QUIRK_INAND_CMD38),
