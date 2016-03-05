@@ -102,7 +102,6 @@ struct mmc_blk_data {
 	unsigned int	read_only;
 	unsigned int	part_type;
 	unsigned int	name_idx;
-	unsigned int	reset_done;
 #define MMC_BLK_READ		BIT(0)
 #define MMC_BLK_WRITE		BIT(1)
 #define MMC_BLK_DISCARD		BIT(2)
@@ -729,39 +728,6 @@ static int mmc_blk_cmd_recovery(struct mmc_card *card, struct request *req,
 		brq->stop.error = 0;
 	}
 	return ERR_CONTINUE;
-}
-
-static int mmc_blk_reset(struct mmc_blk_data *md, struct mmc_host *host,
-			 int type)
-{
-	int err;
-
-	if (md->reset_done & type)
-		return -EEXIST;
-
-	md->reset_done |= type;
-	err = mmc_hw_reset(host);
-	/* Ensure we switch back to the correct partition */
-	if (err != -EOPNOTSUPP) {
-		struct mmc_blk_data *main_md = mmc_get_drvdata(host->card);
-		int part_err;
-
-		main_md->part_curr = main_md->part_type;
-		part_err = mmc_blk_part_switch(host->card, md);
-		if (part_err) {
-			/*
-			 * We have failed to get back into the correct
-			 * partition, so we need to abort the whole request.
-			 */
-			return -ENODEV;
-		}
-	}
-	return err;
-}
-
-static inline void mmc_blk_reset_success(struct mmc_blk_data *md, int type)
-{
-	md->reset_done &= ~type;
 }
 
 static int mmc_blk_issue_discard_rq(struct mmc_queue *mq, struct request *req)
@@ -1453,10 +1419,6 @@ static int mmc_blk_cmd_err(struct mmc_blk_data *md, struct mmc_card *card,
 
 static int mmc_blk_chk_hdr_err(struct mmc_queue *mq, int status)
 {
-	struct mmc_blk_data *md = mq->data;
-	struct mmc_card *card = md->queue.card;
-	int type = MMC_BLK_WR_HDR, err = 0;
-
 	switch (status) {
 	case MMC_BLK_PARTIAL:
 	case MMC_BLK_RETRY:
@@ -1466,9 +1428,7 @@ static int mmc_blk_chk_hdr_err(struct mmc_queue *mq, int status)
 	case MMC_BLK_ABORT:
 	case MMC_BLK_DATA_ERR:
 	case MMC_BLK_ECC_ERR:
-		err = mmc_blk_reset(md, card->host, type);
-		if (!err)
-			mmc_blk_reset_success(md, type);
+		err = 1;
 		break;
 	}
 
@@ -1606,25 +1566,14 @@ static int mmc_blk_issue_rw_rq(struct mmc_queue *mq, struct request *rqc)
 			break;
 		case MMC_BLK_CMD_ERR:
 			ret = mmc_blk_cmd_err(md, card, brq, req, ret);
-			if (!mmc_blk_reset(md, card->host, type))
-				break;
 			goto cmd_abort;
 		case MMC_BLK_RETRY:
 			if (retry++ < 5)
 				break;
 			/* Fall through */
 		case MMC_BLK_ABORT:
-			if (!mmc_blk_reset(md, card->host, type))
-				break;
 			goto cmd_abort;
 		case MMC_BLK_DATA_ERR: {
-			int err;
-
-			err = mmc_blk_reset(md, card->host, type);
-			if (!err)
-				break;
-			if (err == -ENODEV)
-				goto cmd_abort;
 			if (mq_rq->packed_cmd != MMC_PACKED_NONE)
 				break;
 			/* Fall through */

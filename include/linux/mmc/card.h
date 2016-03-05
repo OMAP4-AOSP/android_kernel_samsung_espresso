@@ -52,7 +52,6 @@ struct mmc_ext_csd {
 	u8			rel_param;
 	u8			part_config;
 	u8			boot_part_prot;
-	u8			rst_n_function;
 	u8			cache_ctrl;
 	u8			max_packed_writes;
 	u8			max_packed_reads;
