@@ -60,7 +60,7 @@
 #define OMAP_HSMMC_RSP54	0x0118
 #define OMAP_HSMMC_RSP76	0x011C
 #define OMAP_HSMMC_DATA		0x0120
-#define OMAP_HSMMC_PSTATE	0x0124
+#define OMAP_HSMMC_PSTATE		0x0124
 #define OMAP_HSMMC_HCTL		0x0128
 #define OMAP_HSMMC_SYSCTL	0x012C
 #define OMAP_HSMMC_STAT		0x0130
@@ -68,7 +68,7 @@
 #define OMAP_HSMMC_ISE		0x0138
 #define OMAP_HSMMC_CAPA		0x0140
 #define OMAP_HSMMC_ADMA_ES	0x0154
-#define	OMAP_HSMMC_ADMA_SAL	0x0158
+#define OMAP_HSMMC_ADMA_SAL	0x0158
 
 #define VS18			(1 << 26)
 #define VS30			(1 << 25)
@@ -132,7 +132,7 @@
 #define ADMA_XFER_INT		(1 << 3)
 
 #define DMA_TABLE_NUM_ENTRIES	1024
-#define ADMA_TABLE_SZ	\
+#define ADMA_TABLE_SZ 	\
 	(DMA_TABLE_NUM_ENTRIES * sizeof(struct adma_desc_table))
 
 #define SDMA_XFER	1
@@ -246,7 +246,7 @@ struct omap_hsmmc_host {
 	int			reqs_blocked;
 	int			use_reg;
 	int			req_in_progress;
-	unsigned int            flags;
+	unsigned int		flags;
 	unsigned int		errata;
 	int			external_ldo;
 	int			gpio_for_ldo;
@@ -2547,7 +2547,6 @@ static int __init omap_hsmmc_probe(struct platform_device *pdev)
 		ret = -ENOMEM;
 		goto err_ioremap;
 	}
-
 	host->power_mode = MMC_POWER_OFF;
 
 	host->errata = 0;
@@ -2650,6 +2649,7 @@ static int __init omap_hsmmc_probe(struct platform_device *pdev)
 
 	/* Since we do only SG emulation, we can have as many segs
 	 * as we want. */
+
 	if (host->dma_type == ADMA_XFER) {
 		/* Worst case is when above block layer gives us 512 segments,
 		  * in which there are 511 single block entries, but one large
@@ -2660,7 +2660,7 @@ static int __init omap_hsmmc_probe(struct platform_device *pdev)
 		  * segments instead of DMA_TABLE_NUM_ENTRIES.
 		  */
 		mmc->max_segs = DMA_TABLE_NUM_ENTRIES/2;
-		mmc->max_blk_size = 512;	/* Blk Len at max can be 1024 */
+		mmc->max_blk_size = 512;       /* Block Length at max can be 1024 */
 		mmc->max_blk_count = ADMA_MAX_BLKS_PER_ROW *
 							DMA_TABLE_NUM_ENTRIES/2;
 		mmc->max_req_size = mmc->max_blk_size * mmc->max_blk_count;
@@ -2670,7 +2670,6 @@ static int __init omap_hsmmc_probe(struct platform_device *pdev)
 		mmc->max_blk_count = 0xFFFF;    /* No. of Blocks is 16 bits */
 		mmc->max_req_size = mmc->max_blk_size * mmc->max_blk_count;
 	}
-
 	mmc->max_seg_size = mmc->max_req_size;
 
 	mmc->caps |= MMC_CAP_MMC_HIGHSPEED | MMC_CAP_SD_HIGHSPEED |
