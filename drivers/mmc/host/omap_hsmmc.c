@@ -2636,21 +2636,16 @@ static int __init omap_hsmmc_probe(struct platform_device *pdev)
 							" clk failed\n");
 	}
 
-	/* ADMA is not used if packed cmd is enabled*/
-	if (!(mmc_slot(host).caps2 & MMC_CAP2_PACKED_CMD)) {
-		ctrlr_caps = OMAP_HSMMC_READ(host->base, CAPA);
-
-		if (ctrlr_caps & CAPA_ADMA_SUPPORT) {
-			/* FIXME: passing the device structure fails
-			 * due to unset conherency mask
-			 */
-			host->adma_table = dma_alloc_coherent(NULL,
-				ADMA_TABLE_SZ, &host->phy_adma_table, 0);
-			if (host->adma_table != NULL)
-				host->dma_type = ADMA_XFER;
-			}
-		}
-
+	ctrlr_caps = OMAP_HSMMC_READ(host->base, CAPA);
+	if (ctrlr_caps & CAPA_ADMA_SUPPORT) {
+		/* FIXME: passing the device structure fails
+		 * due to unset conherency mask
+		 */
+		host->adma_table = dma_alloc_coherent(NULL,
+			ADMA_TABLE_SZ, &host->phy_adma_table, 0);
+		if (host->adma_table != NULL)
+			host->dma_type = ADMA_XFER;
+	}
 	dev_dbg(mmc_dev(host->mmc), "DMA Mode=%d\n", host->dma_type);
 
 	/* Since we do only SG emulation, we can have as many segs
@@ -2671,12 +2666,8 @@ static int __init omap_hsmmc_probe(struct platform_device *pdev)
 		mmc->max_req_size = mmc->max_blk_size * mmc->max_blk_count;
 	} else {
 		mmc->max_segs = DMA_TABLE_NUM_ENTRIES;
-		mmc->max_blk_size = 512;       /* Blk Len at max can be 1024 */
-		if (mmc_slot(host).caps2 & MMC_CAP2_PACKED_CMD)
-			mmc->max_blk_count = 0x2000;
-		else
-			mmc->max_blk_count = 0xFFFF;    /* Blocks is 16 bits */
-
+		mmc->max_blk_size = 512;       /* Block Length at max can be 1024 */
+		mmc->max_blk_count = 0xFFFF;    /* No. of Blocks is 16 bits */
 		mmc->max_req_size = mmc->max_blk_size * mmc->max_blk_count;
 	}
 
@@ -2692,9 +2683,6 @@ static int __init omap_hsmmc_probe(struct platform_device *pdev)
 	mmc->caps |= mmc_slot(host).caps;
 	if (mmc->caps & MMC_CAP_8_BIT_DATA)
 		mmc->caps |= MMC_CAP_4_BIT_DATA;
-
-	if (mmc_slot(host).caps2)
-		mmc->caps2 |= mmc_slot(host).caps2;
 
 	if (mmc_slot(host).nonremovable)
 		mmc->caps |= MMC_CAP_NONREMOVABLE;

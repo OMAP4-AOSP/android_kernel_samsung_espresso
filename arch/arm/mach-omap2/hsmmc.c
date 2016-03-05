@@ -310,8 +310,6 @@ static int __init omap_hsmmc_pdata_init(struct omap2_hsmmc_info *c,
 	mmc->slots[0].name = hc_name;
 	mmc->nr_slots = 1;
 	mmc->slots[0].caps = c->caps;
-	if (c->caps2)
-		mmc->slots[0].caps2 = c->caps2;
 	mmc->slots[0].internal_clock = !c->ext_clock;
 	mmc->dma_mask = 0xffffffff;
 	if (cpu_is_omap44xx())
