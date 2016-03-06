@@ -159,15 +159,15 @@ static inline void ip_tr_mc_map(__be32 addr, char *buf)
 }
 
 struct ip_reply_arg {
-	struct kvec iov[1];
+	struct kvec iov[1];   
 	int	    flags;
 	__wsum 	    csum;
 	int	    csumoffset; /* u16 offset of csum in iov[0].iov_base */
-				/* -1 if not needed */
+				/* -1 if not needed */ 
 	int	    bound_dev_if;
 	u8  	    tos;
 	uid_t	    uid;
-};
+}; 
 
 #define IP_REPLY_ARG_NOSRCCHECK 1
 
