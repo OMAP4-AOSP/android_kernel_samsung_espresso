@@ -35,9 +35,6 @@
 #include <linux/sec_dock_keyboard.h>
 #include <linux/battery.h>
 #include <linux/irq.h>
-#ifdef CONFIG_USB_HOST_NOTIFY
-#include <linux/host_notify.h>
-#endif
 
 #include <plat/usb.h>
 
@@ -105,9 +102,6 @@ struct omap4_otg {
 
 	struct switch_dev dock_switch;
 	struct switch_dev audio_switch;
-#ifdef CONFIG_USB_HOST_NOTIFY
-	struct host_notifier_platform_data *pdata;
-#endif
 };
 
 static struct omap4_otg espresso_otg_xceiv;
@@ -365,9 +359,6 @@ static void espresso_set_vbus_drive(bool enable)
 #else
 static void espresso_set_vbus_drive(bool enable)
 {
-	struct omap4_otg *espresso_otg = &espresso_otg_xceiv;
-	if (espresso_otg->pdata->usbhostd_wakeup && enable)
-		espresso_otg->pdata->usbhostd_wakeup();
 	espresso_accessory_power(2, enable);
 }
 #endif
@@ -413,13 +404,6 @@ static void espresso_usb_host_attach(struct omap4_otg *otg)
 	/* Accessory power down needed */
 	espresso_accessory_power(0, 0);
 
-#ifdef CONFIG_USB_HOST_NOTIFY
-	if (otg->pdata && otg->pdata->usbhostd_start) {
-		otg->pdata->ndev.mode = NOTIFY_HOST_MODE;
-		otg->pdata->usbhostd_start();
-	}
-#endif
-
 	omap4_vusb_enable(otg, true);
 
 	otg->otg.state = OTG_STATE_A_IDLE;
@@ -433,13 +417,6 @@ static void espresso_usb_host_attach(struct omap4_otg *otg)
 
 static void espresso_usb_host_detach(struct omap4_otg *otg)
 {
-#ifdef CONFIG_USB_HOST_NOTIFY
-	if (otg->pdata && otg->pdata->usbhostd_stop) {
-		otg->pdata->ndev.mode = NOTIFY_NONE_MODE;
-		otg->pdata->usbhostd_stop();
-	}
-#endif
-
 	otg->otg.state = OTG_STATE_B_IDLE;
 	otg->otg.default_a = false;
 	otg->otg.last_event = USB_EVENT_NONE;
@@ -1230,40 +1207,6 @@ static int __init espresso_save_init_switch_param(char *str)
 __setup("switch_sel=", espresso_save_init_switch_param);
 
 
-#ifdef CONFIG_USB_HOST_NOTIFY
-static void espresso_booster(int enable)
-{
-	espresso_set_vbus_drive(!!enable);
-}
-
-static struct host_notifier_platform_data host_notifier_pdata = {
-	.ndev.name	= "usb_otg",
-	.booster	= espresso_booster,
-	.thread_enable = 1,
-};
-
-static struct platform_device host_notifier_device = {
-	.name = "host_notifier",
-	.dev.platform_data = &host_notifier_pdata,
-};
-
-static void espresso_host_notifier_init(struct omap4_otg *otg)
-{
-	int acc_out =
-		omap_muxtbl_get_gpio_by_name("V_ACCESSORY_OUT_5.0V");
-
-	if (acc_out < 0) {
-		dev_err(&otg->dev, "V_ACCESSORY_OUT_5.0V is invalid.\n");
-		return;
-	}
-
-	host_notifier_pdata.gpio = acc_out;
-	otg->pdata = &host_notifier_pdata;
-
-	platform_device_register(&host_notifier_device);
-}
-#endif
-
 static struct i2c_board_info __initdata espresso_i2c8_boardinfo[] = {
 	{
 		I2C_BOARD_INFO("sii9234_mhl_tx", 0x72>>1),
@@ -1356,9 +1299,6 @@ void __init omap4_espresso_connector_init(void)
 
 	espresso_otg_set_suspend(&espresso_otg->otg, 0);
 	espresso_vbus_detect_init(espresso_otg);
-#ifdef CONFIG_USB_HOST_NOTIFY
-	espresso_host_notifier_init(espresso_otg);
-#endif
 
 	sec_switch_dev = device_create(sec_class, NULL, 0, NULL, "switch");
 	if (IS_ERR(sec_switch_dev)) {

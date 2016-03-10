@@ -284,9 +284,6 @@ static int interpret_urb_result(struct us_data *us, unsigned int pipe,
 		 * a failed command */
 		if (usb_pipecontrol(pipe)) {
 			US_DEBUGP("-- stall on control pipe\n");
-#ifdef CONFIG_USB_HOST_NOTIFY
-			printk(KERN_ERR "usb storage -- stall on control pipe\n");
-#endif
 			return USB_STOR_XFER_STALLED;
 		}
 

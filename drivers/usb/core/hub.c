@@ -657,11 +657,7 @@ static int hub_port_disable(struct usb_hub *hub, int port1, int set_state)
  */
 static void hub_port_logical_disconnect(struct usb_hub *hub, int port1)
 {
-#ifdef CONFIG_USB_HOST_NOTIFY
-	dev_err(hub->intfdev, "logical disconnect on port %d\n", port1);
-#else
 	dev_dbg(hub->intfdev, "logical disconnect on port %d\n", port1);
-#endif
 	hub_port_disable(hub, port1, 1);
 
 	/* FIXME let caller ask to power down the port:
