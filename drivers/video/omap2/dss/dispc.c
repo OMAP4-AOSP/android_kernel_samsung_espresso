@@ -43,6 +43,7 @@
 #include <plat/omap-pm.h>
 #include <video/omapdss.h>
 #include <../mach-omap2/powerdomain.h>
+
 #include "../clockdomain.h"
 #include "dss.h"
 #include "dss_features.h"
@@ -618,6 +619,7 @@ void dispc_runtime_put(void)
 		DSSDBG("dispc_runtime_put\n");
 
 		dispc_save_context();
+
 		/* Sets DSS max latency constraint
 		* * (allowing for deeper power state)
 		* */
@@ -904,7 +906,6 @@ dispc_get_scaling_coef(u32 inc, bool five_taps)
 	};
 
 	inc >>= 7;	/* /= 128 */
-
 	if (five_taps) {
 		if (inc > 26)
 			return coef_M32;
@@ -1560,6 +1561,7 @@ static void _dispc_set_scale_param(enum omap_plane plane,
 	fir_vinc = 1024 * orig_height / out_height;
 
 	_dispc_set_scale_coef(plane, fir_hinc, fir_vinc, five_taps, color_comp);
+
 	_dispc_set_fir(plane, fir_hinc, fir_vinc, color_comp);
 }
 
@@ -4166,8 +4168,8 @@ static void dispc_error_worker(struct work_struct *work)
 			mgr = omap_dss_get_overlay_manager(i);
 
 			if (mgr->id == OMAP_DSS_CHANNEL_LCD) {
-				if (!mgr->device->first_vsync) {
-					DSSERR("First SYNC_LOST.. ignoring\n");
+				if(!mgr->device->first_vsync){
+					DSSERR("First SYNC_LOST.. ignoring \n");
 					break;
 				}
 
@@ -4210,8 +4212,9 @@ static void dispc_error_worker(struct work_struct *work)
 			mgr = omap_dss_get_overlay_manager(i);
 
 			if (mgr->id == OMAP_DSS_CHANNEL_DIGIT) {
-				if (!mgr->device->first_vsync)
+				if(!mgr->device->first_vsync){
 					DSSERR("First SYNC_LOST..TV ignoring\n");
+				}
 
 				manager = mgr;
 				enable = mgr->device->state ==
@@ -4499,7 +4502,6 @@ static int omap_dispchw_probe(struct platform_device *pdev)
 		r = PTR_ERR(clk);
 		goto err_get_clk;
 	}
-
 
 	dispc.dss_clk = clk;
 

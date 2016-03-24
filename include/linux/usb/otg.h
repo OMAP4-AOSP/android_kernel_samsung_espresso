@@ -100,6 +100,10 @@ struct otg_transceiver {
 	int	(*set_power)(struct otg_transceiver *otg,
 				unsigned mA);
 
+	/* set/reset USB charger in High impedence mode on VBUS */
+	int	(*set_hz_mode)(struct otg_transceiver *otg,
+				bool enabled);
+
 	/* effective for A-peripheral, ignored for B devices */
 	int	(*set_vbus)(struct otg_transceiver *otg,
 				bool enabled);

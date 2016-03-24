@@ -1388,8 +1388,8 @@ static int configure_dispc(void)
 		/* We don't need GO with manual update display. LCD iface will
 		 * always be turned off after frame, and new settings will be
 		 * taken in to use at next update */
-		if (!mc->manual_upd_display) {
-			if (mc->skip_init)
+		if (!mc->manual_upd_display){
+			if(mc->skip_init)
 				mc->skip_init = false;
 			else
 				dispc_go(i);

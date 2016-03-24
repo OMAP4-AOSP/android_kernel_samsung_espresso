@@ -243,7 +243,7 @@ static long setup_mgr(struct dsscomp_dev *cdev,
 			if (oi->uv_address)
 				oi->uv = hwc_virt_to_phys((u32) oi->uv_address);
 			else
-			oi->uv = hwc_virt_to_phys(addr +
+				oi->uv = hwc_virt_to_phys(addr +
 					oi->cfg.height * oi->cfg.stride);
 		}
 		oi->ba = hwc_virt_to_phys(addr);

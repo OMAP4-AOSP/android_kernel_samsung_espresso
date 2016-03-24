@@ -27,7 +27,6 @@ struct pda_power_pdata {
 	int (*suspend)(pm_message_t state);
 	int (*resume)(void);
 	void (*charger_work)(void);
-	bool (*get_charger_start_state)(void);
 	char **supplied_to;
 	size_t num_supplicants;
 

@@ -42,11 +42,6 @@ struct omap_ion_tiler_alloc_data {
 	u32 out_align;
 	u32 token;
 };
-struct omap_ion_phys_addr_data {
-	struct ion_handle *handle;
-	unsigned long phys_addr;
-	size_t size;
-};
 
 #ifdef __KERNEL__
 int omap_ion_tiler_alloc(struct ion_client *client,
@@ -73,7 +68,6 @@ enum {
 
 enum {
 	OMAP_ION_TILER_ALLOC,
-	OMAP_ION_PHYS_ADDR
 };
 
 /**

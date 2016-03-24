@@ -44,7 +44,6 @@ static struct {
 #endif
 } dpi;
 
-
 static struct platform_device *dpi_get_dsidev(enum omap_dss_clk_source clk)
 {
 	int dsi_module;
@@ -247,8 +246,8 @@ EXPORT_SYMBOL(omapdss_dpi_display_enable);
 
 void omapdss_dpi_display_disable(struct omap_dss_device *dssdev)
 {
-
 	dssdev->manager->disable(dssdev->manager);
+
 	if (dpi_use_dsi_pll(dssdev)) {
 		dss_select_dispc_clk_source(OMAP_DSS_CLK_SRC_FCK);
 		dsi_pll_uninit(dpi.dsidev, true);
@@ -256,7 +255,6 @@ void omapdss_dpi_display_disable(struct omap_dss_device *dssdev)
 	}
 
 	dispc_runtime_put();
-
 	dss_runtime_put();
 #ifdef CONFIG_FB_OMAP_BOOTLOADER_INIT
 	if (dpi.fb_skip) {
