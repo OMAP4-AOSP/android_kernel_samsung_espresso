@@ -107,7 +107,7 @@ static void set_full_charge(struct battery_manager_callbacks *ptr)
 	struct charger_device_info *di = container_of(ptr,
 			struct charger_device_info, callbacks);
 
-	pr_info("%s : Full Charged Interrupt occured !!!!!\n",
+	pr_debug("%s : Full Charged Interrupt occured !!!!!\n",
 			__func__);
 	di->is_full_charged = true;
 	di->pdata->full_charger_comp(di->once_fully_charged, 1);
@@ -496,7 +496,7 @@ static void battery_manager_work(struct work_struct *work)
 			(di->charge_status != prev_status))
 		power_supply_changed(&di->psy_bat);
 
-	dev_info(di->dev, "vcell = %d soc = %d  current = %d avg_current = %d "
+	dev_dbg(di->dev, "vcell = %d soc = %d  current = %d avg_current = %d "
 		"status = %d health = %d temp = %d "
 		"discharge status = %d, limit time : %ld, bootmode : %d\n",
 		di->bat_info.vcell, di->bat_info.soc, di->bat_info.fg_current,

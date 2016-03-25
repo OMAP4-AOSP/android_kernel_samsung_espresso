@@ -115,25 +115,6 @@ static int smb347_i2c_write(struct i2c_client *client, u8 reg, u8 data)
 	return ret;
 }
 
-static void smb347_test_read(struct smb347_chg_data *chg)
-{
-	u8 data = 0;
-	u32 addr = 0;
-	pr_info("%s\n", __func__);
-
-	for (addr = 0; addr <= 0x0E; addr++) {
-		smb347_i2c_read(chg->client, addr, &data);
-		dev_info(&chg->client->dev,
-			"smb347 addr : 0x%02x data : 0x%02x\n",	addr, data);
-	}
-
-	for (addr = 0x30; addr <= 0x3F; addr++) {
-		smb347_i2c_read(chg->client, addr, &data);
-		dev_info(&chg->client->dev,
-			"smb347 addr : 0x%02x data : 0x%02x\n",	addr, data);
-	}
-}
-
 static void smb347_charger_init(struct smb347_chg_data *chg)
 {
 	/* Allow volatile writes to CONFIG registers */
@@ -302,9 +283,6 @@ static int smb347_i2c_probe(struct i2c_client *client,
 	if (!i2c_check_functionality(adapter, I2C_FUNC_SMBUS_BYTE))
 		return -EIO;
 
-	dev_info(&client->dev, "%s : smb347 Charger Driver Loading\n",
-		__func__);
-
 	chg = kzalloc(sizeof(struct smb347_chg_data), GFP_KERNEL);
 	if (!chg)
 		return -ENOMEM;
@@ -333,7 +311,7 @@ static int smb347_i2c_probe(struct i2c_client *client,
 	if (chg->pdata->register_callbacks)
 		chg->pdata->register_callbacks(&chg->callbacks);
 
-	pr_info("smb347 charger initialized.\n");
+	dev_info(&client->dev, "probed\n");
 
 	return 0;
 

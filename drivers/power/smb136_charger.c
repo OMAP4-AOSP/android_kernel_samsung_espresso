@@ -9,7 +9,6 @@
  * published by the Free Software Foundation.
  */
 
-
 #include <linux/module.h>
 #include <linux/init.h>
 #include <linux/platform_device.h>
@@ -118,24 +117,6 @@ static int smb136_i2c_write(struct i2c_client *client, u8 reg, u8 data)
 	return ret;
 }
 
-static void smb136_test_read(struct smb136_chg_data *chg)
-{
-	u8 data = 0;
-	u32 addr = 0;
-
-	for (addr = 0; addr < 0x0c; addr++) {
-		smb136_i2c_read(chg->client, addr, &data);
-		dev_dbg(&chg->client->dev,
-			"SMB136 addr : 0x%02x data : 0x%02x\n",	addr, data);
-	}
-
-	for (addr = 0x31; addr < 0x3D; addr++) {
-		smb136_i2c_read(chg->client, addr, &data);
-		dev_dbg(&chg->client->dev,
-			"SMB136 addr : 0x%02x data : 0x%02x\n",	addr, data);
-	}
-}
-
 static int smb136_read_status(struct smb_charger_callbacks *ptr)
 {
 	struct smb136_chg_data *chg = container_of(ptr,
@@ -161,12 +142,12 @@ static int smb136_read_status(struct smb_charger_callbacks *ptr)
 		smb136_i2c_read(chg->client, SMB_StatusE, &reg_e);
 	}
 
-	dev_info(&chg->client->dev,
+	dev_dbg(&chg->client->dev,
 	"addr : 0x%x, data : 0x%x, addr : 0x%x, data : 0x%x\n",
 		SMB_StatusD, reg_d, SMB_StatusE, reg_e);
 
 	if (reg_e & 0x40) {
-		dev_info(&chg->client->dev,
+		dev_dbg(&chg->client->dev,
 			"Charge current under termination current\n");
 		res = CHARGER_STATUS_FULL;
 	} else if (reg_e & 0x8) {
@@ -325,9 +306,6 @@ static int smb136_i2c_probe(struct i2c_client *client,
 	if (!i2c_check_functionality(adapter, I2C_FUNC_SMBUS_BYTE))
 		return -EIO;
 
-	dev_info(&client->dev, "%s : SMB136 Charger Driver Loading\n",
-		__func__);
-
 	chg = kzalloc(sizeof(struct smb136_chg_data), GFP_KERNEL);
 	if (!chg)
 		return -ENOMEM;
@@ -355,7 +333,7 @@ static int smb136_i2c_probe(struct i2c_client *client,
 	if (chg->pdata->register_callbacks)
 		chg->pdata->register_callbacks(&chg->callbacks);
 
-	dev_info(&client->dev, "Smb136 charger attach success!!!\n");
+	dev_info(&client->dev, "probed\n");
 	return 0;
 
 err_pdata:
