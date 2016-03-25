@@ -120,13 +120,13 @@ struct mmc_data {
 };
 
 struct mmc_request {
-	struct mmc_command	*sbc;		/* SET_BLOCK_COUNT  */
+	struct mmc_command	*sbc;		/* SET_BLOCK_COUNT for multiblock */
 	struct mmc_command	*cmd;
 	struct mmc_data		*data;
 	struct mmc_command	*stop;
 
 	void			*done_data;	/* completion data */
-	void			(*done)(struct mmc_request *);
+	void			(*done)(struct mmc_request *);/* completion function */
 };
 
 struct mmc_host;

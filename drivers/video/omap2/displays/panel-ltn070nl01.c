@@ -31,7 +31,6 @@
 #include <linux/backlight.h>
 #include <linux/serial_core.h>
 #include <linux/platform_data/panel-ltn.h>
-#include <linux/platform_data/panel-ltn070nl01.h>
 #include <linux/platform_device.h>
 #include <plat/hardware.h>
 #include <video/omapdss.h>

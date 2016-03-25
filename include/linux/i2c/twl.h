@@ -152,7 +152,6 @@
 #define TWL6030_CHARGER_FAULT_INT_MASK 	0x60
 
 #define TWL6030_MMCCTRL		0xEE
-#define TWL6034_MMCCTRL		0xED
 #define VMMC_AUTO_OFF			(0x1 << 3)
 #define SW_FC				(0x1 << 2)
 #define STS_MMC			0x1
@@ -604,29 +603,6 @@ int twl6030_unregister_notifier(struct notifier_block *nb,
 #define RES_LDO1		60
 #define RES_VSYSMIN_HI	61
 
-#define RES_LDOn28		62
-#define RES_LDOn27		63
-#define RES_LDOn26		64
-#define RES_LDOn25		65
-#define RES_LDOn24		66
-#define RES_LDOn23		67
-#define RES_LDOn22		68
-#define RES_LDOn21		69
-#define RES_LDOn20		70
-#define RES_LDOn19		71
-#define RES_LDOn18		72
-#define RES_LDOn17		73
-#define RES_LDOn16		74
-
-#define RES_LDOn15		75
-#define RES_LDOn14		76
-#define RES_LDOn13		77
-#define RES_LDOn12		78
-
-#define RES_SMPS10		80
-#define RES_SMPS9		81
-#define RES_SMPS8		82
-#define RES_SMPS7		83
 /*
  * Power Bus Message Format ... these can be sent individually by Linux,
  * but are usually part of downloaded scripts that are run when various
@@ -909,29 +885,6 @@ struct twl4030_platform_data {
 	struct regulator_init_data		*smps3;
 	struct regulator_init_data		*smps4;
 	struct regulator_init_data		*vio6032;
-	/* TWL6034 LDO regulators */
-	struct regulator_init_data		*ldo12;
-	struct regulator_init_data		*ldo13;
-	struct regulator_init_data		*ldo14;
-	struct regulator_init_data		*ldo15;
-	struct regulator_init_data		*ldo16;
-	struct regulator_init_data		*ldo17;
-	struct regulator_init_data		*ldo18;
-	struct regulator_init_data		*ldo19;
-	struct regulator_init_data		*ldo20;
-	struct regulator_init_data		*ldo21;
-	struct regulator_init_data		*ldo22;
-	struct regulator_init_data		*ldo23;
-	struct regulator_init_data		*ldo24;
-	struct regulator_init_data		*ldo25;
-	struct regulator_init_data		*ldo26;
-	struct regulator_init_data		*ldo27;
-	struct regulator_init_data		*ldo28;
-	/* TWL6034 DCDC regulators */
-	struct regulator_init_data		*smps7;
-	struct regulator_init_data		*smps8;
-	struct regulator_init_data		*smps9;
-	struct regulator_init_data		*smps10;
 
 	/* External control pins */
 	struct regulator_init_data		*sysen;
@@ -1013,20 +966,7 @@ static inline int twl4030charger_usb_en(int enable) { return 0; }
 #define TWL6030_REG_VDAC	45
 #define TWL6030_REG_VUSB	46
 
-/* PMC Pull-Up/Pull-Down/High-Z */
-#define TWL6030_REG_CFG_INPUT_PUPD1		0xF0
-#define TWL6030_REG_CFG_INPUT_PUPD2		0xF1
-#define TWL6030_REG_CFG_INPUT_PUPD3		0xF2
-#define TWL6030_REG_CFG_INPUT_PUPD4		0xF3
-#define TWL6030_REG_CFG_LDO_PD1			0xF4
-#define TWL6030_REG_CFG_LDO_PD2			0xF5
-#define TWL6030_REG_CFG_SMPS_PD			0xF6
-#define TWL6030_REG_TOGGLE1				0x90
-#define TWL6030_REG_TOGGLE2				0x91
-#define TWL6030_REG_TOGGLE3				0x92
-#define TWL6030_REG_MISC1				0xE4
-#define TWL6030_REG_MISC2				0xE5
-#define TWL6030_REG_CHARGERUSB_CTRL3	0xEA
+#define TWL6030_REG_CFG_SMPS_PD		0xF6
 
 /* INTERNAL LDOs */
 #define TWL6030_REG_VRTC	47
@@ -1080,7 +1020,6 @@ static inline int twl4030charger_usb_en(int enable) { return 0; }
 #define TWL6034_REG_LDON28	84
 
 #define TWL6032_PREQ1_RES_ASS_A	0xd7
-#define TWL6034_PREQ1_RES_ASS_D	0xFB
 
 #define TWL6032_ERRATA_DB00119490	(1 << 0)
 #define TWL6030_ERRATA_DB00112620	(1 << 1)
