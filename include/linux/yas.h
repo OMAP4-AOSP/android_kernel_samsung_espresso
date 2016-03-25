@@ -149,12 +149,6 @@ struct yas_acc_data {
 	struct yas_vector xyz;
 	struct yas_vector raw;
 };
-struct yas_gyro_data {
-	struct yas_vector xyz;
-	struct yas_vector raw;
-	int overrun;
-	int num;
-};
 struct yas_mag_data {
 	struct yas_vector xyz;	/* without offset, filtered */
 	struct yas_vector raw;	/* with offset, not filtered */
@@ -215,95 +209,6 @@ struct yas_mag_driver {
 	struct yas_mag_driver_callback callback;
 };
 
-struct yas_mag_calibration_result {
-	int32_t spread;
-	int32_t variation;
-	int32_t radius;
-	int8_t axis;
-	int8_t level;
-	int8_t accuracy;
-	struct yas_matrix dynamic_matrix;
-};
-
-struct yas_mag_calibration_threshold {
-	int32_t spread;
-	int32_t variation[3];
-};
-
-struct yas_mag_calibration_callback {
-	int (*lock) (void);
-	int (*unlock) (void);
-};
-
-#define YAS_MAGCALIB_MODE_SPHERE        (0)
-#define YAS_MAGCALIB_MODE_ELLIPSOID     (1)
-
-struct yas_mag_calibration {
-	int (*init) (void);
-	int (*term) (void);
-	int (*update) (struct yas_vector *mag,
-		       struct yas_mag_calibration_result *result);
-	int (*get_accuracy) (void);
-	int (*set_accuracy) (int accuracy);
-	int (*get_offset) (struct yas_vector *offset);
-	int (*set_offset) (struct yas_vector *offset);
-	int (*get_shape) (void);
-	int (*set_shape) (int shape);
-	int (*get_threshold) (struct yas_mag_calibration_threshold *threshold);
-	int (*set_threshold) (struct yas_mag_calibration_threshold *threshold);
-	int (*get_mode) (void);
-	int (*set_mode) (int mode);
-	int (*get_max_sample) (void);
-	int (*set_max_sample) (int num_samples);
-	int (*get_dynamic_matrix) (struct yas_matrix *dynamic_matrix);
-	struct yas_mag_calibration_callback callback;
-};
-
-#if YAS_SUPPORT_FUSION_DRIVER
-
-struct yas_quaternion {
-	int32_t q[4];
-};
-
-struct yas_fusion_callback {
-	int (*lock) (void);
-	int (*unlock) (void);
-	void (*current_time) (int32_t *sec, int32_t *msec);
-};
-
-struct yas_fusion {
-	int (*init) (void);
-	int (*term) (void);
-	int (*update) (struct yas_vector *acc, struct yas_vector *mag,
-		       struct yas_vector *gyro);
-	int (*get_quaternion) (struct yas_quaternion *quaternion);
-	int (*get_fusion) (struct yas_quaternion *quaternion,
-			   struct yas_vector *acc, struct yas_vector *gravity,
-			   struct yas_vector *linear_acceleration,
-			   struct yas_vector *rotation_vector);
-	struct yas_fusion_callback callback;
-};
-#endif
-
-#if YAS_SUPPORT_SOFTWARE_GYROSCOPE
-
-struct yas_swgyro_callback {
-	int (*lock) (void);
-	int (*unlock) (void);
-};
-
-struct yas_swgyro {
-	int (*init) (void);
-	int (*term) (void);
-	int (*get_delay) (void);
-	int (*set_delay) (int msec);
-	int (*update) (struct yas_vector *acc, struct yas_vector *mag,
-		       struct yas_vector *gyro);
-	struct yas_swgyro_callback callback;
-};
-
-#endif
-
 struct yas_acc_filter {
 	int threshold;		/* um/s^2 */
 };
@@ -342,113 +247,11 @@ struct yas_acc_driver {
 	struct yas_acc_driver_callback callback;
 };
 
-struct yas_acc_calibration_threshold {
-	int32_t variation;
-};
-
-struct yas_acc_calibration_callback {
-	int (*lock) (void);
-	int (*unlock) (void);
-};
-
-struct yas_acc_calibration {
-	int (*init) (void);
-	int (*term) (void);
-	int (*update) (struct yas_vector *acc);
-	int (*get_offset) (struct yas_vector *offset);
-	int (*get_threshold) (struct yas_acc_calibration_threshold *threshold);
-	int (*set_threshold) (struct yas_acc_calibration_threshold *threshold);
-	struct yas_acc_calibration_callback callback;
-};
-
-struct yas_gyro_filter {
-	int threshold;		/*mdegree/s */
-};
-
-struct yas_gyro_driver_callback {
-	int (*lock) (void);
-	int (*unlock) (void);
-	int (*device_open) (void);
-	int (*device_close) (void);
-	int (*device_write) (uint8_t adr, const uint8_t *buf, int len);
-	int (*device_read) (uint8_t adr, uint8_t *buf, int len);
-	int (*interrupt_enable) (void);
-	int (*interrupt_disable) (void);
-	void (*interrupt_notify) (int num);
-	void (*msleep) (int msec);
-};
-
-struct yas_gyro_driver {
-	int (*init) (void);
-	int (*term) (void);
-	int (*get_delay) (void);
-	int (*set_delay) (int delay);
-	int (*get_offset) (struct yas_vector *offset);
-	int (*set_offset) (struct yas_vector *offset);
-	int (*get_enable) (void);
-	int (*set_enable) (int enable);
-	int (*get_filter) (struct yas_gyro_filter *filter);
-	int (*set_filter) (struct yas_gyro_filter *filter);
-	int (*get_filter_enable) (void);
-	int (*set_filter_enable) (int enable);
-	int (*get_position) (void);
-	int (*set_position) (int position);
-	int (*get_interrupt) (void);
-	int (*set_interrupt) (int interrupt);
-	int (*measure) (struct yas_gyro_data *data, int num);
-	void (*interrupt_handler) (void);
-#if DEBUG
-	int (*get_register) (uint8_t adr, uint8_t *val);
-	int (*set_register) (uint8_t adr, uint8_t val);
-#endif
-	struct yas_gyro_driver_callback callback;
-};
-
-struct yas_gyro_calibration_threshold {
-	int32_t variation;
-};
-
-struct yas_gyro_calibration_callback {
-	int (*lock) (void);
-	int (*unlock) (void);
-};
-
-struct yas_gyro_calibration {
-	int (*init) (void);
-	int (*term) (void);
-	int (*update) (struct yas_vector *gyro);
-	int (*get_offset) (struct yas_vector *offset);
-	int (*get_threshold) (struct yas_gyro_calibration_threshold *
-			      threshold);
-	int (*set_threshold) (struct yas_gyro_calibration_threshold *
-			      threshold);
-	struct yas_gyro_calibration_callback callback;
-};
-
-struct yas_utility {
-	int (*get_rotation_matrix) (struct yas_vector *acc,
-				    struct yas_vector *mag,
-				    struct yas_matrix *rotation_matrix);
-	int (*get_euler) (struct yas_matrix *rotation_matrix,
-			  struct yas_vector *euler);
-};
-
 /*-------------------------------------------------------------------------- */
 /* Global function definition                                                */
 /*-------------------------------------------------------------------------- */
 
 int yas_mag_driver_init(struct yas_mag_driver *f);
-int yas_mag_calibration_init(struct yas_mag_calibration *f);
 int yas_acc_driver_init(struct yas_acc_driver *f);
-int yas_acc_calibration_init(struct yas_acc_calibration *f);
-int yas_gyro_driver_init(struct yas_gyro_driver *f, int interrupt);
-int yas_gyro_calibration_init(struct yas_gyro_calibration *f);
-int yas_utility_init(struct yas_utility *f);
-#if YAS_SUPPORT_FUSION_DRIVER
-int yas_fusion_init(struct yas_fusion *f);
-#endif
-#if YAS_SUPPORT_SOFTWARE_GYROSCOPE
-int yas_swgyro_init(struct yas_swgyro *f);
-#endif
 
 #endif /*__YAS_H__ */

@@ -39,7 +39,6 @@
 #include <linux/yas.h>
 #include <linux/sensors_core.h>
 #include "yas_acc_driver.c"
-#include <linux/yas_accel.h>
 
 #define YAS_ACC_KERNEL_VERSION	"4.4.702a"
 #define YAS_ACC_KERNEL_NAME	"accelerometer"

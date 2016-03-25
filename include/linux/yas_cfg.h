@@ -22,20 +22,11 @@
 #define __YAS_CFG_H__
 
 /*----------------------------------------------------------------------------*/
-/*                   Acceleration Calibration Configuration                   */
-/*----------------------------------------------------------------------------*/
-
-
-#define YAS_DEFAULT_ACCCALIB_LENGTH         (20)
-
-#define YAS_DEFAULT_ACCCALIB_DISTORTION     (20000)
-
-
-/*----------------------------------------------------------------------------*/
 /*                     Accelerometer Filter Configuration                     */
 /*----------------------------------------------------------------------------*/
 
 #define YAS_ACC_DEFAULT_FILTER_THRESH       (76612)
+
 
 /*----------------------------------------------------------------------------*/
 /*                    Geomagnetic Calibration Configuration                   */
@@ -43,9 +34,9 @@
 
 #define YAS_DEFAULT_MAGCALIB_THRESHOLD      (1)
 #define YAS_DEFAULT_MAGCALIB_DISTORTION     (15)
-#define YAS_DEFAULT_MAGCALIB_SHAPE          (0)
 #define YAS_MAGCALIB_SHAPE_NUM              (2)
 #define YAS_MAG_MANUAL_OFFSET
+
 
 /*----------------------------------------------------------------------------*/
 /*                      Geomagnetic Filter Configuration                      */
@@ -56,34 +47,6 @@
 #define YAS_MAG_DEFAULT_FILTER_NOISE_Y      (144)	/* sd: 1200 nT */
 #define YAS_MAG_DEFAULT_FILTER_NOISE_Z      (144)	/* sd: 1200 nT */
 #define YAS_MAG_DEFAULT_FILTER_LEN          (20)
-
 #define YAS_MAG_DEFAULT_FILTER_THRESH       (100)
-
-/*----------------------------------------------------------------------------*/
-/*                   Gyroscope Calibration Configuration                      */
-/*----------------------------------------------------------------------------*/
-
-#define YAS_DEFAULT_GYROCALIB_LENGTH        (20)
-
-#define YAS_DEFAULT_GYROCALIB_DISTORTION    (0)
-
-/*----------------------------------------------------------------------------*/
-/*                     Gyroscope Filter Configuration                         */
-/*----------------------------------------------------------------------------*/
-
-#define YAS_GYRO_DEFAULT_FILTER_THRESH      (0)
-
-/*----------------------------------------------------------------------------*/
-/*                          Gyroscope  Configuration                          */
-/*----------------------------------------------------------------------------*/
-
-#define YAS_GYRO_FIFO_MAX                    (1)
-
-/*----------------------------------------------------------------------------*/
-/*                            Other Configuration                             */
-/*----------------------------------------------------------------------------*/
-
-#define YAS_SUPPORT_FUSION_DRIVER           (0)
-#define YAS_SUPPORT_SOFTWARE_GYROSCOPE      (0)
 
 #endif
