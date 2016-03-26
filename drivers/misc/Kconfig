@@ -534,5 +534,6 @@ source "drivers/misc/cache-2dmanager/Kconfig"
 source "drivers/misc/altera-stapl/Kconfig"
 source "drivers/misc/mei/Kconfig"
 source "drivers/misc/ti-ec/Kconfig"
+source "drivers/misc/modem_if_v2/Kconfig"
 
 endmenu
