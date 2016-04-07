@@ -21,7 +21,7 @@
  * software in any way with any other Broadcom software provided under a license
  * other than the GPL, without Broadcom's express prior written consent.
  *
- * $Id: wl_cfgp2p.h 363350 2012-10-17 08:29:23Z $
+ * $Id: wl_cfgp2p.h 358186 2012-09-21 14:36:14Z $
  */
 #ifndef _wl_cfgp2p_h_
 #define _wl_cfgp2p_h_
@@ -72,6 +72,7 @@ struct p2p_bss {
 struct p2p_info {
 	bool on;    /* p2p on/off switch */
 	bool scan;
+	bool dev_open;
 	bool vif_created;
 	s8 vir_ifname[IFNAMSIZ];
 	unsigned long status;
@@ -110,16 +111,15 @@ enum wl_cfgp2p_status {
 	WLP2P_STATUS_ACTION_TX_COMPLETED,
 	WLP2P_STATUS_ACTION_TX_NOACK,
 	WLP2P_STATUS_SCANNING,
-	WLP2P_STATUS_GO_NEG_PHASE,
-	WLP2P_STATUS_DISC_IN_PROGRESS
+	WLP2P_STATUS_GO_NEG_PHASE
 };
 
 
-#define wl_to_p2p_bss_ndev(wl, type)		((wl)->p2p->bss_idx[type].dev)
-#define wl_to_p2p_bss_bssidx(wl, type)		((wl)->p2p->bss_idx[type].bssidx)
-#define wl_to_p2p_bss_saved_ie(wl, type)	((wl)->p2p->bss_idx[type].saved_ie)
-#define wl_to_p2p_bss_private(wl, type)		((wl)->p2p->bss_idx[type].private_data)
-#define wl_to_p2p_bss(wl, type)			((wl)->p2p->bss_idx[type])
+#define wl_to_p2p_bss_ndev(w, type) 	((wl)->p2p->bss_idx[type].dev)
+#define wl_to_p2p_bss_bssidx(w, type) 	((wl)->p2p->bss_idx[type].bssidx)
+#define wl_to_p2p_bss_saved_ie(w, type) 	((wl)->p2p->bss_idx[type].saved_ie)
+#define wl_to_p2p_bss_private(w, type) 	((wl)->p2p->bss_idx[type].private_data)
+#define wl_to_p2p_bss(wl, type) ((wl)->p2p->bss_idx[type])
 #define wl_get_p2p_status(wl, stat) ((!(wl)->p2p_supported) ? 0 : test_bit(WLP2P_STATUS_ ## stat, \
 									&(wl)->p2p->status))
 #define wl_set_p2p_status(wl, stat) ((!(wl)->p2p_supported) ? 0 : set_bit(WLP2P_STATUS_ ## stat, \
@@ -138,7 +138,7 @@ enum wl_cfgp2p_status {
 #define CFGP2P_ERR(args)									\
 	do {										\
 		if (wl_dbg_level & WL_DBG_ERR) {				\
-			printk(KERN_INFO "CFGP2P-INFO2) %s : ", __func__);	\
+			printk(KERN_INFO "CFGP2P-ERROR) %s : ", __func__);	\
 			printk args;						\
 		}									\
 	} while (0)
@@ -238,8 +238,6 @@ wl_cfgp2p_clear_management_ie(struct wl_priv *wl, s32 bssidx);
 
 extern s32
 wl_cfgp2p_find_idx(struct wl_priv *wl, struct net_device *ndev);
-extern struct net_device *
-wl_cfgp2p_find_ndev(struct wl_priv *wl, s32 bssidx);
 
 
 extern s32

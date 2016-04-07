@@ -215,7 +215,7 @@ extern void bcmsdh_device_remove(void * sdh);
 extern int bcmsdh_reg_sdio_notify(void* semaphore);
 extern void bcmsdh_unreg_sdio_notify(void);
 
-#if defined(OOB_INTR_ONLY) || defined(BCMSPI_ANDROID)
+#if defined(OOB_INTR_ONLY)
 extern int bcmsdh_register_oob_intr(void * dhdp);
 extern void bcmsdh_unregister_oob_intr(void);
 extern void bcmsdh_oob_intr_set(bool enable);
@@ -230,9 +230,6 @@ extern uint32 bcmsdh_cur_sbwad(void *sdh);
 /* Function to pass chipid and rev to lower layers for controlling pr's */
 extern void bcmsdh_chipinfo(void *sdh, uint32 chip, uint32 chiprev);
 
-#ifdef BCMSPI
-extern void bcmsdh_dwordmode(void *sdh, bool set);
-#endif /* BCMSPI */
 
 extern int bcmsdh_sleep(void *sdh, bool enab);
 

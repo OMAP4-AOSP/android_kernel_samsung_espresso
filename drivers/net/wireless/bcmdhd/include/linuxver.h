@@ -164,10 +164,6 @@ typedef irqreturn_t(*FN_ISR) (int irq, void *dev_id, struct pt_regs *ptregs);
 #endif 
 
 
-#ifdef CUSTOMER_HW4
-#include <linux/kthread.h>
-#endif
-
 #ifndef __exit
 #define __exit
 #endif

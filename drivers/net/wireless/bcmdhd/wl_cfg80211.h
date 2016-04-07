@@ -2,13 +2,13 @@
  * Linux cfg80211 driver
  *
  * Copyright (C) 1999-2012, Broadcom Corporation
- *
+ * 
  *      Unless you and Broadcom execute a separate written software license
  * agreement governing use of this software, this software is licensed to you
  * under the terms of the GNU General Public License version 2 (the "GPL"),
  * available at http://www.broadcom.com/licenses/GPLv2.php, with the
  * following added to such license:
- *
+ * 
  *      As a special exception, the copyright holders of this software give you
  * permission to link this software with independent modules, and to copy and
  * distribute the resulting executable under terms of your choice, provided that
@@ -16,12 +16,12 @@
  * the license of that module.  An independent module is a module which is not
  * derived from this software.  The special exception does not apply to any
  * modifications of the software.
- *
+ * 
  *      Notwithstanding the above, under no circumstances may you combine this
  * software in any way with any other Broadcom software provided under a license
  * other than the GPL, without Broadcom's express prior written consent.
  *
- * $Id: wl_cfg80211.h 363350 2012-10-17 08:29:23Z $
+ * $Id: wl_cfg80211.h 358186 2012-09-21 14:36:14Z $
  */
 
 #ifndef _wl_cfg80211_h_
@@ -66,7 +66,7 @@ struct wl_ibss;
 #define	WL_ERR(args)									\
 do {										\
 	if (wl_dbg_level & WL_DBG_ERR) {				\
-			printk(KERN_INFO "CFG80211-INFO2) %s : ", __func__);	\
+			printk(KERN_INFO "CFG80211-ERROR) %s : ", __func__);	\
 			printk args;						\
 		} 								\
 } while (0)
@@ -74,9 +74,9 @@ do {										\
 #define	WL_ERR(args)									\
 do {										\
 	if ((wl_dbg_level & WL_DBG_ERR) && net_ratelimit()) {				\
-			printk(KERN_INFO "CFG80211-INFO2) %s : ", __func__);	\
+			printk(KERN_INFO "CFG80211-ERROR) %s : ", __func__);	\
 			printk args;						\
-		}								\
+		} 								\
 } while (0)
 #endif /* defined(DHD_DEBUG) */
 
@@ -113,17 +113,7 @@ do {									\
 #ifdef WL_TRACE_HW4
 #undef WL_TRACE_HW4
 #endif
-#ifdef CUSTOMER_HW4
-#define	WL_TRACE_HW4(args)					\
-do {										\
-	if (wl_dbg_level & WL_DBG_ERR) {				\
-			printk(KERN_INFO "CFG80211-TRACE) %s : ", __func__);	\
-			printk args;						\
-		}								\
-} while (0)
-#else
 #define	WL_TRACE_HW4			WL_TRACE
-#endif /* CUSTOMER_HW4 */
 #if (WL_DBG_LEVEL > 0)
 #define	WL_DBG(args)								\
 do {									\
@@ -343,9 +333,7 @@ struct net_info {
 	s32 mode;
 	s32 roam_off;
 	unsigned long sme_state;
-	bool pm_restore;
 	bool pm_block;
-	s32 pm;
 	struct list_head list; /* list of all net_info structure */
 };
 typedef s32(*ISCAN_HANDLER) (struct wl_priv *wl);
@@ -404,21 +392,10 @@ struct escan_info {
 #ifndef CONFIG_DHD_USE_STATIC_BUF
 #error STATIC_WL_PRIV_STRUCT should be used with CONFIG_DHD_USE_STATIC_BUF
 #endif
-#if defined(DUAL_ESCAN_RESULT_BUFFER)
-	u8 *escan_buf[2];
-#else
 	u8 *escan_buf;
-#endif
-#else
-#if defined(DUAL_ESCAN_RESULT_BUFFER)
-	u8 escan_buf[2][ESCAN_BUF_SIZE];
 #else
 	u8 escan_buf[ESCAN_BUF_SIZE];
-#endif
 #endif /* STATIC_WL_PRIV_STRUCT */
-#if defined(DUAL_ESCAN_RESULT_BUFFER)
-	u8 cur_sync_id;
-#endif
 	struct wiphy *wiphy;
 	struct net_device *ndev;
 };
@@ -479,12 +456,6 @@ struct parsed_ies {
 	bcm_tlv_t *wpa2_ie;
 	u32 wpa2_ie_len;
 };
-
-
-#ifdef WL11U
-/* Max length of Interworking element */
-#define IW_IES_MAX_BUF_LEN 		9
-#endif
 
 /* private data of cfg80211 interface */
 struct wl_priv {
@@ -570,20 +541,14 @@ struct wl_priv {
 	bool p2p_supported;
 	struct btcoex_info *btcoex_info;
 	struct timer_list scan_timeout;   /* Timer for catch scan event timeout */
-#ifdef WL_CFG80211_GON_COLLISION
-	u8 block_gon_req_tx_count;
-	u8 block_gon_req_rx_count;
-#endif /* WL_CFG80211_GON_COLLISION */
 	s32(*state_notifier) (struct wl_priv *wl,
 		struct net_info *_net_info, enum wl_status state, bool set);
 	unsigned long interrested_state;
 	wlc_ssid_t hostapd_ssid;
-#ifdef WL11U
-	bool wl11u;
-	u8 iw_ie[IW_IES_MAX_BUF_LEN];
-	u32 iw_ie_len;
-#endif /* WL11U */
 	bool sched_scan_running;	/* scheduled scan req status */
+#ifdef WL_SCHED_SCAN
+	struct cfg80211_sched_scan_request *sched_scan_req;	/* scheduled scan req */
+#endif /* WL_SCHED_SCAN */
 #ifdef WL_HOST_BAND_MGMT
 	u8 curr_band;
 #endif /* WL_HOST_BAND_MGMT */
@@ -610,8 +575,6 @@ wl_alloc_netinfo(struct wl_priv *wl, struct net_device *ndev,
 		_net_info->mode = mode;
 		_net_info->ndev = ndev;
 		_net_info->wdev = wdev;
-		_net_info->pm_restore = 0;
-		_net_info->pm = 0;
 		_net_info->pm_block = pm_block;
 		_net_info->roam_off = WL_INVALID;
 		wl->iface_cnt++;

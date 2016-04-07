@@ -358,16 +358,16 @@ typedef volatile struct {
 	uint32	nand_cache_data;
 	uint32	nand_ctrl_config;
 	uint32	nand_ctrl_status;
-#endif
-	uint32  gci_corecaps0;
+#endif 
+	uint32  gci_corecaps0; 
 	uint32	gci_corecaps1;
 	uint32	gci_corecaps2;
 	uint32	gci_corectrl;
-	uint32	gci_corestat;
+	uint32	gci_corestat; 
 	uint32	PAD[11];
-	uint32	gci_indirect_addr;
+	uint32	gci_indirect_addr; 
 	uint32	PAD[111];
-	uint32	gci_chipctrl;
+	uint32	gci_chipctrl; 
 } chipcregs_t;
 
 #endif 
@@ -2211,14 +2211,14 @@ typedef volatile struct {
 #define	CST4335_RES_INIT_MODE_SHIFT	7
 #define	CST4335_RES_INIT_MODE_MASK	0x00000180
 #define CST4335_CHIPMODE_MASK		0xF
-#define CST4335_CHIPMODE_SDIOD(cs)	(((cs) & (1 << 0)) != 0)
-#define CST4335_CHIPMODE_GSPI(cs)	(((cs) & (1 << 1)) != 0)
-#define CST4335_CHIPMODE_USB20D(cs)	(((cs) & (1 << 2)) != 0)
-#define CST4335_CHIPMODE_PCIE(cs)	(((cs) & (1 << 3)) != 0)
+#define CST4335_CHIPMODE_SDIOD(cs)	(((cs) & (1 << 0)) != 0)	
+#define CST4335_CHIPMODE_GSPI(cs)	(((cs) & (1 << 1)) != 0)	
+#define CST4335_CHIPMODE_USB20D(cs)	(((cs) & (1 << 2)) != 0)	
+#define CST4335_CHIPMODE_PCIE(cs)	(((cs) & (1 << 3)) != 0)	
 
 
-#define CCTRL1_4335_GPIO_SEL		(1 << 0)
-#define CCTRL1_4335_SDIO_HOST_WAKE (1 << 2)
+#define CCTRL1_4335_GPIO_SEL		(1 << 0)    
+#define CCTRL1_4335_SDIO_HOST_WAKE (1 << 2)  
 
 
 #define CR4_RAM_BASE                    (0x180000)

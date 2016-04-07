@@ -44,9 +44,6 @@
 #include <sbsdpcmdev.h>
 #include <bcmsdpcm.h>
 #include <hndpmu.h>
-#ifdef BCMSPI
-#include <spid.h>
-#endif /* BCMSPI */
 
 #include "siutils_priv.h"
 
@@ -109,7 +106,7 @@ si_kattach(osl_t *osh)
 	static bool ksii_attached = FALSE;
 
 	if (!ksii_attached) {
-		void *regs = NULL;
+		void *regs;
 		regs = REG_MAP(SI_ENUM_BASE, SI_CORE_SIZE);
 
 		if (si_doattach(&ksii, BCM4710_DEVICE_ID, osh, regs,
@@ -179,24 +176,6 @@ si_buscore_prep(si_info_t *sii, uint bustype, uint devid, void *sdh)
 		bcmsdh_cfg_write(sdh, SDIO_FUNC_1, SBSDIO_FUNC1_SDIOPULLUP, 0, NULL);
 	}
 
-#ifdef BCMSPI
-	/* Avoid backplane accesses before wake-wlan (i.e. htavail) for spi.
-	 * F1 read accesses may return correct data but with data-not-available dstatus bit set.
-	 */
-	if (BUSTYPE(bustype) == SPI_BUS) {
-
-		int err;
-		uint32 regdata;
-		/* wake up wlan function :WAKE_UP goes as HT_AVAIL request in hardware */
-		regdata = bcmsdh_cfg_read_word(sdh, SDIO_FUNC_0, SPID_CONFIG, NULL);
-		SI_MSG(("F0 REG0 rd = 0x%x\n", regdata));
-		regdata |= WAKE_UP;
-
-		bcmsdh_cfg_write_word(sdh, SDIO_FUNC_0, SPID_CONFIG, regdata, &err);
-
-		OSL_DELAY(100000);
-	}
-#endif /* BCMSPI */
 
 	return TRUE;
 }
