@@ -27,10 +27,8 @@ struct brightness_data {
 
 struct ltn_panel_data {
 	int lvds_nshdn_gpio;
-	int lcd_en_gpio;
 	int led_backlight_reset_gpio;
 	int backlight_gptimer_num;
-	int panel_id;
 	void (*set_power) (bool enable);
 	void (*set_gptimer_idle) (void);
 	struct brightness_data brightness_table;
