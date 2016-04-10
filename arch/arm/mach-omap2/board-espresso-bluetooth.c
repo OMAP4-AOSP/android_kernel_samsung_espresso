@@ -35,11 +35,12 @@
 
 #include <plat/serial.h>
 
-#include "mux.h"
-#include "omap_muxtbl.h"
+#define GPIO_BT_EN		103
+#define GPIO_BT_NRST		82
+#define GPIO_BT_WAKE		93
+#define GPIO_BT_HOST_WAKE	83
 
 static struct rfkill *bt_rfkill;
-static bool bt_enabled;
 static bool host_wake_uart_enabled;
 static bool wake_uart_enabled;
 
@@ -56,59 +57,44 @@ struct bcm_bt_lpm {
 	char wake_lock_name[100];
 } bt_lpm;
 
-enum {
-	GPIO_BT_EN = 0,
-	GPIO_BT_nRST,
-	GPIO_BT_WAKE,
-	GPIO_BT_HOST_WAKE
-};
-
 static struct gpio bt_gpios[] = {
-	[GPIO_BT_EN] = {
+	{
 		.flags	= GPIOF_OUT_INIT_LOW,
 		.label	= "BT_EN",
+		.gpio	= GPIO_BT_EN,
 	},
-	[GPIO_BT_nRST] = {
+	{
 		.flags	= GPIOF_OUT_INIT_LOW,
 		.label	= "BT_nRST",
+		.gpio	= GPIO_BT_NRST,
 	},
-	[GPIO_BT_WAKE] = {
+	{
 		.flags	= GPIOF_OUT_INIT_LOW,
 		.label	= "BT_WAKE",
+		.gpio	= GPIO_BT_WAKE,
 	},
-	[GPIO_BT_HOST_WAKE] = {
+	{
 		.flags	= GPIOF_IN,
 		.label	= "BT_HOST_WAKE",
+		.gpio	= GPIO_BT_HOST_WAKE,
 	},
 };
-
-static void bt_gpio_init(void)
-{
-	int i;
-
-	for (i = 0; i < ARRAY_SIZE(bt_gpios); i++)
-		bt_gpios[i].gpio =
-		    omap_muxtbl_get_gpio_by_name(bt_gpios[i].label);
-	gpio_request_array(bt_gpios, ARRAY_SIZE(bt_gpios));
-}
 
 static int bcm4330_bt_rfkill_set_power(void *data, bool blocked)
 {
 	/* rfkill_ops callback. Turn transmitter on when blocked is false */
 	if (!blocked) {
 		pr_info("[BT] Bluetooth Power On.\n");
-		gpio_set_value(bt_gpios[GPIO_BT_EN].gpio, 1);
-			msleep(100);
-		gpio_set_value(bt_gpios[GPIO_BT_nRST].gpio, 1);
-			msleep(50);
+		gpio_set_value(GPIO_BT_EN, 1);
+		msleep(100);
+		gpio_set_value(GPIO_BT_NRST, 1);
+		msleep(50);
 
 	} else {
 		pr_info("[BT] Bluetooth Power Off.\n");
-		gpio_set_value(bt_gpios[GPIO_BT_nRST].gpio, 0);
-		gpio_set_value(bt_gpios[GPIO_BT_EN].gpio, 0);
+		gpio_set_value(GPIO_BT_NRST, 0);
+		gpio_set_value(GPIO_BT_EN, 0);
 	}
-
-	bt_enabled = !blocked;
 
 	return 0;
 }
@@ -127,7 +113,7 @@ static void set_wake_locked(int wake)
 	if (!wake_uart_enabled && wake)
 		omap_uart_enable(2);
 
-	gpio_set_value(bt_gpios[GPIO_BT_WAKE].gpio, wake);
+	gpio_set_value(GPIO_BT_WAKE, wake);
 
 	if (wake_uart_enabled && !wake)
 		omap_uart_disable(2);
@@ -180,7 +166,6 @@ static void update_host_wake_locked(int host_wake)
 	}
 
 	host_wake_uart_enabled = host_wake;
-
 }
 
 static irqreturn_t host_wake_isr(int irq, void *dev)
@@ -188,7 +173,7 @@ static irqreturn_t host_wake_isr(int irq, void *dev)
 	int host_wake;
 	unsigned long flags;
 
-	host_wake = gpio_get_value(bt_gpios[GPIO_BT_HOST_WAKE].gpio);
+	host_wake = gpio_get_value(GPIO_BT_HOST_WAKE);
 	irq_set_irq_type(irq, host_wake ? IRQF_TRIGGER_LOW : IRQF_TRIGGER_HIGH);
 
 	if (!bt_lpm.uport) {
@@ -219,24 +204,24 @@ static int bcm_bt_lpm_init(struct platform_device *pdev)
 
 	bt_lpm.host_wake = 0;
 
-	irq = gpio_to_irq(bt_gpios[GPIO_BT_HOST_WAKE].gpio);
+	irq = gpio_to_irq(GPIO_BT_HOST_WAKE);
 	ret = request_irq(irq, host_wake_isr, IRQF_TRIGGER_HIGH,
 		"bt host_wake", NULL);
 	if (ret) {
-		gpio_free(bt_gpios[GPIO_BT_WAKE].gpio);
-		gpio_free(bt_gpios[GPIO_BT_HOST_WAKE].gpio);
+		gpio_free(GPIO_BT_WAKE);
+		gpio_free(GPIO_BT_HOST_WAKE);
 		return ret;
 	}
 
 	ret = irq_set_irq_wake(irq, 1);
 	if (ret) {
-		gpio_free(bt_gpios[GPIO_BT_WAKE].gpio);
-		gpio_free(bt_gpios[GPIO_BT_HOST_WAKE].gpio);
+		gpio_free(GPIO_BT_WAKE);
+		gpio_free(GPIO_BT_HOST_WAKE);
 		return ret;
 	}
 
-	gpio_direction_output(bt_gpios[GPIO_BT_WAKE].gpio, 0);
-	gpio_direction_input(bt_gpios[GPIO_BT_HOST_WAKE].gpio);
+	gpio_direction_output(GPIO_BT_WAKE, 0);
+	gpio_direction_input(GPIO_BT_HOST_WAKE);
 
 	return 0;
 }
@@ -246,19 +231,18 @@ static int bcm4330_bluetooth_probe(struct platform_device *pdev)
 	int rc = 0;
 	int ret = 0;
 
-	bt_gpio_init();
+	gpio_request_array(bt_gpios, ARRAY_SIZE(bt_gpios));
 
-
-	gpio_direction_output(bt_gpios[GPIO_BT_EN].gpio, 0);
-	gpio_direction_output(bt_gpios[GPIO_BT_nRST].gpio, 0);
+	gpio_direction_output(GPIO_BT_EN, 0);
+	gpio_direction_output(GPIO_BT_NRST, 0);
 
 	bt_rfkill = rfkill_alloc("bcm4330 Bluetooth", &pdev->dev,
 				RFKILL_TYPE_BLUETOOTH, &bcm4330_bt_rfkill_ops,
 				NULL);
 
 	if (unlikely(!bt_rfkill)) {
-		gpio_free(bt_gpios[GPIO_BT_nRST].gpio);
-		gpio_free(bt_gpios[GPIO_BT_EN].gpio);
+		gpio_free(GPIO_BT_NRST);
+		gpio_free(GPIO_BT_EN);
 		return -ENOMEM;
 	}
 
@@ -268,8 +252,8 @@ static int bcm4330_bluetooth_probe(struct platform_device *pdev)
 
 	if (unlikely(rc)) {
 		rfkill_destroy(bt_rfkill);
-		gpio_free(bt_gpios[GPIO_BT_nRST].gpio);
-		gpio_free(bt_gpios[GPIO_BT_EN].gpio);
+		gpio_free(GPIO_BT_NRST);
+		gpio_free(GPIO_BT_EN);
 		return -1;
 	}
 
@@ -280,8 +264,8 @@ static int bcm4330_bluetooth_probe(struct platform_device *pdev)
 		rfkill_unregister(bt_rfkill);
 		rfkill_destroy(bt_rfkill);
 
-		gpio_free(bt_gpios[GPIO_BT_nRST].gpio);
-		gpio_free(bt_gpios[GPIO_BT_EN].gpio);
+		gpio_free(GPIO_BT_NRST);
+		gpio_free(GPIO_BT_EN);
 	}
 
 	return ret;
@@ -292,10 +276,7 @@ static int bcm4330_bluetooth_remove(struct platform_device *pdev)
 	rfkill_unregister(bt_rfkill);
 	rfkill_destroy(bt_rfkill);
 
-	gpio_free(bt_gpios[GPIO_BT_EN].gpio);
-	gpio_free(bt_gpios[GPIO_BT_nRST].gpio);
-	gpio_free(bt_gpios[GPIO_BT_WAKE].gpio);
-	gpio_free(bt_gpios[GPIO_BT_HOST_WAKE].gpio);
+	gpio_free_array(bt_gpios, ARRAY_SIZE(bt_gpios));
 
 	wake_lock_destroy(&bt_lpm.wake_lock);
 	return 0;
@@ -303,11 +284,11 @@ static int bcm4330_bluetooth_remove(struct platform_device *pdev)
 
 int bcm4430_bluetooth_suspend(struct platform_device *pdev, pm_message_t state)
 {
-	int irq = gpio_to_irq(bt_gpios[GPIO_BT_HOST_WAKE].gpio);
+	int irq = gpio_to_irq(GPIO_BT_HOST_WAKE);
 	int host_wake;
 
 	disable_irq(irq);
-	host_wake = gpio_get_value(bt_gpios[GPIO_BT_HOST_WAKE].gpio);
+	host_wake = gpio_get_value(GPIO_BT_HOST_WAKE);
 
 	if (host_wake) {
 		enable_irq(irq);
@@ -319,7 +300,7 @@ int bcm4430_bluetooth_suspend(struct platform_device *pdev, pm_message_t state)
 
 int bcm4430_bluetooth_resume(struct platform_device *pdev)
 {
-	int irq = gpio_to_irq(bt_gpios[GPIO_BT_HOST_WAKE].gpio);
+	int irq = gpio_to_irq(GPIO_BT_HOST_WAKE);
 	enable_irq(irq);
 	return 0;
 }
@@ -328,24 +309,21 @@ static struct platform_driver bcm4330_bluetooth_platform_driver = {
 	.probe = bcm4330_bluetooth_probe,
 	.remove = bcm4330_bluetooth_remove,
 	.driver = {
-		   .name = "bcm4330_bluetooth",
-		   .owner = THIS_MODULE,
-		   },
+		.name = "bcm4330_bluetooth",
+		.owner = THIS_MODULE,
+	},
 };
 
 static int __init bcm4330_bluetooth_init(void)
 {
-	bt_enabled = false;
 	return platform_driver_register(&bcm4330_bluetooth_platform_driver);
 }
+module_init(bcm4330_bluetooth_init);
 
 static void __exit bcm4330_bluetooth_exit(void)
 {
 	platform_driver_unregister(&bcm4330_bluetooth_platform_driver);
 }
-
-
-module_init(bcm4330_bluetooth_init);
 module_exit(bcm4330_bluetooth_exit);
 
 MODULE_ALIAS("platform:bcm4330");
