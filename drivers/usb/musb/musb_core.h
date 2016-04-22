@@ -553,10 +553,6 @@ struct musb {
 #ifdef MUSB_CONFIG_PROC_FS
 	struct proc_dir_entry *proc_entry;
 #endif
-#ifdef CONFIG_USB_SAMSUNG_OMAP_NORPM
-	int async_resume;
-	int reserve_async_suspend;
-#endif
 	int vbus_reset_count;
 	unsigned int otg_enum_delay;
 #ifdef CONFIG_OMAP4_DPLL_CASCADING
@@ -732,25 +728,6 @@ static inline int musb_platform_otg_notifications(struct musb *musb, u32 event)
 
 	return musb->ops->otg_notifications(musb, event);
 }
-
-#ifdef CONFIG_USB_SAMSUNG_OMAP_NORPM
-static inline int musb_platform_async_suspend(struct musb *musb)
-{
-	if (!musb->ops->async_suspend)
-		return -EINVAL;
-
-	return musb->ops->async_suspend(musb);
-}
-static inline int musb_platform_async_resume(struct musb *musb)
-{
-	if (!musb->ops->async_resume)
-		return -EINVAL;
-
-	return musb->ops->async_resume(musb);
-}
-extern int musb_add_hcd(struct musb *musb);
-extern int musb_remove_hcd(struct musb *musb);
-#endif
 
 extern int musb_async_suspend(struct musb *musb);
 extern int musb_async_resume(struct musb *musb);

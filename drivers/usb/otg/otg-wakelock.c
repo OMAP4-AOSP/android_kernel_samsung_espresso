@@ -95,7 +95,6 @@ static void otgwl_handle_event(unsigned long event)
 		break;
 
 	case USB_EVENT_NONE:
-	case USB_EVENT_HOST_NONE:
 	case USB_EVENT_CHARGER:
 		otgwl_temporary_hold(&vbus_lock);
 		break;

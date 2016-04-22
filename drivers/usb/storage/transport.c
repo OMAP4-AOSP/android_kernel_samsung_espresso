@@ -1333,10 +1333,8 @@ int usb_stor_port_reset(struct us_data *us)
 		return -EPERM;
 
 	result = usb_lock_device_for_reset(us->pusb_dev, us->pusb_intf);
-	if (result < 0) {
+	if (result < 0)
 		US_DEBUGP("unable to lock device for reset: %d\n", result);
-		msleep(30);
-	}
 	else {
 		/* Were we disconnected while waiting for the lock? */
 		if (test_bit(US_FLIDX_DISCONNECTING, &us->dflags)) {
