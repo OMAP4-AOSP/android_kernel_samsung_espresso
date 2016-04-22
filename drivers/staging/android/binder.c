@@ -3162,13 +3162,7 @@ static void binder_deferred_release(struct binder_proc *proc)
 					     page_addr);
 				unmap_kernel_range((unsigned long)page_addr,
 					PAGE_SIZE);
-				if (IS_ALIGNED((unsigned long)proc->pages[i],
-						4))
-					__free_page(proc->pages[i]);
-				else
-					printk(KERN_ERR "binder_release: %d: "
-						"page %d addr %p is invalid\n",
-						proc->pid, i, proc->pages[i]);
+				__free_page(proc->pages[i]);
 				page_count++;
 			}
 		}

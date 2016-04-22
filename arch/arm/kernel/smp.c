@@ -556,9 +556,6 @@ static void ipi_cpu_stop(unsigned int cpu)
 	local_fiq_disable();
 	local_irq_disable();
 
-	flush_cache_all();
-	local_flush_tlb_all();
-
 	while (1)
 		cpu_relax();
 }
@@ -664,7 +661,6 @@ asmlinkage void __exception_irq_entry do_IPI(int ipinr, struct pt_regs *regs)
 		       cpu, ipinr);
 		break;
 	}
-
 	set_irq_regs(old_regs);
 }
 

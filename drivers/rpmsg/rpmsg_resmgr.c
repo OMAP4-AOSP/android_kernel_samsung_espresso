@@ -296,8 +296,7 @@ int rprm_regulator_request(struct rprm_elem *e, struct rprm_regulator *obj)
 	reg_name = rpmsg_cam_regulator_name[obj->id - 1];
 	rd->reg_p = regulator_get_exclusive(NULL, reg_name);
 	if (IS_ERR_OR_NULL(rd->reg_p)) {
-		pr_err("%s: error providing regulator %s\n",
-			__func__, reg_name);
+		pr_err("%s: error providing regulator %s\n", __func__, reg_name);
 		ret = -EINVAL;
 		goto error;
 	}

@@ -590,7 +590,7 @@ static int dsscomp_probe(struct platform_device *pdev)
 	if (ret) {
 		kfree(cdev);
 		pr_err("dsscomp: failed to register misc device.\n");
-		goto err_misc_register;
+		return ret;
 	}
 	cdev->dbgfs = debugfs_create_dir("dsscomp", NULL);
 	if (IS_ERR_OR_NULL(cdev->dbgfs))
@@ -615,20 +615,10 @@ static int dsscomp_probe(struct platform_device *pdev)
 	fill_platform_info(cdev);
 
 	/* initialize queues */
-	ret = dsscomp_queue_init(cdev);
-	if (ret < 0) {
-		pr_err("dsscomp: failed to init queue.\n");
-		goto error_queue_init;
-	}
+	dsscomp_queue_init(cdev);
 	dsscomp_gralloc_init(cdev);
 
 	return 0;
-
-error_queue_init:
-	misc_deregister(&cdev->dev);
-err_misc_register:
-	kfree(cdev);
-	return ret;
 }
 
 static int dsscomp_remove(struct platform_device *pdev)

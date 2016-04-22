@@ -419,11 +419,6 @@ unsigned long dss_feat_get_param_min(enum dss_range_param param)
 
 unsigned long dss_feat_get_param_max(enum dss_range_param param)
 {
-	if (!omap_current_dss_features) {
-		DSSWARN("omap_current_dss_features is not initialized.");
-		return -ENODEV;
-	}
-
 	return omap_current_dss_features->dss_params[param].max;
 }
 
