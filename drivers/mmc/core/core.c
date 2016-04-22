@@ -1988,13 +1988,11 @@ int mmc_pm_notify(struct notifier_block *notify_block,
 			host->bus_ops->remove(host);
 
 		mmc_detach_bus(host);
-
         /* for BCM WIFI */
         if (host->card && omaphost)
         printk(KERN_WARNING"%s(): WIFI SKIP MMC POWER OFF\n",__func__);
         else
 		mmc_power_off(host);
-
 		mmc_release_host(host);
 		host->pm_flags = 0;
 		break;

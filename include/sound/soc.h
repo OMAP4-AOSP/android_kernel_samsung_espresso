@@ -680,12 +680,7 @@ struct snd_soc_platform_driver {
 	int (*resume)(struct snd_soc_dai *dai);
 
 	/* pcm creation and destruction */
-#ifdef CONFIG_ARCH_OMAP
 	int (*pcm_new)(struct snd_soc_pcm_runtime *);
-#else
-	int (*pcm_new)(struct snd_card *, struct snd_soc_dai *,
-		struct snd_pcm *);
-#endif
 	void (*pcm_free)(struct snd_pcm *);
 
 	/*

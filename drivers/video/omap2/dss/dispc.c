@@ -621,8 +621,8 @@ void dispc_runtime_put(void)
 		dispc_save_context();
 
 		/* Sets DSS max latency constraint
-		* * (allowing for deeper power state)
-		* */
+		 * * (allowing for deeper power state)
+		 * */
 		 omap_pm_set_max_dev_wakeup_lat(
 			 &dispc.pdev->dev,
 			&dispc.pdev->dev,

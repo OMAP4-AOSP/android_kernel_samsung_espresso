@@ -241,7 +241,6 @@ struct omap_hsmmc_host {
 	int			got_dbclk;
 	int			response_busy;
 	int			dpm_state;
-	int			dpm_state_curr;
 	int			vdd;
 	int			protect_card;
 	int			reqs_blocked;
@@ -251,7 +250,6 @@ struct omap_hsmmc_host {
 	unsigned int		errata;
 	int			external_ldo;
 	int			gpio_for_ldo;
-	struct	timer_list	sw_timer;
 	struct	omap_mmc_platform_data	*pdata;
 };
 

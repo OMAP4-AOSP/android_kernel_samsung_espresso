@@ -1197,12 +1197,6 @@ void resume_console(void)
 	console_unlock();
 }
 
-int get_console_suspended(void)
-{
-	return console_suspended;
-}
-EXPORT_SYMBOL(get_console_suspended);
-
 /**
  * console_cpu_notify - print deferred console messages after CPU hotplug
  * @self: notifier struct
