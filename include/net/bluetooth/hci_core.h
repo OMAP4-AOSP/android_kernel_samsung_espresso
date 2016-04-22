@@ -460,12 +460,6 @@ int hci_conn_security(struct hci_conn *conn, __u8 sec_level, __u8 auth_type);
 int hci_conn_change_link_key(struct hci_conn *conn);
 int hci_conn_switch_role(struct hci_conn *conn, __u8 role);
 
-/* BEGIN SS_BLUEZ_BT +kjh 2011.06.23 : */
-/* workaround for a2dp chopping in multi connection.*/
-int hci_conn_change_policy(struct hci_conn *conn, __u8 policy);
-int hci_conn_set_encrypt(struct hci_conn *conn, __u8 enable);
-/* END SS_BLUEZ_BT */
-
 void hci_conn_enter_active_mode(struct hci_conn *conn, __u8 force_active);
 void hci_conn_enter_sniff_mode(struct hci_conn *conn);
 
