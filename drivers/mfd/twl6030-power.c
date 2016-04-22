@@ -93,8 +93,12 @@ static __initdata struct twl6030_resource_map twl6030_res_map[] = {
 /* list of all s/w modifiable resources in TWL6032 */
 static __initdata struct twl6030_resource_map twl6032_res_map[] = {
 	/* PREQx_RES_ASS_A register resources */
+	TWL6032_RES_DATA(RES_LDOUSB, "VUSB", 0, DEV_GRP_P1, BIT(5)),
+	TWL6032_RES_DATA(RES_SMPS5, "SMPS5", 0, DEV_GRP_P1, BIT(4)),
 	TWL6032_RES_DATA(RES_SMPS4, "SMPS4", 0, DEV_GRP_P1, BIT(3)),
 	TWL6032_RES_DATA(RES_SMPS3, "SMPS3", 0, DEV_GRP_P1, BIT(2)),
+	TWL6032_RES_DATA(RES_SMPS2, "SMPS2", 0, DEV_GRP_P1, BIT(1)),
+	TWL6032_RES_DATA(RES_SMPS1, "SMPS1", 0, DEV_GRP_P1, BIT(0)),
 	/* PREQx_RES_ASS_B register resources */
 	TWL6032_RES_DATA(RES_LDOLN, "LDOLN", 1, DEV_GRP_P1, BIT(7)),
 	TWL6032_RES_DATA(RES_LDO7, "LDO7", 1, DEV_GRP_P1, BIT(6)),
@@ -333,18 +337,21 @@ void __init twl6030_power_init(struct twl4030_power_data *power_data, \
 {
 	int r;
 
-	if (power_data) {
-		if (power_data->resource_config)
-			twl6030_update_map(power_data->resource_config,
-							features);
-
-		if (power_data->sys_config)
-			twl6030_update_system_map(power_data->sys_config);
-
-		if (power_data->twl4030_board_init)
-			power_data->twl4030_board_init();
+	if (power_data && (!power_data->resource_config &&
+					!power_data->sys_config)) {
+		pr_err("%s: power data from platform without configuration!\n",
+		       __func__);
+		return;
 	}
 
+	if (power_data && power_data->resource_config)
+		twl6030_update_map(power_data->resource_config, features);
+
+	if (power_data && power_data->sys_config)
+		twl6030_update_system_map(power_data->sys_config);
+
+	if (power_data && power_data->twl4030_board_init)
+		power_data->twl4030_board_init();
 	twl6030_process_system_config();
 
 	twl6030_program_map(features);

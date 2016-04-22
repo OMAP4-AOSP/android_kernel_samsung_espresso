@@ -1060,6 +1060,21 @@ add_children(struct twl4030_platform_data *pdata, unsigned long features,
 		if (IS_ERR(child))
 			return PTR_ERR(child);
 
+		child = add_regulator(TWL6030_REG_VDD1, pdata->vdd1,
+					features);
+		if (IS_ERR(child))
+			return PTR_ERR(child);
+
+		child = add_regulator(TWL6030_REG_VDD2, pdata->vdd2,
+					features);
+		if (IS_ERR(child))
+			return PTR_ERR(child);
+
+		child = add_regulator(TWL6030_REG_VDD3, pdata->vdd3,
+					features);
+		if (IS_ERR(child))
+			return PTR_ERR(child);
+
 		child = add_regulator(TWL6030_REG_VMEM, pdata->vmem,
 					features);
 		if (IS_ERR(child))
@@ -1071,14 +1086,9 @@ add_children(struct twl4030_platform_data *pdata, unsigned long features,
 			return PTR_ERR(child);
 	}
 
-	/* 6030 and 6032 and 6034 share these resources */
+	/* 6030 and 6032 share this regulator */
 	if (twl_has_regulator() && twl_class_is_6030()) {
 		child = add_regulator(TWL6030_REG_VANA, pdata->vana,
-					features);
-		if (IS_ERR(child))
-			return PTR_ERR(child);
-
-		child = add_regulator(TWL6030_REG_SYSEN, pdata->sysen,
 					features);
 		if (IS_ERR(child))
 			return PTR_ERR(child);
@@ -1093,27 +1103,13 @@ add_children(struct twl4030_platform_data *pdata, unsigned long features,
 		if (IS_ERR(child))
 			return PTR_ERR(child);
 
-		child = add_regulator(TWL6030_REG_REGEN1,
+		child = add_regulator(TWL6030_REG_SYSEN,
 				pdata->sysen, features);
 		if (IS_ERR(child))
 			return PTR_ERR(child);
-	}
 
-	/* twl6032 smps */
-	if (twl_has_regulator() && twl_class_is_6030() &&
-		(features & (TWL6032_SUBCLASS))) {
-		child = add_regulator(TWL6032_REG_SMPS3, pdata->smps3,
-					features);
-		if (IS_ERR(child))
-			return PTR_ERR(child);
-
-		child = add_regulator(TWL6032_REG_SMPS4, pdata->smps4,
-					features);
-		if (IS_ERR(child))
-			return PTR_ERR(child);
-
-		child = add_regulator(TWL6032_REG_VIO, pdata->vio6032,
-					features);
+		child = add_regulator(TWL6030_REG_REGEN1,
+				pdata->regen1, features);
 		if (IS_ERR(child))
 			return PTR_ERR(child);
 	}
@@ -1160,6 +1156,22 @@ add_children(struct twl4030_platform_data *pdata, unsigned long features,
 					features);
 		if (IS_ERR(child))
 			return PTR_ERR(child);
+
+		child = add_regulator(TWL6032_REG_SMPS3, pdata->smps3,
+					features);
+		if (IS_ERR(child))
+			return PTR_ERR(child);
+
+		child = add_regulator(TWL6032_REG_SMPS4, pdata->smps4,
+					features);
+		if (IS_ERR(child))
+			return PTR_ERR(child);
+
+		child = add_regulator(TWL6032_REG_VIO, pdata->vio6032,
+					features);
+		if (IS_ERR(child))
+			return PTR_ERR(child);
+
 	}
 
 	if (twl_has_bci() && pdata->bci &&
@@ -1367,7 +1379,6 @@ twl_probe(struct i2c_client *client, const struct i2c_device_id *id)
 		twl_6030_lite = true;
 		dev_info(&client->dev, "Board PMIC is TWL6032\n");
 	}
-
 
 	/* setup clock framework */
 	clocks_init(&client->dev, pdata->clock);

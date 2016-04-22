@@ -34,6 +34,9 @@
 #include "omap_muxtbl.h"
 #include "common-board-devices.h"
 
+#define TWL6030_BBSPOR_CFG			0xE6
+#define TWL6030_PHOENIX_MSK_TRANSITION		0x20
+
 #define TWL_REG_CONTROLLER_INT_MASK	0x00
 #define TWL_CONTROLLER_MVBUS_DET	(1 << 1)
 #define TWL_CONTROLLER_RSVD		(1 << 5)

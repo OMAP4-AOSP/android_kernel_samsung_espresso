@@ -72,12 +72,6 @@ static int wm8994_ldo_is_enabled(struct regulator_dev *rdev)
 
 static int wm8994_ldo_enable_time(struct regulator_dev *rdev)
 {
-	struct wm8994_ldo *ldo = rdev_get_drvdata(rdev);
-	struct wm8994_pdata *pdata = ldo->wm8994->dev->platform_data;
-
-	if (pdata->ldo_ena_delay)
-		return pdata->ldo_ena_delay;
-
 	/* 3ms is fairly conservative but this shouldn't be too performance
 	 * critical; can be tweaked per-system if required. */
 	return 3000;

@@ -74,7 +74,6 @@
 #define TWL4030_MODULE_SECURED_REG	0x17
 #define TWL6032_MODULE_CHARGER		0x18
 #define TWL6030_MODULE_SLAVE_RES	0x19
-#define TWL6034_MODULE_LDO2		0x1A
 
 #define TWL_MODULE_USB		TWL4030_MODULE_USB
 #define TWL_MODULE_AUDIO_VOICE	TWL4030_MODULE_AUDIO_VOICE
@@ -187,10 +186,8 @@ static inline int twl_class_is_ ##class(void)	\
 TWL_CLASS_IS(4030, TWL4030_CLASS_ID)
 TWL_CLASS_IS(6030, TWL6030_CLASS_ID)
 
-
 #define TWL6030_CLASS		BIT(3)	/* TWL6030 class */
 #define TWL6032_SUBCLASS	BIT(4)  /* Phoenix Lite is a varient*/
-#define TWL6034_SUBCLASS	BIT(5)  /* Varient of Phoenix Lite */
 
 bool is_twl6030_lite(void);
 /*
@@ -475,9 +472,7 @@ int twl6030_unregister_notifier(struct notifier_block *nb,
 
 #define TWL4030_PM_MASTER_GLOBAL_TST		0xb6
 
-#define TWL6030_PHOENIX_MSK_TRANSITION		0x20
 #define TWL6030_PHOENIX_DEV_ON			0x25
-#define TWL6030_BBSPOR_CFG				0xE6
 
 /*
  * TWL6030 PM Master module register offsets (use TWL_MODULE_PM_MASTER)
@@ -993,31 +988,6 @@ static inline int twl4030charger_usb_en(int enable) { return 0; }
 /* External control pins */
 #define TWL6030_REG_SYSEN	62
 #define TWL6030_REG_REGEN1	63
-
-
-#define TWL6034_REG_SMPSN7	64
-#define TWL6034_REG_SMPSN8	65
-#define TWL6034_REG_SMPSN9	66
-#define TWL6034_REG_SMPSN10	67
-
-#define TWL6034_REG_LDON12	68
-#define TWL6034_REG_LDON13	69
-#define TWL6034_REG_LDON14	70
-#define TWL6034_REG_LDON15	71
-
-#define TWL6034_REG_LDON16	72
-#define TWL6034_REG_LDON17	73
-#define TWL6034_REG_LDON18	74
-#define TWL6034_REG_LDON19	75
-#define TWL6034_REG_LDON20	76
-#define TWL6034_REG_LDON21	77
-#define TWL6034_REG_LDON22	78
-#define TWL6034_REG_LDON23	79
-#define TWL6034_REG_LDON24	80
-#define TWL6034_REG_LDON25	81
-#define TWL6034_REG_LDON26	82
-#define TWL6034_REG_LDON27	83
-#define TWL6034_REG_LDON28	84
 
 #define TWL6032_PREQ1_RES_ASS_A	0xd7
 

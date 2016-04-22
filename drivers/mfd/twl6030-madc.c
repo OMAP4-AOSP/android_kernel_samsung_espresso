@@ -84,7 +84,7 @@ static inline int twl6030_madc_start_conversion(struct twl6030_madc_data *madc)
 
 	udelay(100);
 	if (madc->features & TWL6032_SUBCLASS) {
-		ret = twl_i2c_write_u8(TWL_MODULE_MADC, TWL6032_MADC_SP,
+		ret = twl_i2c_write_u8(TWL_MODULE_MADC, TWL6030_MADC_SP1,
 				TWL6032_MADC_CTRL_P1);
 		if (ret) {
 			dev_err(madc->dev, "unable to write register 0x%X\n",
@@ -167,7 +167,6 @@ static int twl6030_madc_channel_raw_read(struct twl6030_madc_data *madc,
 	int status_reg;
 
 	mutex_lock(&madc->lock);
-
 	ret = twl6030_madc_start_conversion(twl6030_madc);
 	if (ret)
 		goto unlock;
@@ -225,24 +224,6 @@ int twl6030_get_madc_conversion(int channel_no)
 			return -EINVAL;
 		}
 
-		if (twl6030_madc->features & TWL6034_SUBCLASS) {
-			switch (channel_no) {
-			case 5:
-			case 6:
-			case 9:
-			case 10:
-			case 11:
-			case 14:
-			case 16:
-			case 17:
-			case 18:
-				dev_err(twl6030_madc->dev,
-				"%s: Channel number (%d) not in twl6034 (%d)\n",
-				__func__, channel_no,
-				TWL6032_MADC_MAX_CHANNELS);
-				return -EINVAL;
-			}
-		}
 		twl_i2c_write_u8(TWL_MODULE_MADC, channel_no,
 					TWL6032_MADC_GPSELECT_ISB);
 		reg = TWL6032_MADC_GPCH0_LSB;
