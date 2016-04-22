@@ -22,7 +22,6 @@
 #include <linux/init.h>
 #include <linux/interrupt.h>
 #include <linux/kernel.h>
-#include <linux/platform_data/fsa9480.h>
 #include <linux/regulator/consumer.h>
 #include <linux/usb/otg.h>
 #include <linux/delay.h>

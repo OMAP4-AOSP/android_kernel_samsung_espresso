@@ -66,9 +66,7 @@ static void omap4430_phy_init_for_eyediagram(u32 swcap_trim_offset)
 		__func__,
 		swcap_trim_offset,
 		__raw_readl(ctrl_base + USB2PHYCM_TRIM_OFFSET));
-#ifndef CONFIG_USB_SWITCH_FSA9480
 	iounmap(ctrl_base);
-#endif	/* CONFIG_USB_SWITCH_FSA9480 */
 }
 
 static void omap4430_phy_remove_for_eyediagram(void)

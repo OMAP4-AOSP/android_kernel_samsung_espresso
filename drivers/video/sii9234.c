@@ -35,10 +35,6 @@
 #include <linux/wait.h>
 #include <linux/workqueue.h>
 
-#ifdef CONFIG_USB_SWITCH_FSA9480
-#include <linux/usb/otg_id.h>
-#endif
-
 #ifdef CONFIG_SEC_30PIN_CON
 #include <linux/30pin_con.h>
 #endif
@@ -425,9 +421,6 @@ struct msc_packet {
 
 struct sii9234_data {
 	struct sii9234_platform_data	*pdata;
-#ifdef CONFIG_USB_SWITCH_FSA9480
-	struct otg_id_notifier_block	otg_id_nb;
-#endif
 #ifdef CONFIG_SEC_30PIN_CON
 	struct notifier_block           acc_con_nb;
 #endif
@@ -1622,11 +1615,7 @@ static int sii9234_detection_init(struct sii9234_data *sii9234)
 		goto unhandled;
 
 	if (sii9234->state == STATE_DISCOVERY_FAILED) {
-#ifdef CONFIG_USB_SWITCH_FSA9480
-		handled = MHL_CON_PROXY_WAIT;
-#else
 		handled = MHL_CON_UNHANDLED;
-#endif
 		goto unhandled;
 	}
 
@@ -1723,13 +1712,6 @@ unhandled:
 	disable_irq_nosync(sii9234->irq);
 
 /* this is for MHL 1.1 spec. currently, 30pin model don't use this */
-#ifdef CONFIG_USB_SWITCH_FSA9480
-	/*mhl spec: 8.3.3, if discovery failed, must retry discovering*/
-	if (sii9234->rgnd == RGND_1K) {
-		schedule_work(&sii9234->redetect_work);
-		handled = MHL_CON_HANDLED;
-	} else
-#endif
 	sii9234_power_down(sii9234);
 
 #ifdef CONFIG_SEC_30PIN_CON
@@ -1760,32 +1742,8 @@ static void sii9234_detection_restart(struct work_struct *work)
 	sii9234->pdata->enable_adc_change();
 	if (sii9234_detection_init(sii9234) == MHL_CON_UNHANDLED) {
 		pr_info("sii9234: redetection failed\n");
-#ifdef CONFIG_USB_SWITCH_FSA9480
-		otg_id_notify();
-#endif
 	}
 }
-
-#ifdef CONFIG_USB_SWITCH_FSA9480
-static void sii9234_cancel_callback(struct otg_id_notifier_block *nb)
-{
-	struct sii9234_data *sii9234 = container_of(nb, struct sii9234_data,
-						otg_id_nb);
-
-	mutex_lock(&sii9234->lock);
-	sii9234_power_down(sii9234);
-	mutex_unlock(&sii9234->lock);
-}
-
-static int sii9234_fsa_callback(struct otg_id_notifier_block *nb)
-{
-	int ret = 0;
-	struct sii9234_data *sii9234 = container_of(nb, struct sii9234_data,
-						otg_id_nb);
-	ret = sii9234_detection_init(sii9234);
-	return ret;
-}
-#endif
 
 #ifdef CONFIG_SEC_30PIN_CON
 static int sii9234_30pin_callback(struct notifier_block *this,
@@ -2391,9 +2349,6 @@ err_exit:
 
 	if (sii9234->release_otg) {
 		pr_info("sii9234: releasing MHL connection\n");
-#ifdef CONFIG_USB_SWITCH_FSA9480
-		otg_id_notify();
-#endif
 	}
 
 	return IRQ_HANDLED;
@@ -2507,19 +2462,6 @@ static int __devinit sii9234_mhl_tx_i2c_probe(struct i2c_client *client,
 
 	disable_irq(client->irq);
 
-#ifdef CONFIG_USB_SWITCH_FSA9480
-	sii9234->otg_id_nb.detect = sii9234_fsa_callback;
-	sii9234->otg_id_nb.cancel = sii9234_cancel_callback;
-	sii9234->otg_id_nb.priority = sii9234->pdata->prio;
-
-	plist_node_init(&sii9234->otg_id_nb.p, sii9234->pdata->prio);
-
-	ret = otg_id_register_notifier(&sii9234->otg_id_nb);
-	if (ret < 0) {
-		dev_err(&client->dev, "Unable to register notifier\n");
-		goto err_exit0;
-	}
-#endif
 #ifdef CONFIG_SEC_30PIN_CON
 	sii9234->acc_con_nb.notifier_call = sii9234_30pin_callback;
 	sii9234->pdata->reg_notifier(&sii9234->acc_con_nb);
