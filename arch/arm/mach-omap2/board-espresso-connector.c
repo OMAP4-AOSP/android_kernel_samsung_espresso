@@ -1358,15 +1358,3 @@ switch_dev_fail:
 
 	espresso_otg->current_device = 0;
 }
-
-int __init omap4_espresso_connector_late_init(void)
-{
-	if (!board_has_modem()) {
-		if (gpio_get_value(connector_gpios[GPIO_JIG_ON].gpio))
-			uart_set_l3_cstr(true);
-	}
-
-	return 0;
-}
-
-late_initcall(omap4_espresso_connector_late_init);

@@ -54,16 +54,6 @@
 #define UART_OMAP_IIR_ID		0x3e
 #define UART_OMAP_IIR_RX_TIMEOUT	0xc
 
-#ifdef CONFIG_OMAP_PM
-#include <linux/pm_qos_params.h>
-static struct pm_qos_request_list uart_pm_qos_handle;
-
-static bool uart_pm_qos_enable;
-
-#define SET_UART_PM_QOS_DELAY 10
-#define CLEAR_UART_PM_QOS_DELAY -1
-#endif
-
 #ifdef CONFIG_OMAP4_DPLL_CASCADING
 
 #define OMAP_UART_MASTER_CLOCK			24000000
@@ -175,25 +165,6 @@ u32 omap_uart_resume_idle()
 	}
 	return ret;
 }
-
-#ifdef CONFIG_OMAP_PM
-void uart_set_l3_cstr(int state)
-{
-	if (!uart_pm_qos_enable) {
-		pm_qos_add_request(&uart_pm_qos_handle, PM_QOS_CPU_DMA_LATENCY,
-				   PM_QOS_DEFAULT_VALUE);
-		uart_pm_qos_enable = true;
-	}
-
-	if (state)
-		pm_qos_update_request(&uart_pm_qos_handle,
-				      SET_UART_PM_QOS_DELAY);
-	else
-		pm_qos_update_request(&uart_pm_qos_handle,
-				      CLEAR_UART_PM_QOS_DELAY);
-}
-EXPORT_SYMBOL(uart_set_l3_cstr);
-#endif
 
 int omap_uart_enable(u8 uart_num)
 {
@@ -1719,14 +1690,6 @@ static int serial_omap_probe(struct platform_device *pdev)
 		omap_hwmod_idle(od->hwmods[0]);
 		serial_omap_port_enable(up);
 		serial_omap_port_disable(up);
-#ifdef CONFIG_OMAP_PM
-		if (!uart_pm_qos_enable) {
-			pm_qos_add_request(&uart_pm_qos_handle,
-					   PM_QOS_CPU_DMA_LATENCY,
-					   PM_QOS_DEFAULT_VALUE);
-			uart_pm_qos_enable = true;
-		}
-#endif
 	}
 
 	ui[pdev->id] = up;
@@ -1763,13 +1726,6 @@ do_release_region:
 static int serial_omap_remove(struct platform_device *dev)
 {
 	struct uart_omap_port *up = platform_get_drvdata(dev);
-
-#ifdef CONFIG_OMAP_PM
-	if (uart_pm_qos_enable) {
-		pm_qos_remove_request(&uart_pm_qos_handle);
-		uart_pm_qos_enable = false;
-	}
-#endif
 
 	platform_set_drvdata(dev, NULL);
 	if (up) {
@@ -1847,7 +1803,8 @@ static void omap_uart_restore_context(struct uart_omap_port *up)
 
 		serial_out(up, UART_TI752_TLR, 0);
 	}
-		serial_out(up, UART_OMAP_SCR, up->scr);
+
+	serial_out(up, UART_OMAP_SCR, up->scr);
 	/* UART 16x mode */
 	if (up->errata & UART_ERRATA_i202_MDR1_ACCESS)
 		omap_uart_mdr1_errataset(up, up->mdr1);
@@ -2020,7 +1977,7 @@ int omap_serial_ext_uart_enable(u8 port_id)
 	struct uart_omap_port *up;
 	int err = 0;
 
-	if (port_id > OMAP_MAX_HSUART_PORTS - 1) {
+	if (port_id > OMAP_MAX_HSUART_PORTS) {
 		pr_err("Invalid Port_id %d passed to %s\n", port_id, __func__);
 		err = -ENODEV;
 	} else {
@@ -2040,7 +1997,7 @@ int omap_serial_ext_uart_disable(u8 port_id)
 	struct uart_omap_port *up;
 	int err = 0;
 
-	if (port_id > OMAP_MAX_HSUART_PORTS - 1) {
+	if (port_id > OMAP_MAX_HSUART_PORTS) {
 		pr_err("Invalid Port_id %d passed to %s\n", port_id, __func__);
 		err = -ENODEV;
 	} else {
