@@ -41,7 +41,7 @@ static void omap4430_phy_init_for_eyediagram(u32 swcap_trim_offset)
 	transceiver = otg_get_transceiver();
 
 	/* If clock is disabled, enable clock */
-	if (!otg_is_active(transceiver))
+	if (!omap4430_phy_is_active(transceiver->dev))
 		otg_set_suspend(transceiver, 0);
 
 	ctrl_base = ioremap(OMAP443X_SCM_BASE, SZ_1M);

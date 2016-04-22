@@ -306,8 +306,6 @@ struct musb_platform_ops {
 	int	(*adjust_channel_params)(struct dma_channel *channel,
 				u16 packet_sz, u8 *mode,
 				dma_addr_t *dma_addr, u32 *len);
-	int	(*vbus_reset)(struct musb *musb);
-	int (*otg_notifications)(struct musb *musb, unsigned long event);
 };
 
 /*
@@ -411,10 +409,6 @@ struct musb {
 	/* device lock */
 	spinlock_t		lock;
 
-	/* mutex for synchronization */
-	struct mutex		musb_lock;
-	struct mutex		async_musb_lock;
-
 	const struct musb_platform_ops *ops;
 	struct musb_context_registers context;
 
@@ -422,6 +416,7 @@ struct musb {
 	struct wake_lock	musb_wakelock;
 	struct work_struct	irq_work;
 	struct workqueue_struct	*otg_notifier_wq;
+	struct work_struct	hz_mode_work;
 	u16			hwvers;
 
 /* this hub status bit is reserved by USB 2.0 and not seen by usbcore */
@@ -553,8 +548,6 @@ struct musb {
 #ifdef MUSB_CONFIG_PROC_FS
 	struct proc_dir_entry *proc_entry;
 #endif
-	int vbus_reset_count;
-	unsigned int otg_enum_delay;
 #ifdef CONFIG_OMAP4_DPLL_CASCADING
 	int event;
 #endif
@@ -712,25 +705,5 @@ static inline int musb_platform_exit(struct musb *musb)
 
 	return musb->ops->exit(musb);
 }
-
-static inline int musb_platform_vbus_reset(struct musb *musb)
-{
-	if (!musb->ops->vbus_reset)
-		return -EINVAL;
-
-	return musb->ops->vbus_reset(musb);
-}
-
-static inline int musb_platform_otg_notifications(struct musb *musb, u32 event)
-{
-	if (!musb->ops->otg_notifications)
-		return -EINVAL;
-
-	return musb->ops->otg_notifications(musb, event);
-}
-
-extern int musb_async_suspend(struct musb *musb);
-extern int musb_async_resume(struct musb *musb);
-extern void musb_all_ep_flush(struct musb *musb);
 
 #endif	/* __MUSB_CORE_H__ */

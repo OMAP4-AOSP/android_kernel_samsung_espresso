@@ -682,9 +682,6 @@ static irqreturn_t hsic_aux_irq(int irq, void *__hcd)
  * then invokes the start() method for the HCD associated with it
  * through the hotplug entry's driver_data.
  */
-struct usb_hcd	*ghcd_omap;
-#define USBHS_OHCI_HWMODNAME    "usbhs_ohci"
-#define HCCONTROL_OFFSET	(4)
 static int ehci_hcd_omap_probe(struct platform_device *pdev)
 {
 	struct device				*dev = &pdev->dev;
@@ -692,9 +689,7 @@ static int ehci_hcd_omap_probe(struct platform_device *pdev)
 	struct resource				*res;
 	struct usb_hcd				*hcd;
 	void __iomem				*regs;
-	void __iomem				*ohci_base;
 	struct ehci_hcd				*omap_ehci;
-	struct omap_hwmod			*oh;
 	int					ret = -ENODEV;
 	int					irq;
 	int					i;
@@ -866,12 +861,6 @@ static int ehci_hcd_omap_probe(struct platform_device *pdev)
 
 	/* root ports should always stay powered */
 	ehci_port_power(omap_ehci, 1);
-
-	/* Ensure OHCI is kept in suspended state */
-	oh = omap_hwmod_lookup(USBHS_OHCI_HWMODNAME);
-	ohci_base = omap_hwmod_get_mpu_rt_va(oh);
-	__raw_writel(OHCI_USB_SUSPEND, ohci_base + HCCONTROL_OFFSET);
-	(void)__raw_readl(ohci_base + HCCONTROL_OFFSET);
 
 	return 0;
 

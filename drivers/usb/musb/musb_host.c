@@ -2307,8 +2307,7 @@ static int musb_bus_suspend(struct usb_hcd *hcd)
 	if (musb->is_active) {
 		WARNING("trying to suspend as %s while active\n",
 				otg_state_string(musb->xceiv->state));
-/*		return -EBUSY;*/
-		return 0;
+		return -EBUSY;
 	} else
 		return 0;
 }
@@ -2320,16 +2319,6 @@ static int musb_bus_resume(struct usb_hcd *hcd)
 	wake_lock(&musb->musb_wakelock);
 	/* resuming child port does the work */
 	return 0;
-}
-
-static int musb_vbus_reset(struct usb_hcd *hcd, int portnum)
-{
-	struct musb     *musb = hcd_to_musb(hcd);
-	int ret = 0;
-
-	ret = musb_platform_vbus_reset(musb);
-
-	return ret;
 }
 
 #ifndef CONFIG_MUSB_PIO_ONLY
@@ -2455,8 +2444,6 @@ const struct hc_driver musb_hc_driver = {
 	.hub_control		= musb_hub_control,
 	.bus_suspend		= musb_bus_suspend,
 	.bus_resume		= musb_bus_resume,
-/* relinquish_port function is used for vbus reset */
-	.relinquish_port	= musb_vbus_reset,
 	/* .start_port_reset	= NULL, */
 	/* .hub_irq_enable	= NULL, */
 };

@@ -958,7 +958,6 @@ void musb_start(struct musb *musb)
 		if (musb->xceiv->last_event == USB_EVENT_VBUS)
 			musb->is_active = 1;
 	}
-	musb_platform_enable(musb);
 	musb_writeb(regs, MUSB_DEVCTL, devctl);
 }
 
@@ -1012,7 +1011,6 @@ static void musb_shutdown(struct platform_device *pdev)
 	struct musb	*musb = dev_to_musb(&pdev->dev);
 	unsigned long	flags;
 
-	mutex_lock(&musb->musb_lock);
 	pm_runtime_get_sync(musb->controller);
 	spin_lock_irqsave(&musb->lock, flags);
 	musb_platform_disable(musb);
@@ -1023,7 +1021,6 @@ static void musb_shutdown(struct platform_device *pdev)
 		usb_remove_hcd(musb_to_hcd(musb));
 	musb_writeb(musb->mregs, MUSB_DEVCTL, 0);
 	musb_platform_exit(musb);
-	mutex_unlock(&musb->musb_lock);
 
 	pm_runtime_put(musb->controller);
 	/* FIXME power down */
@@ -1901,6 +1898,10 @@ static void musb_free(struct musb *musb)
 	sysfs_remove_group(&musb->controller->kobj, &musb_attr_group);
 #endif
 
+#ifdef CONFIG_USB_GADGET_MUSB_HDRC
+	musb_gadget_cleanup(musb);
+#endif
+
 	if (musb->nIrq >= 0) {
 		if (musb->irq_wake)
 			disable_irq_wake(musb->nIrq);
@@ -1950,8 +1951,7 @@ musb_init_controller(struct device *dev, int nIrq, void __iomem *ctrl)
 		status = -ENOMEM;
 		goto fail0;
 	}
-	mutex_init(&musb->musb_lock);
-	mutex_init(&musb->async_musb_lock);
+
 	pm_runtime_use_autosuspend(musb->controller);
 	pm_runtime_set_autosuspend_delay(musb->controller, 200);
 	pm_runtime_enable(musb->controller);
@@ -1980,15 +1980,13 @@ musb_init_controller(struct device *dev, int nIrq, void __iomem *ctrl)
 
 	if (!musb->isr) {
 		status = -ENODEV;
-		goto fail2;
+		goto fail3;
 	}
 
 	if (!musb->xceiv->io_ops) {
 		musb->xceiv->io_priv = musb->mregs;
 		musb->xceiv->io_ops = &musb_ulpi_access;
 	}
-
-	pm_runtime_get_sync(musb->controller);
 
 #ifndef CONFIG_MUSB_PIO_ONLY
 	if (use_dma && dev->dma_mask) {
@@ -2021,6 +2019,7 @@ musb_init_controller(struct device *dev, int nIrq, void __iomem *ctrl)
 
 	/* Init IRQ workqueue before request_irq */
 	INIT_WORK(&musb->irq_work, musb_irq_work);
+	INIT_WORK(&musb->hz_mode_work, musb_hz_mode_work);
 
 	/* attach to the IRQ */
 	if (request_irq(nIrq, musb->isr, 0, dev_name(dev), musb)) {
@@ -2091,6 +2090,8 @@ musb_init_controller(struct device *dev, int nIrq, void __iomem *ctrl)
 		wake_lock_init(&musb->musb_wakelock, WAKE_LOCK_SUSPEND,
 						"musb_autosuspend_wake_lock");
 
+	pm_runtime_put(musb->controller);
+
 	status = musb_init_debugfs(musb);
 	if (status < 0)
 		goto fail4;
@@ -2100,8 +2101,6 @@ musb_init_controller(struct device *dev, int nIrq, void __iomem *ctrl)
 	if (status)
 		goto fail5;
 #endif
-
-	pm_runtime_put(musb->controller);
 
 	dev_info(dev, "USB %s mode controller at %p using %s, IRQ %d\n",
 			({char *s;
@@ -2130,9 +2129,6 @@ fail4:
 		wake_lock_destroy(&musb->musb_wakelock);
 
 fail3:
-	pm_runtime_put_sync(musb->controller);
-
-fail2:
 	if (musb->irq_wake)
 		device_init_wakeup(dev, 0);
 	musb_platform_exit(musb);
@@ -2433,22 +2429,6 @@ static const struct dev_pm_ops musb_dev_pm_ops = {
 };
 
 #define MUSB_DEV_PM_OPS (&musb_dev_pm_ops)
-
-int musb_async_suspend(struct musb *musb)
-{
-	musb_save_context(musb);
-	return 0;
-}
-
-int musb_async_resume(struct musb *musb)
-{
-	static int	first_async_resume = 1;
-	if (!first_async_resume)
-		musb_restore_context(musb);
-	first_async_resume = 0;
-	return 0;
-}
-
 #else
 #define	MUSB_DEV_PM_OPS	NULL
 #endif

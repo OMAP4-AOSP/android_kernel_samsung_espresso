@@ -118,9 +118,6 @@ struct otg_transceiver {
 	/* start or continue HNP role switch */
 	int	(*start_hnp)(struct otg_transceiver *otg);
 
-	/* return phy is active or not */
-	int	(*is_active)(struct otg_transceiver *otg);
-
 };
 
 
@@ -174,15 +171,6 @@ otg_shutdown(struct otg_transceiver *otg)
 		otg->shutdown(otg);
 }
 
-static inline int
-otg_is_active(struct otg_transceiver *otg)
-{
-	if (otg->is_active)
-		return otg->is_active(otg);
-
-	return 0;
-}
-
 /* for usb host and peripheral controller drivers */
 #ifdef CONFIG_USB_OTG_UTILS
 extern struct otg_transceiver *otg_get_transceiver(void);
@@ -209,6 +197,16 @@ static inline int
 otg_start_hnp(struct otg_transceiver *otg)
 {
 	return otg->start_hnp(otg);
+}
+
+/* Context: can sleep */
+static inline int
+otg_set_hz_mode(struct otg_transceiver *otg, bool enabled)
+{
+	if (otg->set_hz_mode)
+		return otg->set_hz_mode(otg, enabled);
+
+	return -EINVAL;
 }
 
 /* Context: can sleep */

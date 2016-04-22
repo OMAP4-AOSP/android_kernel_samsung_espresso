@@ -1042,11 +1042,6 @@ static int espresso_otg_set_suspend(struct otg_transceiver *otg, int suspend)
 	return omap4430_phy_suspend(otg->dev, suspend);
 }
 
-static int espresso_otg_is_active(struct otg_transceiver *otg)
-{
-	return omap4430_phy_is_active(otg->dev);
-}
-
 static irqreturn_t ta_nconnected_irq(int irq, void *_otg)
 {
 	struct omap4_otg *otg = _otg;
@@ -1291,7 +1286,6 @@ void __init omap4_espresso_connector_init(void)
 	espresso_otg->otg.set_vbus		= espresso_otg_set_vbus;
 	espresso_otg->otg.init			= espresso_otg_phy_init;
 	espresso_otg->otg.shutdown		= espresso_otg_phy_shutdown;
-	espresso_otg->otg.is_active		= espresso_otg_is_active;
 
 	ATOMIC_INIT_NOTIFIER_HEAD(&espresso_otg->otg.notifier);
 

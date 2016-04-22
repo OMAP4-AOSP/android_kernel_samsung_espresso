@@ -207,10 +207,7 @@ __acquires(ep->musb->lock)
 				ep->end_point.name, request,
 				req->request.actual, req->request.length,
 				request->status);
-        
-	/* check the validation of function */
-	if (req->request.complete)
-		req->request.complete(&req->ep->end_point, &req->request);
+	req->request.complete(&req->ep->end_point, &req->request);
 	spin_lock(&musb->lock);
 	ep->busy = busy;
 }
@@ -1742,7 +1739,6 @@ static int musb_gadget_pullup(struct usb_gadget *gadget, int is_on)
 	struct musb	*musb = gadget_to_musb(gadget);
 	unsigned long	flags;
 
-	mutex_lock(&musb->musb_lock);
 	is_on = !!is_on;
 
 	pm_runtime_get_sync(musb->controller);
@@ -1757,7 +1753,6 @@ static int musb_gadget_pullup(struct usb_gadget *gadget, int is_on)
 	}
 	spin_unlock_irqrestore(&musb->lock, flags);
 
-	mutex_unlock(&musb->musb_lock);
 	pm_runtime_mark_last_busy(musb->controller);
 	pm_runtime_put_autosuspend(musb->controller);
 
@@ -1938,6 +1933,7 @@ int usb_gadget_probe_driver(struct usb_gadget_driver *driver,
 		retval = -ENODEV;
 		goto err0;
 	}
+
 	pm_runtime_get_sync(musb->controller);
 
 	dev_dbg(musb->controller, "registering driver %s\n", driver->function);
@@ -1995,8 +1991,7 @@ int usb_gadget_probe_driver(struct usb_gadget_driver *driver,
 			(musb->xceiv->last_event == USB_EVENT_CHARGER)) {
 		musb->xceiv->state = OTG_STATE_B_IDLE;
 		pm_runtime_put(musb->controller);
-	} else
-		musb_platform_otg_notifications(musb, musb->xceiv->last_event);
+	}
 
 	return 0;
 
@@ -2052,26 +2047,6 @@ static void stop_activity(struct musb *musb, struct usb_gadget_driver *driver)
 		spin_unlock(&musb->lock);
 		driver->disconnect(&musb->g);
 		spin_lock(&musb->lock);
-	}
-}
-
-void musb_all_ep_flush(struct musb *musb)
-{
-	int			i;
-	struct musb_hw_ep	*hw_ep;
-
-	for (i = 0, hw_ep = musb->endpoints;
-			i < musb->nr_endpoints;
-			i++, hw_ep++) {
-		musb_ep_select(musb->mregs, i);
-		if (hw_ep->is_shared_fifo /* || !epnum */) {
-			nuke(&hw_ep->ep_in, -ESHUTDOWN);
-		} else {
-			if (hw_ep->max_packet_sz_tx)
-				nuke(&hw_ep->ep_in, -ESHUTDOWN);
-			if (hw_ep->max_packet_sz_rx)
-				nuke(&hw_ep->ep_out, -ESHUTDOWN);
-		}
 	}
 }
 
