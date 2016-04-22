@@ -49,10 +49,6 @@
 static bool enable_sr = true;
 module_param(enable_sr, bool, S_IRUSR | S_IRGRP | S_IROTH);
 
-char *rpmsg_cam_regulator_name[] = {
-	"cam2pwr"
-};
-
 #ifdef CONFIG_SND_SOC_WM8994
 static struct regulator_consumer_supply vbatt_supplies[] = {
 	REGULATOR_SUPPLY("LDO1VDD", "1-001a"),

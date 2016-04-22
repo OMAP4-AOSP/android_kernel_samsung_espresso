@@ -71,6 +71,4 @@ enum {
 	RP_MSG_BOOTINIT_DONE	= 0xFFFFFF08,
 };
 
-extern char *rpmsg_cam_regulator_name[];
-
 #endif /* _PLAT_RPMSG_H */
