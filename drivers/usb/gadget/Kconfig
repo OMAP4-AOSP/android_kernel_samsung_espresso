@@ -944,15 +944,6 @@ config USB_G_ANDROID
 	  The functions can be configured via a board file and may be
 	  enabled and disabled dynamically.
 
-config USB_DUN_SUPPORT
-	boolean "DUN support function"
-	depends on USB_G_ANDROID
-	help
-	  Provides USB modem serial driver.
-	  This function makes connection to acm from data router.
-	  It uses misc register.
-	  Support fops : open, close, release, read, poll, llseek, ioctl
-
 config USB_CDC_COMPOSITE
 	tristate "CDC Composite Device (Ethernet and ACM)"
 	depends on NET
