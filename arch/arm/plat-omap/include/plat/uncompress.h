@@ -166,18 +166,15 @@ static inline void __arch_decomp_setup(unsigned long arch_id)
 		DEBUG_LL_OMAP4(3, omap4_panda);
 		DEBUG_LL_OMAP4(3, omap_tabletblaze);
 
+		/* omap4 based boards using UART4 */
+		DEBUG_LL_OMAP4(4, omap4_samsung)
+
 		/* zoom2/3 external uart */
 		DEBUG_LL_ZOOM(omap_zoom2);
 		DEBUG_LL_ZOOM(omap_zoom3);
 
 		/* TI8168 base boards using UART3 */
 		DEBUG_LL_TI816X(3, ti8168evm);
-
-#if defined(CONFIG_MACH_OMAP4_SAMSUNG)
-#define SEC_DEBUG_LL_OMAP4(p, mach)	DEBUG_LL_OMAP4(p, mach)
-		SEC_DEBUG_LL_OMAP4(CONFIG_SAMSUNG_CONSOLE_UART, omap4_samsung);
-#endif /* CONFIG_MACH_OMAP4_SAMSUNG */
-
 	} while (0);
 }
 

@@ -60,11 +60,3 @@ config OMAP_STMPE_NR
 		device, and it rquires its own IRQ number. Generally, only
 		one STMPE is used on one device but two or more STMPE device
 		are also used if number of GPIOs are not enough on OMAP.
-
-menu "OMAP Samsung Specific Configurations"
-
-config SAMSUNG_CONSOLE_UART
-	int "used console uart port"
-	default 4
-
-endmenu
