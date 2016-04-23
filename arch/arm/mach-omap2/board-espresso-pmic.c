@@ -34,6 +34,8 @@
 #include "omap_muxtbl.h"
 #include "common-board-devices.h"
 
+#define GPIO_EMMC_EN	53
+
 #define TWL6030_BBSPOR_CFG			0xE6
 #define TWL6030_PHOENIX_MSK_TRANSITION		0x20
 
@@ -587,6 +589,37 @@ static struct platform_device espresso_vmmc_device = {
 	},
 };
 
+static struct regulator_consumer_supply espresso_vmmc_external_supplies = {
+	.supply		= "vmmc",
+	.dev_name	= "omap_hsmmc.1",
+};
+
+static struct regulator_init_data espresso_vmmc_external_data = {
+	.constraints = {
+		.valid_ops_mask	= REGULATOR_CHANGE_STATUS,
+	},
+	.num_consumer_supplies	= 1,
+	.consumer_supplies = &espresso_vmmc_external_supplies,
+};
+
+static struct fixed_voltage_config espresso_vmmc_external = {
+	.supply_name		= "eMMC_LDO",
+	.gpio			= GPIO_EMMC_EN,
+	.microvolts		= 1800000, /* 1.8V */
+	.startup_delay		= 100000, /* 100 ms */
+	.enable_high		= 1,
+	.enabled_at_boot	= 1,
+	.init_data		= &espresso_vmmc_external_data,
+};
+
+static struct platform_device espresso_vmmc_external_device = {
+	.name		= "reg-fixed-voltage",
+	.id		= 3,
+	.dev = {
+		.platform_data	= &espresso_vmmc_external,
+	},
+};
+
 static void __init espresso_audio_init(void)
 {
 #ifdef CONFIG_TWL6040_CODEC
@@ -665,10 +698,11 @@ void __init omap4_espresso_pmic_init(void)
 			ARRAY_SIZE(espresso_twl6032_i2c1_board_info));
 
 	/*
-	 * Register fixed regulator to control ldo which is used by tflash.
+	 * Register fixed regulators to control external LDO.
 	 */
 	espresso_vmmc_config.gpio = omap_muxtbl_get_gpio_by_name("TF_EN");
 	platform_device_register(&espresso_vmmc_device);
+	platform_device_register(&espresso_vmmc_external_device);
 
 	/*
 	 * Drive MSECURE high for TWL6030 write access.

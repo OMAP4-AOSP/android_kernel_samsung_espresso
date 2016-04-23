@@ -24,14 +24,10 @@
 #include "hsmmc.h"
 #include "board-espresso.h"
 
-#define GPIO_EMMC_EN	53
-
 static struct omap2_hsmmc_info espresso_mmc_info[] = {
 	{
 		.mmc		= 2,
 		.nonremovable	= true,
-		.external_ldo	= true,
-		.gpio_for_ldo	= GPIO_EMMC_EN,
 		.caps		= MMC_CAP_8_BIT_DATA
 				| MMC_CAP_1_8V_DDR | MMC_CAP_UHS_DDR50,
 		.ocr_mask	= MMC_VDD_165_195,
