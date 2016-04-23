@@ -72,4 +72,12 @@ config PANEL_N8X0
 	depends on BACKLIGHT_CLASS_DEVICE
 	help
 	  This is the LCD panel used on Nokia N8x0
+
+config PANEL_LTN
+	tristate "Samsung LTN070NL01/LTN101AL03 Panel"
+	depends on OMAP2_DSS_DPI
+	default n
+	help
+	  This enables support for Samsung LTN070NL01/LTN101AL03 LCD panel
+
 endmenu
