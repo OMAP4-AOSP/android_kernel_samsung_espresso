@@ -1654,6 +1654,9 @@ static struct clk dss_sys_clk = {
 	.enable_reg	= OMAP4430_CM_DSS_DSS_CLKCTRL,
 	.enable_bit	= OMAP4430_OPTFCLKEN_SYS_CLK_SHIFT,
 	.clkdm_name	= "l3_dss_clkdm",
+#if defined(CONFIG_FB_OMAP_BOOTLOADER_INIT) && !defined(CONFIG_MACH_ESPRESSO)
+	.flags          = ENABLE_ON_INIT,
+#endif
 	.parent		= &syc_clk_div_ck,
 	.recalc		= &followparent_recalc,
 	.speculate	= &omap2_clksel_speculate,
@@ -1676,7 +1679,7 @@ static struct clk dss_dss_clk = {
 	.enable_reg	= OMAP4430_CM_DSS_DSS_CLKCTRL,
 	.enable_bit	= OMAP4430_OPTFCLKEN_DSSCLK_SHIFT,
 	.clkdm_name	= "l3_dss_clkdm",
-#ifdef CONFIG_FB_OMAP_BOOTLOADER_INIT
+#if defined(CONFIG_FB_OMAP_BOOTLOADER_INIT) && defined(CONFIG_MACH_ESPRESSO)
 	.flags          = ENABLE_ON_INIT,
 #endif
 	.parent		= &dpll_per_m5x2_ck,
