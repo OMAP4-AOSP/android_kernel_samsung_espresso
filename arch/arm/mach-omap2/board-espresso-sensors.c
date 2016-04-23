@@ -19,7 +19,7 @@
 #include "omap_muxtbl.h"
 
 #include <linux/gp2a.h>
-#include <linux/i2c/twl6030-madc.h>
+#include <linux/i2c/twl6030-gpadc.h>
 #include <linux/regulator/consumer.h>
 #include <linux/bh1721fvc.h>
 #include <linux/yas.h>
@@ -84,9 +84,9 @@ static struct bh1721fvc_platform_data bh1721fvc_pdata = {
 static int gp2a_light_adc_value(void)
 {
 	if (system_rev >= 6)
-		return twl6030_get_madc_conversion(GP2A_LIGHT_ADC_CHANNEL)/4;
+		return twl6030_get_gpadc_conversion(GP2A_LIGHT_ADC_CHANNEL) / 4;
 	else
-		return twl6030_get_madc_conversion(GP2A_LIGHT_ADC_CHANNEL);
+		return twl6030_get_gpadc_conversion(GP2A_LIGHT_ADC_CHANNEL);
 }
 
 static void gp2a_power(bool on)

@@ -15,7 +15,6 @@
  */
 
 #include <linux/gpio.h>
-#include <linux/i2c/twl6030-madc.h>
 #include <linux/init.h>
 #include <linux/input.h>
 #include <linux/kernel.h>
