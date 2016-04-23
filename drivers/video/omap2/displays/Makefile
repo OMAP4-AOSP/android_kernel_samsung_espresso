@@ -15,3 +15,4 @@ obj-$(CONFIG_PANEL_N8X0) += panel-n8x0.o
 obj-$(CONFIG_PANEL_DSERLINK) += lvds-de-serlink.o
 obj-$(CONFIG_PANEL_SERLINK) += lvds-serlink.o
 obj-$(CONFIG_PANEL_LG_101) += panel-lg101.o
+obj-$(CONFIG_PANEL_LTN) += panel-ltn.o

@@ -101,4 +101,12 @@ config PANEL_DSERLINK
 	tristate "DSERLINK"
 	help
 	  This is de-serial link
+
+config PANEL_LTN
+	tristate "Samsung LTN070NL01/LTN101AL03 Panel"
+	depends on OMAP2_DSS_DPI
+	default n
+	help
+	  This enables support for Samsung LTN070NL01/LTN101AL03 LCD panel
+
 endmenu
