@@ -41,8 +41,6 @@
 #include "mux.h"
 #include "omap_muxtbl.h"
 
-#include "omap_phy_tune.c"
-
 #define CHARGERUSB_CTRL1		0x8
 #define CHARGERUSB_CTRL3		0xA
 #define CHARGERUSB_CINLIMIT		0xE
@@ -68,9 +66,6 @@
 
 #define MASK_SWITCH_USB_AP	0x01
 #define MASK_SWITCH_UART_AP	0x02
-
-#define SWCAP_TRIM_OFFSET_ESPRESSO	0x22
-#define SWCAP_TRIM_OFFSET_ESPRESSO10	0x31
 
 static char *device_names[] = {
 	[P30_OTG]			= "otg",
@@ -1294,11 +1289,6 @@ void __init omap4_espresso_connector_init(void)
 		pr_err("espresso_otg: cannot set transceiver (%d)\n", ret);
 
 	omap4430_phy_init(&espresso_otg->dev);
-
-	if (board_is_espresso10())
-		omap4430_phy_init_for_eyediagram(SWCAP_TRIM_OFFSET_ESPRESSO10);
-	else
-		omap4430_phy_init_for_eyediagram(SWCAP_TRIM_OFFSET_ESPRESSO);
 
 	espresso_otg_set_suspend(&espresso_otg->otg, 0);
 	espresso_vbus_detect_init(espresso_otg);

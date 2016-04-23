@@ -61,7 +61,6 @@ static int usbotghs_control;
 #define OMAP4_HSOTG_REF_GEN_TEST_MASK	0xF8FFFFFF
 static void __iomem *hsotg_base;
 #endif
-static int clk_state;
 
 int omap4430_phy_init(struct device *dev)
 {
@@ -190,18 +189,18 @@ static int omap4430_phy_set_clk(struct device *dev, int on)
 {
 	static int state;
 
-	if (on && !clk_state) {
+	if (on && !state) {
 		/* Enable the phy clocks */
 		clk_enable(phyclk);
 		clk_enable(clk48m);
 		clk_enable(clk32k);
-		clk_state = 1;
-	} else if (!on && clk_state) {
+		state = 1;
+	} else if (!on && state) {
 		/* Disable the phy clocks */
 		clk_disable(phyclk);
 		clk_disable(clk48m);
 		clk_disable(clk32k);
-		clk_state = 0;
+		state = 0;
 	}
 	return 0;
 }
@@ -259,14 +258,10 @@ int omap4_charger_detect(void)
 	return charger;
 }
 
-int omap4430_phy_is_active(struct device *dev)
-{
-	return clk_state;
-}
-
 int omap4430_phy_power(struct device *dev, int ID, int on)
 {
-	if (on && clk_state) {
+	if (on) {
+
 #ifdef CONFIG_OMAP4_HSOTG_ED_CORRECTION
 		/* apply eye diagram improvement settings */
 		omap44xx_hsotg_ed_correction();
