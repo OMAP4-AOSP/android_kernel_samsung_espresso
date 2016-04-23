@@ -248,8 +248,7 @@ struct omap_hsmmc_host {
 	int			req_in_progress;
 	unsigned int		flags;
 	unsigned int		errata;
-	int			external_ldo;
-	int			gpio_for_ldo;
+
 	struct	omap_mmc_platform_data	*pdata;
 };
 
@@ -336,31 +335,15 @@ static int omap_hsmmc_1_set_power(struct device *dev, int slot, int power_on,
 {
 	struct omap_hsmmc_host *host =
 		platform_get_drvdata(to_platform_device(dev));
-	int ret = 0;
+	int ret;
 
 	if (mmc_slot(host).before_set_reg)
 		mmc_slot(host).before_set_reg(dev, slot, power_on, vdd);
 
-	if (power_on) {
-		if (host->external_ldo) {
-			printk(KERN_INFO "%s LDO enable\n",
-				mmc_hostname(host->mmc));
-			gpio_set_value(host->gpio_for_ldo, 1);
-			}
-		else
-			ret = mmc_regulator_set_ocr(host->mmc, host->vcc, vdd);
-		}
-	else {
-		if (host->external_ldo) {
-			printk(KERN_INFO "%s LDO Disable\n",
-				mmc_hostname(host->mmc));
-			gpio_set_value(host->gpio_for_ldo, 0);
-			}
-		else
-			ret = mmc_regulator_set_ocr(host->mmc, host->vcc, 0);
-		mdelay(50);
-		mdelay(50);
-		}
+	if (power_on)
+		ret = mmc_regulator_set_ocr(host->mmc, host->vcc, vdd);
+	else
+		ret = mmc_regulator_set_ocr(host->mmc, host->vcc, 0);
 
 	if (mmc_slot(host).after_set_reg)
 		mmc_slot(host).after_set_reg(dev, slot, power_on, vdd);
@@ -379,26 +362,14 @@ static int omap_hsmmc_2_set_power(struct device *dev, int slot, int power_on,
 		mmc_slot(host).before_set_reg(dev, slot, power_on, vdd);
 
 	if (power_on) {
-		printk(KERN_INFO "%s LDO enable\n", mmc_hostname(host->mmc));
-		if (host->external_ldo)
-			gpio_set_value(host->gpio_for_ldo, 1);
-		else {
-			ret = regulator_enable(host->vcc);
-			if (ret == 0 && host->vcc_aux)
-				ret = regulator_enable(host->vcc_aux);
-		}
+		ret = regulator_enable(host->vcc);
+		if (ret == 0 && host->vcc_aux)
+			ret = regulator_enable(host->vcc_aux);
 	} else {
-		printk(KERN_INFO "%s LDO Disable\n", mmc_hostname(host->mmc));
-		if (host->external_ldo)
-			gpio_set_value(host->gpio_for_ldo, 0);
-		else {
-			ret = regulator_disable(host->vcc);
-			if (ret == 0 && host->vcc_aux)
-				ret = regulator_disable(host->vcc_aux);
-		}
-
-		mdelay(50);
-		mdelay(50);
+		ret = regulator_disable(host->vcc);
+		if (ret == 0 && host->vcc_aux)
+			ret = regulator_disable(host->vcc_aux);
+		mdelay(100);
 	}
 
 	if (mmc_slot(host).after_set_reg)
@@ -475,9 +446,6 @@ static int omap_hsmmc_1_set_sleep(struct device *dev, int slot, int sleep,
 	struct omap_hsmmc_host *host =
 		platform_get_drvdata(to_platform_device(dev));
 	int mode = sleep ? REGULATOR_MODE_STANDBY : REGULATOR_MODE_NORMAL;
-
-	if (host->external_ldo)
-		return 0;
 
 	return regulator_set_mode(host->vcc, mode);
 }
@@ -565,12 +533,8 @@ static int omap_hsmmc_reg_get(struct omap_hsmmc_host *host)
 		* for MMC2 or MMC3
 		*/
 		if (host->id == OMAP_MMC1_DEVID) {
-			if (host->external_ldo)
-				return 0;
-			else {
-				ret = PTR_ERR(reg);
-				goto err;
-			}
+			ret = PTR_ERR(reg);
+			goto err;
 		}
 	} else {
 		host->vcc = reg;
@@ -2700,34 +2664,6 @@ static int __init omap_hsmmc_probe(struct platform_device *pdev)
 				"Unable to configure MMC IRQs\n");
 			goto err_irq_cd_init;
 		}
-	}
-
-	if (mmc_slot(host).external_ldo) {
-		host->external_ldo = 1;
-		host->gpio_for_ldo = mmc_slot(host).gpio_for_ldo;
-
-		switch (host->id) {
-		case OMAP_MMC1_DEVID:
-			if (gpio_request(host->gpio_for_ldo, "SD_LDO") < 0) {
-				dev_err(mmc_dev(host->mmc), "Failed to get %d for eMMC LDO control\n",
-					host->gpio_for_ldo);
-				goto err_irq_cd_init;
-			}
-			gpio_direction_output(host->gpio_for_ldo, 0);
-		    break;
-
-		case OMAP_MMC2_DEVID:
-			if (gpio_request(host->gpio_for_ldo, "eMMC_LDO") < 0) {
-				dev_err(mmc_dev(host->mmc), "Failed to get %d for eMMC LDO control\n",
-					host->gpio_for_ldo);
-				goto err_irq_cd_init;
-				}
-			gpio_direction_output(host->gpio_for_ldo, 1);
-			break;
-
-		default:
-			break;
-			}
 	}
 
 	if (omap_hsmmc_have_reg() && !mmc_slot(host).set_power) {
