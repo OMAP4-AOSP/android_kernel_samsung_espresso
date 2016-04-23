@@ -65,7 +65,6 @@ struct twl6030_madc_data {
 	struct mutex lock;
 	struct dentry		*file;
 	struct wake_lock wakelock;
-	unsigned long features;
 };
 
 static struct twl6030_madc_data *twl6030_madc;
@@ -83,22 +82,12 @@ static inline int twl6030_madc_start_conversion(struct twl6030_madc_data *madc)
 	}
 
 	udelay(100);
-	if (madc->features & TWL6032_SUBCLASS) {
-		ret = twl_i2c_write_u8(TWL_MODULE_MADC, TWL6030_MADC_SP1,
-				TWL6032_MADC_CTRL_P1);
-		if (ret) {
-			dev_err(madc->dev, "unable to write register 0x%X\n",
-					TWL6032_MADC_CTRL_P1);
-			return ret;
-		}
-	} else {
-		ret = twl_i2c_write_u8(TWL_MODULE_MADC, TWL6030_MADC_SP1,
+	ret = twl_i2c_write_u8(TWL_MODULE_MADC, TWL6030_MADC_SP1,
 				TWL6030_MADC_CTRL_P1);
-		if (ret) {
-			dev_err(madc->dev, "unable to write register 0x%X\n",
-					TWL6030_MADC_CTRL_P1);
-			return ret;
-		}
+	if (ret) {
+		dev_err(madc->dev, "unable to write register 0x%X\n",
+			TWL6030_MADC_CTRL_P1);
+		return ret;
 	}
 	return 0;
 }
@@ -164,18 +153,14 @@ static int twl6030_madc_channel_raw_read(struct twl6030_madc_data *madc,
 {
 	u8 msb, lsb;
 	int ret;
-	int status_reg;
 
 	mutex_lock(&madc->lock);
 	ret = twl6030_madc_start_conversion(twl6030_madc);
 	if (ret)
 		goto unlock;
 
-	if (madc->features & TWL6032_SUBCLASS)
-		status_reg = TWL6032_MADC_CTRL_P1;
-	else
-		status_reg = TWL6030_MADC_CTRL_P1;
-	ret = twl6030_madc_wait_conversion_ready(twl6030_madc, 5, status_reg);
+	ret = twl6030_madc_wait_conversion_ready(twl6030_madc, 5,
+						TWL6030_MADC_CTRL_P1);
 	if (ret)
 		goto unlock;
 
@@ -209,32 +194,16 @@ unlock:
  */
 int twl6030_get_madc_conversion(int channel_no)
 {
-	u8 reg = 0;
-
+	u8 reg = TWL6030_MADC_GPCH0_LSB + (2 * channel_no);
 	if (!twl6030_madc) {
 		pr_err("%s: No ADC device\n", __func__);
 		return -EINVAL;
 	}
-
-	if (twl6030_madc->features & TWL6032_SUBCLASS) {
-		if (channel_no >= TWL6032_MADC_MAX_CHANNELS) {
-			dev_err(twl6030_madc->dev,
-			"%s: Channel number (%d) exceeds max (%d)\n",
-			__func__, channel_no, TWL6032_MADC_MAX_CHANNELS);
-			return -EINVAL;
-		}
-
-		twl_i2c_write_u8(TWL_MODULE_MADC, channel_no,
-					TWL6032_MADC_GPSELECT_ISB);
-		reg = TWL6032_MADC_GPCH0_LSB;
-	} else {
-		if (channel_no >= TWL6030_MADC_MAX_CHANNELS) {
-			dev_err(twl6030_madc->dev,
+	if (channel_no >= TWL6030_MADC_MAX_CHANNELS) {
+		dev_err(twl6030_madc->dev,
 			"%s: Channel number (%d) exceeds max (%d)\n",
 			__func__, channel_no, TWL6030_MADC_MAX_CHANNELS);
-			return -EINVAL;
-		}
-		reg = TWL6030_MADC_GPCH0_LSB + (2 * channel_no);
+		return -EINVAL;
 	}
 
 	return twl6030_madc_channel_raw_read(twl6030_madc, reg);
@@ -245,14 +214,8 @@ EXPORT_SYMBOL_GPL(twl6030_get_madc_conversion);
 
 static int debug_twl6030_madc_show(struct seq_file *s, void *_)
 {
-	int i, result, channels;
-
-	if (twl6030_madc->features & TWL6032_SUBCLASS)
-		channels = TWL6032_MADC_MAX_CHANNELS;
-	else
-		channels = TWL6030_MADC_MAX_CHANNELS;
-
-	for (i = 0; i < channels; i++) {
+	int i, result;
+	for (i = 0; i < TWL6030_MADC_MAX_CHANNELS; i++) {
 		result = twl6030_get_madc_conversion(i);
 		seq_printf(s, "channel %3d returns result %d\n",
 			i, result);
@@ -296,19 +259,11 @@ static int __devinit twl6030_madc_probe(struct platform_device *pdev)
 
 	platform_set_drvdata(pdev, madc);
 	madc->dev = &pdev->dev;
-	madc->features = pdata->features;
 	mutex_init(&madc->lock);
 	madc->file = debugfs_create_file(DRIVER_NAME, S_IRUGO, NULL,
 					madc, DEBUG_FOPS);
 	wake_lock_init(&madc->wakelock, WAKE_LOCK_SUSPEND, "twl6030 adc");
 	twl6030_madc = madc;
-
-	if (twl_i2c_write_u8(TWL_MODULE_MADC, TWL6030_MADC_TEMP1_EN |
-			     TWL6030_MADC_SCALER_EN_CH2,
-			TWL6030_MADC_CTRL))
-		dev_err(twl6030_madc->dev, "unable to write to register 0x%X\n",
-			TWL6030_MADC_CTRL);
-
 	return 0;
 }
 

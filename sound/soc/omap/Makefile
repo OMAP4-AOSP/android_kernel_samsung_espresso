@@ -20,7 +20,6 @@ obj-$(CONFIG_SND_OMAP_SOC_HDMI) += snd-soc-omap-hdmi.o
 obj-$(CONFIG_SND_OMAP_SOC_VXREC) += snd-soc-omap-vxrec.o
 
 # OMAP Machine Support
-snd-soc-mid-omap-wm8994-objs := mid_omap_wm8994.o
 snd-soc-omap-wm8994-objs := omap_wm8994.o
 snd-soc-n810-objs := n810.o
 snd-soc-rx51-objs := rx51.o
@@ -37,7 +36,6 @@ snd-soc-zoom2-objs := zoom2.o
 snd-soc-igep0020-objs := igep0020.o
 snd-soc-omap4-hdmi-objs := omap4-hdmi-card.o
 
-obj-$(CONFIG_SND_OMAP_SOC_MID) += snd-soc-mid-omap-wm8994.o
 obj-$(CONFIG_SND_OMAP_SOC_N810) += snd-soc-n810.o
 obj-$(CONFIG_SND_OMAP_SOC_RX51) += snd-soc-rx51.o
 obj-$(CONFIG_SND_OMAP_SOC_AMS_DELTA) += snd-soc-ams-delta.o

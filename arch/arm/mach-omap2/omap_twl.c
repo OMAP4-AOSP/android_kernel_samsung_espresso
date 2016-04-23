@@ -277,7 +277,7 @@ static struct omap_voltdm_pmic omap443x_447x_mpu_pmic = {
 	.step_size		= 12660,
 	.on_volt		= 1375000,
 	.onlp_volt		= 1375000,
-	.ret_volt		= 860000,
+	.ret_volt		= 750000,
 	.off_volt		= 0,
 	.volt_setup_time	= 0,
 	.switch_on_time		= 549,
@@ -320,7 +320,7 @@ static struct omap_voltdm_pmic omap443x_446x_iva_pmic = {
 	.i2c_high_speed		= true,
 	.i2c_scll_low		= 0x28,
 	.i2c_scll_high		= 0x2C,
-	.i2c_hscll_low		= 0x11,
+	.i2c_hscll_low		= 0x0B,
 	.i2c_hscll_high		= 0x00,
 	.vsel_to_uv		= twl6030_vsel_to_uv,
 	.uv_to_vsel		= twl6030_uv_to_vsel,
@@ -331,7 +331,7 @@ static struct omap_voltdm_pmic omap447x_iva_pmic = {
 	.step_size		= 12660,
 	.on_volt		= 1188000,
 	.onlp_volt		= 1188000,
-	.ret_volt		= 860000,
+	.ret_volt		= 750000,
 	.off_volt		= 0,
 	.volt_setup_time	= 0,
 	.switch_on_time		= 549,
@@ -347,7 +347,7 @@ static struct omap_voltdm_pmic omap447x_iva_pmic = {
 	.i2c_high_speed		= true,
 	.i2c_scll_low		= 0x28,
 	.i2c_scll_high		= 0x2C,
-	.i2c_hscll_low		= 0x11,
+	.i2c_hscll_low		= 0x0B,
 	.i2c_hscll_high		= 0x00,
 	.vsel_to_uv		= twl6030_vsel_to_uv,
 	.uv_to_vsel		= twl6030_uv_to_vsel,
@@ -358,7 +358,7 @@ static struct omap_voltdm_pmic omap443x_core_pmic = {
 	.step_size		= 12660,
 	.on_volt		= 1200000,
 	.onlp_volt		= 1200000,
-	.ret_volt		= 860000,
+	.ret_volt		= 750000,
 	.off_volt		= 0,
 	.volt_setup_time	= 0,
 	.switch_on_time		= 549,
@@ -374,7 +374,7 @@ static struct omap_voltdm_pmic omap443x_core_pmic = {
 	.i2c_high_speed		= true,
 	.i2c_scll_low		= 0x28,
 	.i2c_scll_high		= 0x2C,
-	.i2c_hscll_low		= 0x11,
+	.i2c_hscll_low		= 0x0B,
 	.i2c_hscll_high		= 0x00,
 	.vsel_to_uv		= twl6030_vsel_to_uv,
 	.uv_to_vsel		= twl6030_uv_to_vsel,
@@ -554,6 +554,7 @@ static __initdata struct twl_reg_setup_array omap4430_twl6030_setup[] = {
 
 static int __init twl_set_4430vcore(struct voltagedomain *voltdm)
 {
+	twl6030_set_offset(voltdm);
 	return _twl_set_regs("OMAP4430 ", omap4430_twl6030_setup);
 }
 
@@ -589,6 +590,7 @@ static __initdata struct twl_reg_setup_array omap4460_twl6030_setup[] = {
 
 static int __init twl_set_4460vcore(struct voltagedomain *voltdm)
 {
+	twl6030_set_offset(voltdm);
 	return _twl_set_regs("OMAP4460 ", omap4460_twl6030_setup);
 }
 
