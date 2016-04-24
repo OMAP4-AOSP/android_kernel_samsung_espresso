@@ -2163,7 +2163,7 @@ static int _wm8994_set_fll(struct snd_soc_codec *codec, int id, int src,
 	u16 reg, clk1, aif_reg, aif_src;
 	unsigned long timeout;
 	bool was_enabled;
-	dev_info(codec->dev, "%s ++\n", __func__);
+	dev_dbg(codec->dev, "%s ++\n", __func__);
 
 	switch (id) {
 	case WM8994_FLL1:
@@ -2327,7 +2327,7 @@ out:
 	wm8994->fll[id].src = src;
 
 	configure_clock(codec);
-	dev_info(codec->dev, "%s --\n", __func__);
+	dev_dbg(codec->dev, "%s --\n", __func__);
 	return 0;
 }
 
