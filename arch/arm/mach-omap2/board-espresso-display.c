@@ -199,12 +199,12 @@ void __init omap4_espresso_display_init(void)
 		pr_err("Could not get dss system clock\n");
 		/* return -ENOENT; */
 	}
-	clk_enable(dss_sys_fclk);
 	dss_dss_fclk = omap_clk_get_by_name("dss_dss_clk");
 	if (IS_ERR(dss_dss_fclk)) {
 		pr_err("Could not get dss functional clock\n");
 		/* return -ENOENT; */
 	 }
+	 clk_enable(dss_dss_fclk);
 #endif
 
 	ret = gpio_request(GPIO_LCD_EN, "lcd_en");
