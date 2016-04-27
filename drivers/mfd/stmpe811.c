@@ -85,7 +85,7 @@ static int stmpe811_i2c_read(struct i2c_client *client, u8 reg, u8 *data,
 
 	ret = i2c_smbus_read_i2c_block_data(client, (u8)reg, length, data);
 	if (ret < 0)
-		pr_err("Failed to stmpe811 read, reg: %d\n", reg);
+		dev_err(&client->dev, "i2c_read failed, reg: %d, ret: %d\n", reg, ret);
 
 	return ret;
 }
@@ -100,7 +100,7 @@ static int stmpe811_i2c_write(struct i2c_client *client, u8 reg, u8 *data,
 
 	ret = i2c_smbus_write_word_data(client, (u8)reg, swab16(value));
 	if (ret < 0)
-		pr_err("Failed to stmpe811 write, reg: %d\n", reg);
+		dev_err(&client->dev, "i2c_write failed, reg: %d, ret: %d\n", reg, ret);
 
 	return ret;
 }
@@ -131,7 +131,7 @@ int stmpe811_adc_get_value(u8 channel)
 	u8 completed;
 
 	if (!adc) {
-		pr_err("stmpe811: no adc device. probe failed.\n");
+		dev_err(&client->dev, "adc_get_value: driver not ready\n");
 		return -1;
 	}
 
@@ -139,7 +139,7 @@ int stmpe811_adc_get_value(u8 channel)
 
 	ret = stmpe811_write_register(STMPE811_ADC_CAPT, (1 << channel)) ;
 	if (ret < 0) {
-		pr_err("Failed to get stmpe811 adc value,");
+		dev_err(&client->dev, "adc_get_value: write_register failed: %d\n", ret);
 		goto adc_get_fail;
 	}
 
@@ -152,7 +152,7 @@ int stmpe811_adc_get_value(u8 channel)
 
 		count++;
 		if (count > 10) {
-			pr_err("timeout to get stmpe811 adc value,");
+			dev_err(&client->dev, "adc_get_value: timeout\n");
 			goto adc_get_fail;
 		}
 	}
@@ -161,7 +161,7 @@ int stmpe811_adc_get_value(u8 channel)
 	data_channel_addr = STMPE811_ADC_DATA_CH0 + (channel * 2);
 	ret = stmpe811_i2c_read(client, data_channel_addr, data, (u8)2);
 	if (ret < 0) {
-		pr_err("Failed to get stmpe811 adc value,");
+		dev_err(&client->dev, "adc_get_value: i2c_read failed: %d\n", ret);
 		goto adc_get_fail;
 	}
 
@@ -179,12 +179,10 @@ static int __init stmpe811_adc_init(void)
 {
 	int ret = 0;
 
-	pr_info("init!");
-
 	/*misc device registration*/
 	ret = misc_register(&stmpe811_adc_device);
 	if (ret < 0) {
-		pr_err("misc_register failed");
+		pr_err("%s: misc_register failed", __func__);
 		return ret;
 	}
 
@@ -203,8 +201,6 @@ err_i2c:
 
 static void __init stmpe811_adc_exit(void)
 {
-	pr_info("exit!");
-
 	i2c_del_driver(&stmpe811_adc_i2c_driver);
 
 	misc_deregister(&stmpe811_adc_device);
@@ -228,13 +224,9 @@ static int stmpe811_adc_i2c_probe(struct i2c_client *client,
 	u8 data[2];
 	u16 w_data;
 
-	pr_info("stmpe811 driver probe\n");
-
 	adc = kzalloc(sizeof(struct stmpe811_adc_state), GFP_KERNEL);
-	if (adc == NULL) {
-		pr_err("failed to allocate memory\n");
+	if (adc == NULL)
 		return -ENOMEM;
-	}
 
 	adc->client = client;
 	i2c_set_clientdata(client, adc);
@@ -244,13 +236,13 @@ static int stmpe811_adc_i2c_probe(struct i2c_client *client,
 	mutex_init(&adc->adc_lock);
 
 	if (stmpe811_i2c_read(client, STMPE811_CHIP_ID, data, (u8)2) < 0) {
-		pr_err("Failed to read STMPE811_CHIP_ID.\n");
+		dev_err(&client->dev, "Failed to read STMPE811_CHIP_ID\n");
 		kfree(adc);
 		return -1;
 	}
 
 	w_data = (data[0] << 8) | data[1];
-	pr_info("CHIP_ID = 0x%x\n", w_data);
+	dev_dbg(&client->dev, "CHIP_ID = 0x%x\n", w_data);
 
 	/* init stmpe811 adc driver */
 	stmpe811_write_register(STMPE811_SYS_CTRL1, 0x02);
@@ -260,22 +252,22 @@ static int stmpe811_adc_i2c_probe(struct i2c_client *client,
 	/* enable adc & ts clock */
 	stmpe811_write_register(STMPE811_SYS_CTRL2, 0x00);
 	stmpe811_i2c_read(client, STMPE811_SYS_CTRL2, data, (u8)1);
-	pr_info("STMPE811_SYS_CTRL2 = 0x%x..\n", data[0]);
+	dev_dbg(&client->dev, "STMPE811_SYS_CTRL2 = 0x%x..\n", data[0]);
 
 	/* disable interrupt */
 	stmpe811_write_register(STMPE811_INT_EN, 0x00);
 	stmpe811_i2c_read(client, STMPE811_INT_EN, data, (u8)1);
-	pr_info("STMPE811_INT_EN = 0x%x..\n", data[0]);
+	dev_dbg(&client->dev, "STMPE811_INT_EN = 0x%x..\n", data[0]);
 
 	/* 64, 12bit, internal */
 	stmpe811_write_register(STMPE811_ADC_CTRL1, 0x3C);
 	stmpe811_i2c_read(client, STMPE811_ADC_CTRL1, data, (u8)1);
-	pr_info("STMPE811_ADC_CTRL1 = 0x%x..\n", data[0]);
+	dev_dbg(&client->dev, "STMPE811_ADC_CTRL1 = 0x%x..\n", data[0]);
 
 	/* clock speed 6.5MHz */
 	stmpe811_write_register(STMPE811_ADC_CTRL2, 0x03);
 	stmpe811_i2c_read(client, STMPE811_ADC_CTRL2, data, (u8)1);
-	pr_info("STMPE811_ADC_CTRL2 = 0x%x..\n", data[0]);
+	dev_dbg(&client->dev, "STMPE811_ADC_CTRL2 = 0x%x..\n", data[0]);
 
 	/* ADC settings. The value should be 0x00 instead of 0xFF
 	 * gpio 0-3 -> ADC
@@ -283,13 +275,13 @@ static int stmpe811_adc_i2c_probe(struct i2c_client *client,
 	stmpe811_write_register(STMPE811_GPIO_AF, 0x00);
 
 	stmpe811_i2c_read(client, STMPE811_GPIO_AF, data, (u8)1);
-	pr_info("STMPE811_GPIO_AF = 0x%x..\n", data[0]);
+	dev_dbg(&client->dev, "STMPE811_GPIO_AF = 0x%x..\n", data[0]);
 
 	stmpe811_write_register(STMPE811_TSC_CTRL, 0x00);
 	stmpe811_i2c_read(client, STMPE811_TSC_CTRL, data, (u8)1);
-	pr_info("STMPE811_TSC_CTRL = 0x%x..\n", data[0]);
+	dev_dbg(&client->dev, "STMPE811_TSC_CTRL = 0x%x..\n", data[0]);
 
-	pr_info("adc_i2c_probe success!!!\n");
+	dev_dbg(&client->dev, "probed\n");
 
 	return 0;
 }
