@@ -55,7 +55,6 @@ struct wm8994 {
 	struct mutex irq_lock;
 
 	enum wm8994_type type;
-
 	int revision;
 	int cust_id;
 
