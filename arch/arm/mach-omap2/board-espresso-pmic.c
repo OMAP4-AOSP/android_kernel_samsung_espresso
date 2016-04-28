@@ -37,6 +37,11 @@
 #define GPIO_SYS_DRM_MSEC	6
 #define GPIO_TF_EN		34
 
+#define GPIO_SUB_MICBIAS_EN	177
+#define GPIO_CODEC_CLK_REQ	101
+#define GPIO_MICBIAS_EN	48
+#define GPIO_EAR_GND_SEL	171
+
 #define TWL6030_BBSPOR_CFG			0xE6
 #define TWL6030_PHOENIX_MSK_TRANSITION		0x20
 
@@ -144,7 +149,9 @@ static struct wm8994_pdata wm1811_pdata = {
 
 	.ldo_ena_always_driven = true,
 
-	.use_submic = true,
+	.ear_select_gpio = GPIO_EAR_GND_SEL,
+	.main_mic_bias_gpio = GPIO_MICBIAS_EN,
+	.mclk_gpio = GPIO_CODEC_CLK_REQ,
 };
 #endif
 
@@ -608,8 +615,10 @@ static void __init espresso_audio_init(void)
 #ifdef CONFIG_SND_SOC_WM8994
 	platform_device_register(&vbatt_device);
 
-	if (board_is_espresso10())
-		wm1811_pdata.use_submic = false;
+	if (!board_is_espresso10()) {
+		wm1811_pdata.use_submic = true;
+		wm1811_pdata.submic_gpio = GPIO_SUB_MICBIAS_EN;
+	}
 #endif
 }
 
