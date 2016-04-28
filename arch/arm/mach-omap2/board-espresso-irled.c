@@ -18,30 +18,27 @@
 #include <asm/mach-types.h>
 
 #include "mux.h"
-#include "omap_muxtbl.h"
-#include "omap44xx_muxtbl.h"
 #include "board-espresso.h"
+
+#define GPIO_IRDA_EN		59
+#define GPIO_IRDA_CONTROL	152
 
 #define CLOCK_VALUE 800000
 #define ON_OFFSET_VALUE -2
 #define OFF_OFFSET_VALUE 0
 
 #define MAX_SIZE 1024
-#define NANO_SEC 1000000000
 #define MICRO_SEC 1000000
 
-enum {
-	GPIO_IRDA_EN = 0,
-	GPIO_IRDA_CONTROL,
-};
-
 static struct gpio irled_gpios[] = {
-	[GPIO_IRDA_EN] = {
+	{
 		.flags = GPIOF_OUT_INIT_LOW,
+		.gpio = GPIO_IRDA_EN,
 		.label = "IRDA_EN",
 	},
-	[GPIO_IRDA_CONTROL] = {
+	{
 		.flags = GPIOF_OUT_INIT_LOW,
+		.gpio = GPIO_IRDA_CONTROL,
 		.label = "IRDA_CONTROL",
 	},
 };
@@ -64,7 +61,7 @@ static void irled_work(struct work_struct *work)
 	unsigned int i;
 	unsigned int j;
 
-	gpio_direction_output(irled_gpios[GPIO_IRDA_EN].gpio, 1);
+	gpio_direction_output(GPIO_IRDA_EN, 1);
 
 	__udelay(1000);
 
@@ -80,11 +77,9 @@ static void irled_work(struct work_struct *work)
 			break;
 
 		for (j = 0; j < ir_data.signal[i]; j++) {
-			gpio_direction_output(irled_gpios
-					      [GPIO_IRDA_CONTROL].gpio, 1);
+			gpio_direction_output(GPIO_IRDA_CONTROL, 1);
 			__udelay(on);
-			gpio_direction_output(irled_gpios
-					      [GPIO_IRDA_CONTROL].gpio, 0);
+			gpio_direction_output(GPIO_IRDA_CONTROL, 0);
 			__udelay(off);
 		}
 
@@ -105,14 +100,14 @@ static void irled_work(struct work_struct *work)
 			local_irq_disable();
 		}
 	}
-	gpio_direction_output(irled_gpios[GPIO_IRDA_CONTROL].gpio, 1);
+	gpio_direction_output(GPIO_IRDA_CONTROL, 1);
 	__udelay(on);
-	gpio_direction_output(irled_gpios[GPIO_IRDA_CONTROL].gpio, 0);
+	gpio_direction_output(GPIO_IRDA_CONTROL, 0);
 	__udelay(off);
 
 	local_irq_enable();
 
-	gpio_direction_output(irled_gpios[GPIO_IRDA_EN].gpio, 0);
+	gpio_direction_output(GPIO_IRDA_EN, 0);
 }
 
 static ssize_t irled_store(struct device *dev, struct device_attribute *attr,
@@ -303,8 +298,6 @@ int __init omap4_espresso_irled_init(void)
 	if (system_rev > 6 && !board_is_bestbuy_variant()) {
 		if (board_is_espresso10()) {
 			for (i = 0; i < ARRAY_SIZE(irled_gpios); i++) {
-				irled_gpios[i].gpio =
-				omap_muxtbl_get_gpio_by_name(irled_gpios[i].label);
 				omap_mux_set_gpio(
 					OMAP_PIN_INPUT_PULLDOWN | OMAP_MUX_MODE7,
 					irled_gpios[i].gpio);
@@ -313,16 +306,12 @@ int __init omap4_espresso_irled_init(void)
 		return 0;
 	}
 
-	for (i = 0; i < ARRAY_SIZE(irled_gpios); i++)
-		irled_gpios[i].gpio =
-		    omap_muxtbl_get_gpio_by_name(irled_gpios[i].label);
 	gpio_request_array(irled_gpios, ARRAY_SIZE(irled_gpios));
 
 	ret = irled_init();
 	if (ret < 0) {
 		pr_err("irled: irled_init failed\n");
-		for (i = 0; i < ARRAY_SIZE(irled_gpios); i++)
-			gpio_free(irled_gpios[i].gpio);
+		gpio_free_array(irled_gpios, ARRAY_SIZE(irled_gpios));
 	}
 
 	return ret;
