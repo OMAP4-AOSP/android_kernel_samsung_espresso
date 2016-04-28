@@ -22,9 +22,6 @@
 #include <linux/sec_jack.h>
 
 #include "board-espresso.h"
-#include "control.h"
-#include "mux.h"
-#include "omap_muxtbl.h"
 
 #define ADC_CHANNEL_JACK	2
 
@@ -139,22 +136,21 @@ void __init omap4_espresso_jack_init(void)
 	struct gpio jack_gpios[] = {
 		[GPIO_DET_3_5] = {
 			.flags	= GPIOF_IN,
+			.gpio	= 0,
 			.label	= "DET_3.5",
 		},
 		[GPIO_EAR_SEND_END] = {
 			.flags	= GPIOF_IN,
+			.gpio	= 4,
 			.label	= "EAR_SEND_END",
 		},
 		[GPIO_EAR_MICBIAS_EN] = {
 			.flags	= GPIOF_OUT_INIT_LOW,
+			.gpio 	= 49,
 			.label	= "EAR_MICBIAS_EN",
 		},
 	};
-	int i;
 
-	for (i = 0; i < ARRAY_SIZE(jack_gpios); i++)
-		jack_gpios[i].gpio =
-			omap_muxtbl_get_gpio_by_name(jack_gpios[i].label);
 	gpio_request_array(jack_gpios, ARRAY_SIZE(jack_gpios));
 
 	sec_jack_pdata.det_gpio = jack_gpios[GPIO_DET_3_5].gpio;
