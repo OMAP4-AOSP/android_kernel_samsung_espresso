@@ -36,10 +36,10 @@
 #include <linux/jiffies.h>
 
 #include "board-espresso.h"
-#include "control.h"
 #include "hsmmc.h"
-#include "mux.h"
-#include "omap_muxtbl.h"
+
+#define GPIO_WLAN_HOST_WAKE	81
+#define GPIO_WLAN_EN		104
 
 #ifdef CONFIG_DHD_USE_STATIC_BUF
 #define WLAN_STATIC_SCAN_BUF0		5
@@ -192,6 +192,7 @@ static struct fixed_voltage_config espresso_vwlan = {
 	.supply_name		= "vwl1271",
 	.microvolts		= 2000000, /* 2.0V */
 	.startup_delay		= 70000, /* 70msec */
+	.gpio			= GPIO_WLAN_EN,
 	.enable_high		= 1,
 	.enabled_at_boot	= 0,
 	.init_data		= &espresso_vmmc5,
@@ -365,21 +366,14 @@ static struct platform_device espresso_wifi_device = {
 
 static void __init espresso_wlan_gpio(void)
 {
-	unsigned int gpio_wlan_host_wake =
-		omap_muxtbl_get_gpio_by_name("WLAN_HOST_WAKE");
-
 	pr_debug("%s\n", __func__);
 
-	espresso_vwlan.gpio = omap_muxtbl_get_gpio_by_name("WLAN_EN");
-
-	if (gpio_wlan_host_wake != -EINVAL) {
-		espresso_wifi_resources[0].start =
-			gpio_to_irq(gpio_wlan_host_wake);
-		espresso_wifi_resources[0].end =
-			espresso_wifi_resources[0].start;
-		gpio_request(gpio_wlan_host_wake, "WLAN_HOST_WAKE");
-		gpio_direction_input(gpio_wlan_host_wake);
-	}
+	espresso_wifi_resources[0].start =
+		gpio_to_irq(GPIO_WLAN_HOST_WAKE);
+	espresso_wifi_resources[0].end =
+		espresso_wifi_resources[0].start;
+	gpio_request(GPIO_WLAN_HOST_WAKE, "WLAN_HOST_WAKE");
+	gpio_direction_input(GPIO_WLAN_HOST_WAKE);
 }
 
 void __init omap4_espresso_wifi_init(void)
