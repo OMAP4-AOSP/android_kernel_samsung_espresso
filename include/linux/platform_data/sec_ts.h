@@ -51,7 +51,6 @@ struct touch_key {
  * associated with.
  * @private_data : pointer that needed by vendor specific information
  * @gpio_irq : physical gpio using to interrupt
- * @gpio_en : physical gpio using to IC enable
  * @gpio_scl : physical gpio using to i2c communication
  * @gpio_sda : physical gpio using to i2c communication
  * @set_ta_mode : callback function when TA, USB connected or disconnected
@@ -74,7 +73,6 @@ struct sec_ts_platform_data {
 	void *driver_data;
 	void *private_data;
 	u32 gpio_irq;
-	u32 gpio_en;
 	u32 gpio_scl;
 	u32 gpio_sda;
 	void (*set_ta_mode)(int *);

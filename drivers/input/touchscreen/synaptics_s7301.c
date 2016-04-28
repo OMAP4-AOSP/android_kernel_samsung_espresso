@@ -35,6 +35,7 @@
 #include <linux/platform_device.h>
 #include <linux/platform_data/sec_ts.h>
 #include <linux/touchscreen/synaptics.h>
+#include <linux/battery.h>
 
 #include <linux/fs.h>
 #include <linux/uaccess.h>
@@ -128,15 +129,15 @@ static void set_ta_mode(int *ta_state)
 
 	if (ts) {
 		switch (*ta_state) {
-		case CABLE_TA:
+		case CABLE_TYPE_AC:
 		F01_SetTABit(ts->client, true);
 		pr_info("tsp: TA attached\n");
 		break;
-		case CABLE_USB:
+		case CABLE_TYPE_USB:
 		F01_SetTABit(ts->client, false);
 		pr_info("tsp: USB attached\n");
 		break;
-		case CABLE_NONE:
+		case CABLE_TYPE_NONE:
 		default:
 		F01_SetTABit(ts->client, false);
 		pr_info("tsp: No attached cable\n");
@@ -991,7 +992,9 @@ static irqreturn_t ts_irq_handler(int irq, void *handle)
 
 	int i, j;
 	int cur_state, id;
+#if TRACKING_COORD
 	static u32 cnt;
+#endif
 	u16 x, y;
 	u8 buf;
 	u8 state[3] = {0, };

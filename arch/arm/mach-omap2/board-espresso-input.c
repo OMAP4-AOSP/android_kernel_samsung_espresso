@@ -28,36 +28,27 @@
 
 #include "board-espresso.h"
 #include "mux.h"
-#include "omap_muxtbl.h"
 #include "control.h"
 
-enum {
-	GPIO_EXT_WAKEUP = 0,
-};
+#define GPIO_EXT_WAKEUP	3
 
-static struct gpio keys_map_high_gpios[] __initdata = {
-	[GPIO_EXT_WAKEUP] = {
-		.label	= "EXT_WAKEUP",
-	},
-};
+/* Reversed on p51xx */
+#define GPIO_VOL_UP		30
+#define GPIO_VOL_DN		8
 
-enum {
-	GPIO_VOL_UP = 0,
-	GPIO_VOL_DOWN,
-};
+#define GPIO_TSP_INT		46
+#define GPIO_TSP_LDO_ON	54
+#define GPIO_TSP_I2C_SCL	130
+#define GPIO_TSP_I2C_SDA	131
 
-static struct gpio keys_map_low_gpios[] __initdata = {
-	[GPIO_VOL_UP] = {
-		.label	= "VOL_UP",
-	},
-	[GPIO_VOL_DOWN] = {
-		.label	= "VOL_DN",
-	},
-};
+#define GPIO_TSP_VENDOR1	71
+#define GPIO_TSP_VENDOR2	72
+#define GPIO_TSP_VENDOR3	92
 
 static struct gpio_event_direct_entry espresso_gpio_keypad_keys_map_high[] = {
 	{
 		.code	= KEY_POWER,
+		.gpio	= GPIO_EXT_WAKEUP,
 	},
 };
 
@@ -72,11 +63,13 @@ static struct gpio_event_input_info espresso_gpio_keypad_keys_info_high = {
 };
 
 static struct gpio_event_direct_entry espresso_gpio_keypad_keys_map_low[] = {
-	[GPIO_VOL_DOWN] = {
+	{
 		.code	= KEY_VOLUMEDOWN,
+		.gpio	= GPIO_VOL_DN,
 	},
-	[GPIO_VOL_UP] = {
+	{
 		.code	= KEY_VOLUMEUP,
+		.gpio	= GPIO_VOL_UP,
 	},
 };
 
@@ -95,40 +88,16 @@ static struct gpio_event_info *espresso_gpio_keypad_info[] = {
 };
 
 static struct gpio_event_platform_data espresso_gpio_keypad_data = {
-	.name		= "sec_key",
+	.name		= "espresso-gpio-keypad",
 	.info		= espresso_gpio_keypad_info,
 	.info_count	= ARRAY_SIZE(espresso_gpio_keypad_info)
 };
 
 static struct platform_device espresso_gpio_keypad_device = {
-	.name	= GPIO_EVENT_DEV_NAME,
+	.name = GPIO_EVENT_DEV_NAME,
 	.id	= 0,
 	.dev = {
 		.platform_data = &espresso_gpio_keypad_data,
-	},
-};
-
-enum {
-	GPIO_TOUCH_nINT = 0,
-	GPIO_TOUCH_EN,
-	GPIO_TOUCH_SCL,
-	GPIO_TOUCH_SDA,
-};
-
-static struct gpio tsp_gpios[] = {
-	[GPIO_TOUCH_nINT] = {
-		.flags	= GPIOF_IN,
-		.label	= "TSP_INT",
-	},
-	[GPIO_TOUCH_EN] = {
-		.flags	= GPIOF_OUT_INIT_HIGH,
-		.label	= "TSP_LDO_ON",
-	},
-	[GPIO_TOUCH_SCL] = {
-		.label	= "TSP_I2C_SCL_1.8V",
-	},
-	[GPIO_TOUCH_SDA] = {
-		.label	= "TSP_I2C_SDA_1.8V",
 	},
 };
 
@@ -136,37 +105,30 @@ static void tsp_set_power(bool on)
 {
 	u32 r;
 
-	if (on) {
-		pr_debug("tsp: power on.\n");
-		gpio_set_value(tsp_gpios[GPIO_TOUCH_EN].gpio, 1);
+	pr_debug("%s: %d\n", __func__, on);
 
-		r = omap4_ctrl_pad_readl(
-			OMAP4_CTRL_MODULE_PAD_CORE_CONTROL_I2C_0);
+	if (on) {
+		gpio_set_value(GPIO_TSP_LDO_ON, 1);
+
+		r = omap4_ctrl_pad_readl(OMAP4_CTRL_MODULE_PAD_CORE_CONTROL_I2C_0);
 		r &= ~OMAP4_I2C3_SDA_PULLUPRESX_MASK;
 		r &= ~OMAP4_I2C3_SCL_PULLUPRESX_MASK;
-		omap4_ctrl_pad_writel(r,
-				OMAP4_CTRL_MODULE_PAD_CORE_CONTROL_I2C_0);
+		omap4_ctrl_pad_writel(r, OMAP4_CTRL_MODULE_PAD_CORE_CONTROL_I2C_0);
 
-		omap_mux_set_gpio(OMAP_PIN_INPUT | OMAP_MUX_MODE3,
-			tsp_gpios[GPIO_TOUCH_nINT].gpio);
+		omap_mux_set_gpio(OMAP_PIN_INPUT | OMAP_MUX_MODE3, GPIO_TSP_INT);
 		if (board_is_espresso10()) msleep(300);
 	} else {
-		pr_debug("tsp: power off.\n");
-		gpio_set_value(tsp_gpios[GPIO_TOUCH_EN].gpio, 0);
+		gpio_set_value(GPIO_TSP_LDO_ON, 0);
 
 		/* Below register settings needed by prevent current leakage. */
-		r = omap4_ctrl_pad_readl(
-			OMAP4_CTRL_MODULE_PAD_CORE_CONTROL_I2C_0);
+		r = omap4_ctrl_pad_readl(OMAP4_CTRL_MODULE_PAD_CORE_CONTROL_I2C_0);
 		r |= OMAP4_I2C3_SDA_PULLUPRESX_MASK;
 		r |= OMAP4_I2C3_SCL_PULLUPRESX_MASK;
-		omap4_ctrl_pad_writel(r,
-				OMAP4_CTRL_MODULE_PAD_CORE_CONTROL_I2C_0);
+		omap4_ctrl_pad_writel(r, OMAP4_CTRL_MODULE_PAD_CORE_CONTROL_I2C_0);
 
-		omap_mux_set_gpio(OMAP_PIN_INPUT | OMAP_MUX_MODE3,
-			tsp_gpios[GPIO_TOUCH_nINT].gpio);
+		omap_mux_set_gpio(OMAP_PIN_INPUT | OMAP_MUX_MODE3, GPIO_TSP_INT);
 		if (board_is_espresso10()) msleep(50);
 	}
-	return;
 }
 
 const u32 espresso_tsp_fw_info = 0x17;
@@ -178,13 +140,16 @@ static struct synaptics_fw_info espresso10_tsp_fw_info = {
 static struct sec_ts_platform_data espresso_ts_pdata = {
 	.fw_name	= "melfas/p3100.fw",
 	.fw_info	= &espresso_tsp_fw_info,
-	.rx_channel_no	= 13, /* Rx ch. */
-	.tx_channel_no	= 22, /* Tx ch. */
+	.rx_channel_no	= 13,
+	.tx_channel_no	= 22,
 	.x_pixel_size	= 1023,
 	.y_pixel_size	= 599,
 	.pivot		= false,
 	.ta_state	= CABLE_TYPE_NONE,
 	.set_power	= tsp_set_power,
+	.gpio_irq	= GPIO_TSP_INT,
+	.gpio_scl	= GPIO_TSP_I2C_SCL,
+	.gpio_sda	= GPIO_TSP_I2C_SDA,
 };
 
 static struct i2c_board_info __initdata espresso_i2c3_boardinfo[] = {
@@ -204,145 +169,88 @@ static struct i2c_board_info __initdata espresso10_i2c3_boardinfo[] = {
 void touch_i2c_to_gpio(bool to_gpios)
 {
 	if (to_gpios) {
-		gpio_direction_output(tsp_gpios[GPIO_TOUCH_nINT].gpio, 0);
-		omap_mux_set_gpio(OMAP_PIN_INPUT | OMAP_MUX_MODE3,
-					tsp_gpios[GPIO_TOUCH_nINT].gpio);
+		gpio_direction_output(GPIO_TSP_INT, 0);
+		omap_mux_set_gpio(OMAP_PIN_INPUT | OMAP_MUX_MODE3, GPIO_TSP_INT);
 
-		gpio_direction_output(tsp_gpios[GPIO_TOUCH_SCL].gpio, 0);
-		omap_mux_set_gpio(OMAP_PIN_INPUT | OMAP_MUX_MODE3,
-					tsp_gpios[GPIO_TOUCH_SCL].gpio);
+		gpio_direction_output(GPIO_TSP_I2C_SCL, 0);
+		omap_mux_set_gpio(OMAP_PIN_INPUT | OMAP_MUX_MODE3, GPIO_TSP_I2C_SCL);
 
-		gpio_direction_output(tsp_gpios[GPIO_TOUCH_SDA].gpio, 0);
-		omap_mux_set_gpio(OMAP_PIN_INPUT | OMAP_MUX_MODE3,
-					tsp_gpios[GPIO_TOUCH_SDA].gpio);
+		gpio_direction_output(GPIO_TSP_I2C_SDA, 0);
+		omap_mux_set_gpio(OMAP_PIN_INPUT | OMAP_MUX_MODE3, GPIO_TSP_I2C_SDA);
 	} else {
-		gpio_direction_output(tsp_gpios[GPIO_TOUCH_nINT].gpio, 1);
-		gpio_direction_input(tsp_gpios[GPIO_TOUCH_nINT].gpio);
-		omap_mux_set_gpio(OMAP_PIN_INPUT_PULLUP | OMAP_MUX_MODE3,
-					tsp_gpios[GPIO_TOUCH_nINT].gpio);
+		gpio_direction_output(GPIO_TSP_INT, 1);
+		gpio_direction_input(GPIO_TSP_INT);
+		omap_mux_set_gpio(OMAP_PIN_INPUT_PULLUP | OMAP_MUX_MODE3, GPIO_TSP_INT);
 
-		gpio_direction_output(tsp_gpios[GPIO_TOUCH_SCL].gpio, 1);
-		gpio_direction_input(tsp_gpios[GPIO_TOUCH_SCL].gpio);
-		omap_mux_set_gpio(OMAP_PIN_INPUT | OMAP_MUX_MODE0,
-					tsp_gpios[GPIO_TOUCH_SCL].gpio);
+		gpio_direction_output(GPIO_TSP_I2C_SCL, 1);
+		gpio_direction_input(GPIO_TSP_I2C_SCL);
+		omap_mux_set_gpio(OMAP_PIN_INPUT | OMAP_MUX_MODE0, GPIO_TSP_I2C_SCL);
 
-		gpio_direction_output(tsp_gpios[GPIO_TOUCH_SDA].gpio, 1);
-		gpio_direction_input(tsp_gpios[GPIO_TOUCH_SDA].gpio);
-		omap_mux_set_gpio(OMAP_PIN_INPUT | OMAP_MUX_MODE0,
-					tsp_gpios[GPIO_TOUCH_SDA].gpio);
+		gpio_direction_output(GPIO_TSP_I2C_SDA, 1);
+		gpio_direction_input(GPIO_TSP_I2C_SDA);
+		omap_mux_set_gpio(OMAP_PIN_INPUT | OMAP_MUX_MODE0, GPIO_TSP_I2C_SDA);
 	}
-
-	return;
-}
-
-ssize_t sec_key_pressed_show(struct device *dev,
-			     struct device_attribute *attr, char *buf)
-{
-	unsigned int key_press_status = 0;
-	int i;
-
-	for (i = 0; i < ARRAY_SIZE(espresso_gpio_keypad_keys_map_high); i++) {
-		if (unlikely
-		    (espresso_gpio_keypad_keys_map_high[i].gpio == -EINVAL))
-			continue;
-		key_press_status |=
-		    ((gpio_get_value(espresso_gpio_keypad_keys_map_high[i].gpio)
-		      << i));
-	}
-
-	for (i = 0; i < ARRAY_SIZE(espresso_gpio_keypad_keys_map_low); i++) {
-		if (unlikely
-		    (espresso_gpio_keypad_keys_map_low[i].gpio == -EINVAL))
-			continue;
-		key_press_status |=
-		    ((!gpio_get_value(espresso_gpio_keypad_keys_map_low[i].gpio)
-		      << (i + ARRAY_SIZE(espresso_gpio_keypad_keys_map_high))));
-	}
-
-	return sprintf(buf, "%u\n", key_press_status);
-}
-
-static DEVICE_ATTR(sec_key_pressed, S_IRUGO, sec_key_pressed_show, NULL);
-
-static int espresso_create_sec_key_dev(void)
-{
-	struct device *sec_key;
-	sec_key = device_create(sec_class, NULL, 0, NULL, "sec_key");
-	if (!sec_key) {
-		pr_err("Failed to create sysfs(sec_key)!\n");
-		return -ENOMEM;
-	}
-
-	if (device_create_file(sec_key, &dev_attr_sec_key_pressed) < 0)
-		pr_err("Failed to create device file(%s)!\n",
-		       dev_attr_sec_key_pressed.attr.name);
-
-	return 0;
 }
 
 static void __init espresso_gpio_keypad_gpio_init(void)
 {
-	int i;
-
-	for (i = 0; i < ARRAY_SIZE(keys_map_high_gpios); i++)
-		espresso_gpio_keypad_keys_map_high[i].gpio =
-		    omap_muxtbl_get_gpio_by_name(keys_map_high_gpios[i].label);
-
-	for (i = 0; i < ARRAY_SIZE(keys_map_low_gpios); i++)
-		espresso_gpio_keypad_keys_map_low[i].gpio =
-		    omap_muxtbl_get_gpio_by_name(keys_map_low_gpios[i].label);
+	if (board_is_espresso10()) {
+		espresso_gpio_keypad_keys_map_low[0].gpio = GPIO_VOL_UP;
+		espresso_gpio_keypad_keys_map_low[1].gpio = GPIO_VOL_DN;
+	}
 }
 
 static void __init espresso_tsp_gpio_init(void)
 {
-	int i;
-
-	for (i = 0; i < ARRAY_SIZE(tsp_gpios); i++)
-		tsp_gpios[i].gpio =
-			omap_muxtbl_get_gpio_by_name(tsp_gpios[i].label);
-
-	if (board_is_espresso10())
-		tsp_gpios[GPIO_TOUCH_EN].flags = GPIOF_DIR_OUT;
+	struct gpio tsp_gpios[] = {
+		{
+			.flags	= GPIOF_IN,
+			.gpio	= GPIO_TSP_INT,
+			.label	= "TSP_INT",
+		},
+		{
+			.flags	= GPIOF_OUT_INIT_HIGH,
+			.gpio	= GPIO_TSP_LDO_ON,
+			.label	= "TSP_LDO_ON",
+		},
+		{
+			.label	= "TSP_I2C_SCL_1.8V",
+			.gpio	= GPIO_TSP_I2C_SCL,
+		},
+		{
+			.label	= "TSP_I2C_SDA_1.8V",
+			.gpio	= GPIO_TSP_I2C_SDA,
+		},
+	};
 
 	gpio_request_array(tsp_gpios, ARRAY_SIZE(tsp_gpios));
 
-	espresso_i2c3_boardinfo[0].irq =
-				gpio_to_irq(tsp_gpios[GPIO_TOUCH_nINT].gpio);
-
-	if (board_is_espresso10()) {
-		espresso_ts_pdata.gpio_en = tsp_gpios[GPIO_TOUCH_EN].gpio;
-		espresso10_i2c3_boardinfo[0].irq =
-				gpio_to_irq(tsp_gpios[GPIO_TOUCH_nINT].gpio);
-	}
-	espresso_ts_pdata.gpio_irq = tsp_gpios[GPIO_TOUCH_nINT].gpio;
-	espresso_ts_pdata.gpio_scl = tsp_gpios[GPIO_TOUCH_SCL].gpio;
-	espresso_ts_pdata.gpio_sda = tsp_gpios[GPIO_TOUCH_SDA].gpio;
+	espresso_i2c3_boardinfo[0].irq = gpio_to_irq(GPIO_TSP_INT);
+	espresso10_i2c3_boardinfo[0].irq = gpio_to_irq(GPIO_TSP_INT);
 }
-
-static struct gpio ts_panel_gpios[] = {
-	{
-		.label	= "TSP_VENDOR1",
-		.flags	= GPIOF_IN
-	},
-	{
-		.label	= "TSP_VENDOR2",
-		.flags	= GPIOF_IN
-	},
-	{
-		.label	= "TSP_VENDOR3",
-		.flags	= GPIOF_IN
-	},
-};
-
-static const char *panel_name[8] = {"ILJIN", "DIGITECH", "iljin", "o-film", "s-mac", };
 
 static void __init espresso_ts_panel_setup(void)
 {
 	int i, panel_id = 0;
+	const char *panel_name[8] = { "ILJIN", "DIGITECH", "iljin", "o-film", "s-mac" };
+	struct gpio ts_panel_gpios[] = {
+		{
+			.label	= "TSP_VENDOR1",
+			.gpio	= GPIO_TSP_VENDOR1,
+			.flags	= GPIOF_IN
+		},
+		{
+			.label	= "TSP_VENDOR2",
+			.gpio	= GPIO_TSP_VENDOR2,
+			.flags	= GPIOF_IN
+		},
+		{
+			.label	= "TSP_VENDOR3",
+			.gpio	= GPIO_TSP_VENDOR3,
+			.flags	= GPIOF_IN
+		},
+	};
 
-	for (i = 0; i < ARRAY_SIZE(ts_panel_gpios); i++)
-		ts_panel_gpios[i].gpio =
-			omap_muxtbl_get_gpio_by_name(ts_panel_gpios[i].label);
 	gpio_request_array(ts_panel_gpios, ARRAY_SIZE(ts_panel_gpios));
 
 	for (i = 0; i < ARRAY_SIZE(ts_panel_gpios); i++)
@@ -355,8 +263,6 @@ static void __init espresso_ts_panel_setup(void)
 		espresso_ts_pdata.tx_channel_no	= 27,
 		espresso_ts_pdata.x_pixel_size	= 1279,
 		espresso_ts_pdata.y_pixel_size	= 799,
-		espresso_ts_pdata.pivot		= false,
-		espresso_ts_pdata.ta_state	= CABLE_NONE,
 		panel_id += 2;
 	}
 	espresso_ts_pdata.panel_name = panel_name[clamp(panel_id, 0, 7)];
@@ -364,28 +270,11 @@ static void __init espresso_ts_panel_setup(void)
 
 void omap4_espresso_tsp_ta_detect(int cable_type)
 {
-	if (board_is_espresso10()) {
-		switch (cable_type) {
-		case CABLE_TYPE_AC:
-			espresso_ts_pdata.ta_state = CABLE_TA;
-			break;
-		case CABLE_TYPE_USB:
-			espresso_ts_pdata.ta_state = CABLE_USB;
-			break;
-		case CABLE_TYPE_NONE:
-		default:
-			espresso_ts_pdata.ta_state = CABLE_NONE;
-		}
-	} else {
-		espresso_ts_pdata.ta_state = cable_type;
-	}
-
+	espresso_ts_pdata.ta_state = cable_type;
 
 	/* Conditions for prevent kernel panic */
-	if (espresso_ts_pdata.set_ta_mode &&
-				gpio_get_value(tsp_gpios[GPIO_TOUCH_EN].gpio))
+	if (espresso_ts_pdata.set_ta_mode && gpio_get_value(GPIO_TSP_LDO_ON))
 		espresso_ts_pdata.set_ta_mode(&espresso_ts_pdata.ta_state);
-	return;
 }
 
 void __init omap4_espresso_input_init(void)
@@ -401,9 +290,6 @@ void __init omap4_espresso_input_init(void)
 		i2c_register_board_info(3, espresso10_i2c3_boardinfo,
 				ARRAY_SIZE(espresso10_i2c3_boardinfo));
 	}
-
-
-	espresso_create_sec_key_dev();
 
 	platform_device_register(&espresso_gpio_keypad_device);
 }
