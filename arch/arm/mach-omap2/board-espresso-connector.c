@@ -39,7 +39,8 @@
 
 #include "board-espresso.h"
 #include "mux.h"
-#include "omap_muxtbl.h"
+
+#define GPIO_TA_NCONNECTED		32
 
 #define CHARGERUSB_CTRL1		0x8
 #define CHARGERUSB_CTRL3		0xA
@@ -92,7 +93,6 @@ struct omap4_otg {
 	int usb_manual_mode;
 	int uart_manual_mode;
 	int current_device;
-	int ta_nconnected;
 
 	struct switch_dev dock_switch;
 	struct switch_dev audio_switch;
@@ -125,18 +125,22 @@ enum {
 static struct gpio connector_gpios[] = {
 	[GPIO_ACCESSORY_EN] = {
 		.flags	= GPIOF_OUT_INIT_LOW,
+		.gpio = 172,
 		.label = "ACCESSORY_EN",
 	},
 	[GPIO_ACCESSORY_INT] = {
 		.flags = GPIOF_IN,
+		.gpio = 39,
 		.label = "ACCESSORY_INT_1.8V",
 	},
 	[GPIO_DOCK_INT] = {
 		.flags = GPIOF_IN,
+		.gpio = 31,
 		.label = "DOCK_INT",
 	},
 	[GPIO_JIG_ON] = {
 		.flags = GPIOF_IN,
+		.gpio = 55,
 		.label = "JIG_ON_18",
 	},
 };
@@ -150,14 +154,17 @@ enum {
 static struct gpio uart_sw_gpios[] = {
 	[GPIO_USB_SEL1] = {
 		.flags	= GPIOF_OUT_INIT_HIGH,
+		.gpio	= 154,
 		.label	= "USB_SEL1",
 	},
 	[GPIO_USB_SEL2] = {
 		.flags	= GPIOF_OUT_INIT_HIGH,
+		.gpio	= 60,
 		.label	= "USB_SEL2",
 	},
 	[GPIO_UART_SEL] = {
 		.flags	= GPIOF_OUT_INIT_LOW,
+		.gpio	= 47,
 		.label	= "UART_SEL",
 	},
 };
@@ -172,18 +179,22 @@ enum {
 static struct gpio mhl_gpios[] = {
 	[GPIO_MHL_RST] = {
 		.flags  = GPIOF_OUT_INIT_LOW,
+		.gpio = 43,
 		.label  = "MHL_RST",
 	},
 	[GPIO_MHL_INT] = {
 		.flags = GPIOF_IN,
+		.gpio = 175,
 		.label  = "MHL_INT",
 	},
 	[GPIO_HDMI_EN] = {
 		.flags = GPIOF_OUT_INIT_LOW,
+		.gpio = 102,
 		.label = "HDMI_EN",
 	},
 	[GPIO_HDMI_HPD] = {
 		.flags = GPIOF_IN,
+		.gpio = 63,
 		.label  = "HDMI_HPD",
 	},
 };
@@ -520,7 +531,7 @@ static void espresso_con_usb_charger_attached(struct omap4_otg *otg)
 	/* USB cable connected */
 	pr_info("%s, USB_EVENT_VBUS\n", __func__);
 
-	val = gpio_get_value(otg->ta_nconnected);
+	val = gpio_get_value(GPIO_TA_NCONNECTED);
 	if (val < 0) {
 		pr_err("usb ta_nconnected: gpio_get_value error %d\n", val);
 		return;
@@ -546,7 +557,7 @@ static void espresso_con_ta_charger_attached(struct omap4_otg *otg)
 	/* Change to USB_EVENT_CHARGER for sleep */
 	pr_info("%s, USB_EVENT_CHARGER\n", __func__);
 
-	val = gpio_get_value(otg->ta_nconnected);
+	val = gpio_get_value(GPIO_TA_NCONNECTED);
 	if (val < 0) {
 		pr_err("usb ta_nconnected: gpio_get_value error %d\n", val);
 		return;
@@ -1042,7 +1053,7 @@ static irqreturn_t ta_nconnected_irq(int irq, void *_otg)
 	struct omap4_otg *otg = _otg;
 	int val;
 
-	val = gpio_get_value(otg->ta_nconnected);
+	val = gpio_get_value(GPIO_TA_NCONNECTED);
 	if (val < 0) {
 		pr_err("usb ta_nconnected: gpio_get_value error %d\n", val);
 		return IRQ_HANDLED;
@@ -1071,28 +1082,22 @@ static int espresso_vbus_detect_init(struct omap4_otg *otg)
 	int status = 0;
 	int irq = 0;
 	int val;
-	int ta_nconnected =
-		omap_muxtbl_get_gpio_by_name("TA_nCONNECTED");
 
-	dev_info(&otg->dev, "init TA_nCONNECTED : %d\n", ta_nconnected);
-
-	status = gpio_request(ta_nconnected, "TA_nCONNECTED");
+	status = gpio_request(GPIO_TA_NCONNECTED, "TA_nCONNECTED");
 	if (status < 0) {
-		dev_err(&otg->dev, "gpio %d request failed.\n", ta_nconnected);
+		dev_err(&otg->dev, "gpio %d request failed.\n", GPIO_TA_NCONNECTED);
 		return status;
 	}
 
-	status = gpio_direction_input(ta_nconnected);
+	status = gpio_direction_input(GPIO_TA_NCONNECTED);
 	if (status < 0) {
 		dev_err(&otg->dev, "failed to set gpio %d as input\n",
-				ta_nconnected);
+				GPIO_TA_NCONNECTED);
 		return status;
 	}
 
-	otg->ta_nconnected = ta_nconnected;
-	irq = gpio_to_irq(ta_nconnected);
-	dev_info(&otg->dev, "request_irq : %d(gpio: %d)\n", irq, ta_nconnected);
-	val = gpio_get_value(ta_nconnected);
+	irq = gpio_to_irq(GPIO_TA_NCONNECTED);
+	val = gpio_get_value(GPIO_TA_NCONNECTED);
 
 	status = request_threaded_irq(irq, NULL, ta_nconnected_irq,
 			(val ? IRQF_TRIGGER_LOW : IRQF_TRIGGER_HIGH) | \
@@ -1100,7 +1105,7 @@ static int espresso_vbus_detect_init(struct omap4_otg *otg)
 			"TA_nConnected", otg);
 	if (status < 0) {
 		dev_err(&otg->dev, "request irq %d failed for gpio %d\n",
-				irq, ta_nconnected);
+				irq, GPIO_TA_NCONNECTED);
 		return status;
 	}
 
@@ -1217,23 +1222,15 @@ static struct i2c_board_info __initdata espresso_i2c8_boardinfo[] = {
 
 static void connector_gpio_init(void)
 {
-	int i;
-
-	for (i = 0; i < ARRAY_SIZE(connector_gpios); i++)
-		connector_gpios[i].gpio =
-			omap_muxtbl_get_gpio_by_name(connector_gpios[i].label);
-
-	for (i = 0; i < ARRAY_SIZE(uart_sw_gpios); i++)
-		uart_sw_gpios[i].gpio =
-			omap_muxtbl_get_gpio_by_name(uart_sw_gpios[i].label);
+	if ((board_is_espresso10() && system_rev >= 8) ||
+		(!board_is_espresso10() && system_rev >= 10)) {
+		connector_gpios[GPIO_ACCESSORY_INT].gpio = 2;
+	}
 
 	gpio_request_array(connector_gpios, ARRAY_SIZE(connector_gpios));
 	gpio_request_array(uart_sw_gpios, ARRAY_SIZE(uart_sw_gpios));
 
 	if (board_is_espresso10() && board_is_bestbuy_variant()) {
-		for (i = 0; i < ARRAY_SIZE(mhl_gpios); i++)
-			mhl_gpios[i].gpio = omap_muxtbl_get_gpio_by_name(mhl_gpios[i].label);
-
 		gpio_request_array(mhl_gpios, ARRAY_SIZE(mhl_gpios));
 
 		espresso_i2c8_boardinfo[0].irq =
@@ -1246,7 +1243,7 @@ static int __init espresso_plugged_usb_cable_init(void)
 	struct omap4_otg *espresso_otg = &espresso_otg_xceiv;
 
 	/* USB connected */
-	if (gpio_get_value(espresso_otg->ta_nconnected) == 0)
+	if (gpio_get_value(GPIO_TA_NCONNECTED) == 0)
 		omap4_vusb_enable(espresso_otg, true);
 
 	return 0;
