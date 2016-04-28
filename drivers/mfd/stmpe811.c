@@ -56,8 +56,6 @@
 #define STMPE811_GPIO_AF	0x17
 #define STMPE811_TSC_CTRL	0x40
 
-static struct device *sec_adc_dev;
-
 static const struct file_operations stmpe811_fops = {
 	.owner = THIS_MODULE,
 };
@@ -273,7 +271,6 @@ static int stmpe811_adc_i2c_probe(struct i2c_client *client,
 	 * gpio 0-3 -> ADC
 	 */
 	stmpe811_write_register(STMPE811_GPIO_AF, 0x00);
-
 	stmpe811_i2c_read(client, STMPE811_GPIO_AF, data, (u8)1);
 	dev_dbg(&client->dev, "STMPE811_GPIO_AF = 0x%x..\n", data[0]);
 
