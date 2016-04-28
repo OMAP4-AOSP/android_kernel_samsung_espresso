@@ -255,7 +255,7 @@ static int omap4_wm8994_start_fll1(struct snd_soc_dai *aif1_dai)
 {
 	int ret;
 
-	dev_info(aif1_dai->dev, "Moving to audio clocking settings\n");
+	dev_dbg(aif1_dai->dev, "Moving to audio clocking settings\n");
 
 	/* Switch the FLL */
 	ret = snd_soc_dai_set_pll(aif1_dai,
