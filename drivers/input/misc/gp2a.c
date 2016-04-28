@@ -269,14 +269,14 @@ static ssize_t light_enable_store(struct device *dev,
 	gp2a_dbgmsg("new_value = %d, old state = %d\n",
 		    new_value, (gp2a->power_state & LIGHT_ENABLED) ? 1 : 0);
 	if (new_value && !(gp2a->power_state & LIGHT_ENABLED)) {
-		if (!gp2a->power_state)
+		if (!gp2a->power_state && gp2a->pdata->power)
 			gp2a->pdata->power(true);
 		gp2a->power_state |= LIGHT_ENABLED;
 		gp2a_light_enable(gp2a);
 	} else if (!new_value && (gp2a->power_state & LIGHT_ENABLED)) {
 		gp2a_light_disable(gp2a);
 		gp2a->power_state &= ~LIGHT_ENABLED;
-		if (!gp2a->power_state)
+		if (!gp2a->power_state && gp2a->pdata->power)
 			gp2a->pdata->power(false);
 	}
 	mutex_unlock(&gp2a->power_lock);
@@ -304,7 +304,7 @@ static ssize_t proximity_enable_store(struct device *dev,
 	gp2a_dbgmsg("new_value = %d, old state = %d\n",
 		    new_value, (gp2a->power_state & PROXIMITY_ENABLED) ? 1 : 0);
 	if (new_value && !(gp2a->power_state & PROXIMITY_ENABLED)) {
-		if (!gp2a->power_state)
+		if (!gp2a->power_state && gp2a->pdata->power)
 			gp2a->pdata->power(true);
 		gp2a->power_state |= PROXIMITY_ENABLED;
 
@@ -331,7 +331,7 @@ static ssize_t proximity_enable_store(struct device *dev,
 		gp2a_i2c_write(gp2a, REGS_OPMOD, &reg_defaults[0]);
 #endif
 		gp2a->power_state &= ~PROXIMITY_ENABLED;
-		if (!gp2a->power_state)
+		if (!gp2a->power_state && gp2a->pdata->power)
 			gp2a->pdata->power(false);
 	}
 	mutex_unlock(&gp2a->power_lock);
@@ -797,7 +797,7 @@ static int gp2a_suspend(struct device *dev)
 	struct gp2a_data *gp2a = i2c_get_clientdata(client);
 	if (gp2a->power_state & LIGHT_ENABLED)
 		gp2a_light_disable(gp2a);
-	if (gp2a->power_state == LIGHT_ENABLED)
+	if (gp2a->power_state == LIGHT_ENABLED && gp2a->pdata->power)
 		gp2a->pdata->power(false);
 	return 0;
 }
@@ -807,7 +807,7 @@ static int gp2a_resume(struct device *dev)
 	/* Turn power back on if we were before suspend. */
 	struct i2c_client *client = to_i2c_client(dev);
 	struct gp2a_data *gp2a = i2c_get_clientdata(client);
-	if (gp2a->power_state == LIGHT_ENABLED)
+	if (gp2a->power_state == LIGHT_ENABLED && gp2a->pdata->power)
 		gp2a->pdata->power(true);
 	if (gp2a->power_state & LIGHT_ENABLED)
 		gp2a_light_enable(gp2a);
@@ -832,7 +832,8 @@ static int gp2a_i2c_remove(struct i2c_client *client)
 		gp2a->power_state = 0;
 		if (gp2a->power_state & LIGHT_ENABLED)
 			gp2a_light_disable(gp2a);
-		gp2a->pdata->power(false);
+		if (gp2a->pdata->power)
+			gp2a->pdata->power(false);
 	}
 	mutex_destroy(&gp2a->power_lock);
 	wake_lock_destroy(&gp2a->prx_wake_lock);
@@ -848,7 +849,8 @@ static void gp2a_i2c_shutdown(struct i2c_client *client)
 		gp2a->power_state = 0;
 		if (gp2a->power_state & LIGHT_ENABLED)
 			gp2a_light_disable(gp2a);
-		gp2a->pdata->power(false);
+		if (gp2a->pdata->power)
+			gp2a->pdata->power(false);
 	}
 
 	if (gp2a->pdata->led_on != NULL)

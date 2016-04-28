@@ -16,7 +16,6 @@
 #include <linux/gpio.h>
 #include <linux/delay.h>
 #include "mux.h"
-#include "omap_muxtbl.h"
 
 #include <linux/gp2a.h>
 #include <linux/i2c/twl6030-gpadc.h>
@@ -27,59 +26,40 @@
 
 #include "board-espresso.h"
 
+#define GPIO_ALS_INT		33
+#define GPIO_PS_VOUT		1
+#define GPIO_MSENSE_IRQ		157
+
+#define GP2A_LIGHT_ADC_CHANNEL	4
+
 #define YAS_TA_OFFSET_ESPRESSO {0, 0, 0}
 #define YAS_USB_OFFSET_ESPRESSO {0, 0, 0}
 #define YAS_TA_OFFSET_ESPRESSO10 {200, -4600, -1100}
 #define YAS_USB_OFFSET_ESPRESSO10 {0, -1100, -300}
 #define YAS_FULL_OFFSET {0, 0, 0}
 
-enum {
-	NUM_ALS_INT = 0,
-	NUM_PS_VOUT,
-	NUM_MSENSE_IRQ,
-};
-
-struct gpio sensors_gpios[] = {
-	[NUM_ALS_INT] = {
-		.flags = GPIOF_IN,
-		.label = "ALS_INT_18",
-	},
-	[NUM_PS_VOUT] = {
-		.flags = GPIOF_IN,
-		.label = "PS_VOUT",
-	},
-	[NUM_MSENSE_IRQ] = {
-		.flags = GPIOF_IN,
-		.label = "MSENSE_IRQ",
-	},
-};
-
 static int bh1721fvc_light_sensor_reset(void)
 {
-	pr_info("%s\n", __func__);
+	pr_debug("%s\n", __func__);
 
-	omap_mux_init_gpio(sensors_gpios[NUM_ALS_INT].gpio,
-		OMAP_PIN_OUTPUT);
+	omap_mux_init_gpio(GPIO_ALS_INT, OMAP_PIN_OUTPUT);
 
-	gpio_free(sensors_gpios[NUM_ALS_INT].gpio);
+	gpio_free(GPIO_ALS_INT);
 
-	gpio_request(sensors_gpios[NUM_ALS_INT].gpio, "LIGHT_SENSOR_RESET");
+	gpio_request(GPIO_ALS_INT, "LIGHT_SENSOR_RESET");
 
-	gpio_direction_output(sensors_gpios[NUM_ALS_INT].gpio, 0);
+	gpio_direction_output(GPIO_ALS_INT, 0);
 
 	udelay(2);
 
-	gpio_direction_output(sensors_gpios[NUM_ALS_INT].gpio, 1);
+	gpio_direction_output(GPIO_ALS_INT, 1);
 
 	return 0;
-
 }
 
 static struct bh1721fvc_platform_data bh1721fvc_pdata = {
 	.reset = bh1721fvc_light_sensor_reset,
 };
-
-#define GP2A_LIGHT_ADC_CHANNEL	4
 
 static int gp2a_light_adc_value(void)
 {
@@ -89,36 +69,30 @@ static int gp2a_light_adc_value(void)
 		return twl6030_get_gpadc_conversion(GP2A_LIGHT_ADC_CHANNEL);
 }
 
-static void gp2a_power(bool on)
-{
-
-}
-
 static void omap4_espresso_sensors_regulator_on(bool on)
 {
 	struct regulator *reg_v28;
 	struct regulator *reg_v18;
 
-	reg_v28 =
-		regulator_get(NULL, "VAP_IO_2.8V");
+	reg_v28 = regulator_get(NULL, "VAP_IO_2.8V");
 	if (IS_ERR(reg_v28)) {
-		pr_err("%s [%d] failed to get v2.8 regulator.\n",
+		pr_err("%s [%d] failed to get v2.8 regulator\n",
 			__func__, __LINE__);
-		goto done;
+		return;
 	}
-	reg_v18 =
-		regulator_get(NULL, "VDD_IO_1.8V");
+	reg_v18 = regulator_get(NULL, "VDD_IO_1.8V");
 	if (IS_ERR(reg_v18)) {
-		pr_err("%s [%d] failed to get v1.8 regulator.\n",
+		pr_err("%s [%d] failed to get v1.8 regulator\n",
 			__func__, __LINE__);
-		goto done;
+		return;
 	}
+
+	pr_debug("%s: %d\n", __func__, on);
+
 	if (on) {
-		pr_info("sensor ldo on.\n");
 		regulator_enable(reg_v28);
 		regulator_enable(reg_v18);
 	} else {
-		pr_info("sensor ldo off.\n");
 		regulator_disable(reg_v18);
 		regulator_disable(reg_v28);
 	}
@@ -126,13 +100,10 @@ static void omap4_espresso_sensors_regulator_on(bool on)
 	regulator_put(reg_v18);
 	if (!board_is_espresso10())
 		msleep(20);
-done:
-	return;
 }
 
 static struct gp2a_platform_data gp2a_pdata = {
-	.power = gp2a_power,
-	.p_out = 0,
+	.p_out = GPIO_PS_VOUT,
 	.light_adc_value = gp2a_light_adc_value,
 	.ldo_on = omap4_espresso_sensors_regulator_on,
 };
@@ -140,6 +111,7 @@ static struct gp2a_platform_data gp2a_pdata = {
 struct mag_platform_data magnetic_pdata = {
 	.power_on = omap4_espresso_sensors_regulator_on,
 	.offset_enable = 0,
+	.orientation = 8, /* P31xx default */
 	.chg_status = CABLE_TYPE_NONE,
 	.ta_offset.v = YAS_TA_OFFSET_ESPRESSO,
 	.usb_offset.v = YAS_USB_OFFSET_ESPRESSO,
@@ -161,6 +133,7 @@ void omap4_espresso_set_chager_type(int type)
 struct acc_platform_data accelerometer_pdata = {
 	.cal_path = "/efs/calibration_data",
 	.ldo_on = omap4_espresso_sensors_regulator_on,
+	.orientation = 8, /* P31xx default */
 };
 
 static struct al3201_platform_data al3201_pdata = {
@@ -192,37 +165,46 @@ static struct i2c_board_info __initdata espresso_common_sensors_i2c4_boardinfo[]
 	{
 		I2C_BOARD_INFO("accelerometer", 0x18),
 		.platform_data = &accelerometer_pdata,
-	 },
+	},
 	{
 		I2C_BOARD_INFO("geomagnetic", 0x2e),
 		.platform_data = &magnetic_pdata,
 	},
 };
 
-
 void __init omap4_espresso_sensors_init(void)
 {
-	int i;
-	for (i = 0; i < ARRAY_SIZE(sensors_gpios); i++)
-		sensors_gpios[i].gpio =
-			omap_muxtbl_get_gpio_by_name(sensors_gpios[i].label);
-
+	int32_t ta_offset_espresso10[] = YAS_TA_OFFSET_ESPRESSO10;
+	int32_t usb_offset_espresso10[] = YAS_USB_OFFSET_ESPRESSO10;
+	struct gpio sensors_gpios[] = {
+		{
+			.flags = GPIOF_IN,
+			.gpio  = GPIO_ALS_INT,
+			.label = "ALS_INT_18",
+		},
+		{
+			.flags = GPIOF_IN,
+			.gpio  = GPIO_PS_VOUT,
+			.label = "PS_VOUT",
+		},
+		{
+			.flags = GPIOF_IN,
+			.gpio  = GPIO_MSENSE_IRQ,
+			.label = "MSENSE_IRQ",
+		},
+	};
 	gpio_request_array(sensors_gpios, ARRAY_SIZE(sensors_gpios));
 
-	omap_mux_init_gpio(sensors_gpios[NUM_MSENSE_IRQ].gpio,
+	omap_mux_init_gpio(GPIO_MSENSE_IRQ,
 		OMAP_PIN_OUTPUT);
 
-	gpio_free(sensors_gpios[NUM_MSENSE_IRQ].gpio);
+	gpio_free(GPIO_MSENSE_IRQ);
 
-	gpio_request(sensors_gpios[NUM_MSENSE_IRQ].gpio, "MSENSE_IRQ");
+	gpio_request(GPIO_MSENSE_IRQ, "MSENSE_IRQ");
 
-	gpio_direction_output(sensors_gpios[NUM_MSENSE_IRQ].gpio, 1);
-
-	gp2a_pdata.p_out = sensors_gpios[NUM_PS_VOUT].gpio;
+	gpio_direction_output(GPIO_MSENSE_IRQ, 1);
 
 	if (!board_is_espresso10()) {
-		magnetic_pdata.orientation = 8;
-		accelerometer_pdata.orientation = 8;
 		if (board_has_modem()) {
 			i2c_register_board_info(4, espresso_sensors_i2c4_boardinfo_rf,
 				ARRAY_SIZE(espresso_sensors_i2c4_boardinfo_rf));
@@ -233,8 +215,6 @@ void __init omap4_espresso_sensors_init(void)
 	} else {
 		magnetic_pdata.orientation = 7;
 		accelerometer_pdata.orientation = 6;
-		int32_t ta_offset_espresso10[] = YAS_TA_OFFSET_ESPRESSO10;
-		int32_t usb_offset_espresso10[] = YAS_USB_OFFSET_ESPRESSO10;
 		magnetic_pdata.ta_offset.v[0] = ta_offset_espresso10[0];
 		magnetic_pdata.ta_offset.v[1] = ta_offset_espresso10[1];
 		magnetic_pdata.ta_offset.v[2] = ta_offset_espresso10[2];
