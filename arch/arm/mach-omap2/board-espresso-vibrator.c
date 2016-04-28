@@ -22,22 +22,11 @@
 #include <../../../drivers/staging/android/timed_output.h>
 
 #include "mux.h"
-#include "omap_muxtbl.h"
-#include "omap44xx_muxtbl.h"
 #include "board-espresso.h"
 
+#define GPIO_MOTOR_EN	38
+
 #define MAX_TIMEOUT		10000 /* 10sec */
-
-enum {
-	GPIO_MOTOR_EN = 0,
-};
-
-static struct gpio vibrator_gpio[] = {
-	[GPIO_MOTOR_EN] = {
-		.flags	= GPIOF_OUT_INIT_LOW,
-		.label	= "MOTOR_EN",
-	},
-};
 
 static struct vibrator {
 	struct wake_lock wklock;
@@ -50,7 +39,7 @@ static void vibrator_off(void)
 {
 	if (!vibdata.enabled)
 		return;
-	gpio_set_value(vibrator_gpio[GPIO_MOTOR_EN].gpio, 0);
+	gpio_set_value(GPIO_MOTOR_EN, 0);
 	vibdata.enabled = false;
 	wake_unlock(&vibdata.wklock);
 }
@@ -75,7 +64,7 @@ static void vibrator_enable(struct timed_output_dev *dev, int value)
 	if (value) {
 		wake_lock(&vibdata.wklock);
 
-		gpio_set_value(vibrator_gpio[GPIO_MOTOR_EN].gpio, 1);
+		gpio_set_value(GPIO_MOTOR_EN, 1);
 
 		vibdata.enabled = true;
 
@@ -108,25 +97,9 @@ static enum hrtimer_restart vibrator_timer_func(struct hrtimer *timer)
 
 static void __init omap_vibrator_none_pads_cfg_mux(void)
 {
-	int i;
-	struct omap_mux_partition *partition;
-	struct omap_mux_partition *core = omap_mux_get("core");
-	struct omap_mux_partition *wkup = omap_mux_get("wkup");
-	struct omap_muxtbl *tbl;
-
-	for (i = 0; i < ARRAY_SIZE(vibrator_gpio); i++) {
-		tbl = omap_muxtbl_find_by_name(vibrator_gpio[i].label);
-		if (!tbl)
-			continue;
-		if (tbl->domain == OMAP4_MUXTBL_DOMAIN_WKUP)
-			partition = wkup;
-		else
-			partition = core;
-
-		omap_mux_write(partition,
-			OMAP_MUX_MODE7 | OMAP_PIN_INPUT_PULLDOWN,
-			tbl->mux.reg_offset);
-	}
+	omap_mux_write(omap_mux_get("core"),
+		OMAP_MUX_MODE7 | OMAP_PIN_INPUT_PULLDOWN,
+		OMAP4_CTRL_MODULE_PAD_GPMC_AD14_OFFSET);
 }
 
 static int __init vibrator_init(void)
@@ -156,22 +129,19 @@ err_to_dev_reg:
 
 int __init omap4_espresso_vibrator_init(void)
 {
-	int ret = 0, i;
+	int ret;
 
 	if (!board_has_modem()) {
 		omap_vibrator_none_pads_cfg_mux();
 		return 0;
 	}
 
-	for (i = 0; i < ARRAY_SIZE(vibrator_gpio); i++)
-		vibrator_gpio[i].gpio =
-		    omap_muxtbl_get_gpio_by_name(vibrator_gpio[i].label);
-	gpio_request_array(vibrator_gpio, ARRAY_SIZE(vibrator_gpio));
+	gpio_request_one(GPIO_MOTOR_EN, GPIOF_OUT_INIT_LOW, "MOTOR_EN");
 
 	ret = vibrator_init();
 	if (ret < 0) {
 		pr_err("vib: vibrator_init fail.");
-		gpio_free(vibrator_gpio[GPIO_MOTOR_EN].gpio);
+		gpio_free(GPIO_MOTOR_EN);
 	}
 
 	return ret;
