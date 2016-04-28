@@ -30,11 +30,12 @@
 #include "pm.h"
 
 #include "board-espresso.h"
-#include "mux.h"
-#include "omap_muxtbl.h"
 #include "common-board-devices.h"
 
-#define GPIO_EMMC_EN	53
+#define GPIO_EMMC_EN		53
+#define GPIO_CODEC_LDO_EN	45
+#define GPIO_SYS_DRM_MSEC	6
+#define GPIO_TF_EN		34
 
 #define TWL6030_BBSPOR_CFG			0xE6
 #define TWL6030_PHOENIX_MSK_TRANSITION		0x20
@@ -131,6 +132,7 @@ static struct wm8994_pdata wm1811_pdata = {
 	.ldo = {
 		{
 			.init_data = &wm1811_ldo1_initdata,
+			.enable = GPIO_CODEC_LDO_EN,
 		},
 		{
 			.init_data = &wm1811_ldo2_initdata,
@@ -343,23 +345,6 @@ static struct regulator_init_data espresso_clk32kaudio = {
 	.consumer_supplies	= espresso_clk32kaudio_supply,
 };
 
-#ifdef CONFIG_TWL6040_CODEC
-static struct twl4030_codec_audio_data espresso_audio = {
-	/* single-step ramp for headset and handsfree */
-	.hs_left_step		= 0x0f,
-	.hs_right_step		= 0x0f,
-	.hf_left_step		= 0x1d,
-	.hf_right_step		= 0x1d,
-	.ep_step		= 0x0f,
-};
-
-static struct twl4030_codec_data espresso_codec = {
-	.audio		= &espresso_audio,
-	.naudint_irq	= OMAP44XX_IRQ_SYS_2N,
-	.irq_base	= TWL6040_CODEC_IRQ_BASE,
-};
-#endif
-
 static struct twl4030_madc_platform_data espresso_madc = {
 	.irq_line	= -1,
 	.features	= TWL6030_CLASS | TWL6032_SUBCLASS,
@@ -547,9 +532,6 @@ static struct twl4030_platform_data espresso_twl6032_pdata = {
 	.clk32kaudio	= &espresso_clk32kaudio,
 
 	/* children */
-#ifdef CONFIG_TWL6040_CODEC
-	.codec		= &espresso_codec,
-#endif
 	.madc		= &espresso_madc,
 };
 
@@ -575,6 +557,7 @@ static struct i2c_board_info espresso_twl6032_i2c1_board_info[] __initdata = {
 static struct fixed_voltage_config espresso_vmmc_config = {
 	.supply_name		= "vmmc",
 	.microvolts		= 2800000, /* 2.8V */
+	.gpio			= GPIO_TF_EN,
 	.startup_delay		= 0,
 	.enable_high		= 1,
 	.enabled_at_boot	= 0,
@@ -622,16 +605,8 @@ static struct platform_device espresso_vmmc_external_device = {
 
 static void __init espresso_audio_init(void)
 {
-#ifdef CONFIG_TWL6040_CODEC
-	espresso_codec.audpwron_gpio =
-		omap_muxtbl_get_gpio_by_name("AUD_PWRON");
-#endif
-
 #ifdef CONFIG_SND_SOC_WM8994
 	platform_device_register(&vbatt_device);
-
-	wm1811_pdata.ldo[0].enable =
-		omap_muxtbl_get_gpio_by_name("CODEC_LDO_EN");
 
 	if (board_is_espresso10())
 		wm1811_pdata.use_submic = false;
@@ -640,9 +615,6 @@ static void __init espresso_audio_init(void)
 
 void __init omap4_espresso_pmic_init(void)
 {
-	unsigned int gpio_sys_drm_msec =
-		omap_muxtbl_get_gpio_by_name("SYS_DRM_MSEC");
-
 	/* Update oscillator information */
 	omap_pm_set_osc_lp_time(15000, 1);
 
@@ -700,15 +672,14 @@ void __init omap4_espresso_pmic_init(void)
 	/*
 	 * Register fixed regulators to control external LDO.
 	 */
-	espresso_vmmc_config.gpio = omap_muxtbl_get_gpio_by_name("TF_EN");
 	platform_device_register(&espresso_vmmc_device);
 	platform_device_register(&espresso_vmmc_external_device);
 
 	/*
 	 * Drive MSECURE high for TWL6030 write access.
 	 */
-	gpio_request(gpio_sys_drm_msec, "SYS_DRM_MSEC");
-	gpio_direction_output(gpio_sys_drm_msec, 1);
+	gpio_request(GPIO_SYS_DRM_MSEC, "SYS_DRM_MSEC");
+	gpio_direction_output(GPIO_SYS_DRM_MSEC, 1);
 
 	if (enable_sr)
 		omap_enable_smartreflex_on_init();
