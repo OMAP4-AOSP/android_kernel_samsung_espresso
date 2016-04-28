@@ -50,7 +50,6 @@
 #include "mux.h"
 #include "omap_ram_console.h"
 #include "omap4-sar-layout.h"
-#include "omap_muxtbl.h"
 
 #include "sec_muxtbl.h"
 
@@ -380,6 +379,8 @@ static void __init sec_common_init(void)
 
 static void __init espresso_init(void)
 {
+	omap4_mux_init(NULL, NULL, OMAP_PACKAGE_CBS);
+
 	omap4_espresso_emif_init();
 
 	if (board_is_espresso10()) {

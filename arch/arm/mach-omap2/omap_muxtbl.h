@@ -45,14 +45,8 @@ struct omap_muxset {
 	unsigned int size;
 };
 
-extern int __init omap_muxtbl_init(int flags);
+extern void __init omap_muxtbl_init(void);
 
 extern int __init omap_muxtbl_add_muxset(struct omap_muxset *muxset);
-
-extern struct omap_muxtbl *omap_muxtbl_find_by_name(const char *label);
-
-extern struct omap_muxtbl *omap_muxtbl_find_by_pin(const char *pin);
-
-extern int __init omap_muxtbl_get_gpio_by_name(const char *label);
 
 #endif /* __OMAP_MUXTBL_H__ */

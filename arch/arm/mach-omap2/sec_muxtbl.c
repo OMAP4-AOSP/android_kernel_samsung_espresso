@@ -69,20 +69,9 @@ int __init sec_muxtbl_init(unsigned int type, unsigned int rev)
 	struct sec_muxtbl_node *head = NULL;
 	struct sec_muxtbl_node *cur;
 	struct list_head *pos;
-	int package = OMAP_PACKAGE_CBS;
 	int err;
-	static unsigned int init_done;
 
-	if (!init_done) {
-		if (omap_rev() == OMAP4430_REV_ES1_0)
-			package = OMAP_PACKAGE_CBL;
-
-		err = omap_muxtbl_init(package);
-		if (err)
-			return err;
-
-		init_done = 1;
-	}
+	omap_muxtbl_init();
 
 	if (__sec_muxtbl_setup_list(type, &head, rev))
 		return 0;

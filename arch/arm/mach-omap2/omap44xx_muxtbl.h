@@ -20,8 +20,6 @@
 #define OMAP4_MUXTBL_DOMAIN_CORE	0
 #define OMAP4_MUXTBL_DOMAIN_WKUP	1
 
-#define OMAP4_CTRL_MODULE_PAD_EXT_GPIO000_OFFSET	0x00
-
 #define OMAP4_MUXTBL(_domain, _M0, _mux_value, _gpio, _label)	\
 {									\
 	.gpio = {							\
@@ -33,7 +31,7 @@
 	.pin = #_M0,							\
 }
 
-extern int __init omap4_muxtbl_init(int flags);
+extern void __init omap4_muxtbl_init(void);
 
 extern int __init omap4_muxtbl_add_mux(struct omap_muxtbl *muxtbl);
 
