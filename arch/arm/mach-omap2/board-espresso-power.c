@@ -32,62 +32,45 @@
 #include <linux/irq.h>
 
 #include "board-espresso.h"
-#include "mux.h"
-#include "omap_muxtbl.h"
 
-#define TA_CHG_ING_N	0
-#define TA_ENABLE	1
-#define FUEL_ALERT	2
+#define GPIO_TA_NCONNECTED	32
+#define GPIO_TA_NCHG		142
+#define GPIO_TA_EN		13
+#define GPIO_FUEL_ALERT	44
 
-#define TEMP_ADC_CHANNEL	1
-#define ADC_NUM_SAMPLES		5
-#define ADC_LIMIT_ERR_COUNT	5
+#define GPIO_CHG_SDA		98
+#define GPIO_CHG_SCL		99
+#define GPIO_FUEL_SDA		62
+#define GPIO_FUEL_SCL		61
 
-#define CHARGER_STATUS_FULL             0x1
-#define CHARGER_STATUS_CHARGERERR       0x2
-#define CHARGER_STATUS_USB_FAIL         0x3
-#define CHARGER_VBATT_UVLO              0x4
+#define CHARGER_STATUS_FULL	0x1
 
 #define CABLE_DETECT_VALUE	1150
-#define HIGH_BLOCK_TEMP         500
-#define HIGH_RECOVER_TEMP       420
-#define LOW_BLOCK_TEMP          (-50)
-#define LOW_RECOVER_TEMP        0
-
-#define BB_HIGH_BLOCK_TEMP         480
-#define BB_HIGH_RECOVER_TEMP       440
-#define BB_LOW_BLOCK_TEMP          (-40)
-#define BB_LOW_RECOVER_TEMP        0
+#define HIGH_BLOCK_TEMP	500
+#define HIGH_RECOVER_TEMP	420
+#define LOW_BLOCK_TEMP		(-50)
+#define LOW_RECOVER_TEMP	0
 
 u32 bootmode;
 struct max17042_fuelgauge_callbacks *fuelgauge_callback;
 struct smb_charger_callbacks *espresso_charger_callbacks;
 struct battery_manager_callbacks *batman_callback;
 
-static struct gpio charger_gpios[] = {
-	{ .flags = GPIOF_IN, .label = "TA_nCHG" },		/* TA_nCHG */
-	{ .flags = GPIOF_OUT_INIT_LOW, .label = "TA_EN" },	/* TA_EN */
-	{ .flags = GPIOF_IN, .label = "FUEL_ALERT" },
-};
-
 static irqreturn_t charger_state_isr(int irq, void *_data)
 {
-	int res = 0;
-	int val;
+	int res = 0, val;
 
-	val = gpio_get_value(charger_gpios[TA_CHG_ING_N].gpio);
+	val = gpio_get_value(GPIO_TA_NCHG);
 
-	irq_set_irq_type(irq, val ?
-		IRQF_TRIGGER_LOW : IRQF_TRIGGER_HIGH);
+	irq_set_irq_type(irq, val ? IRQF_TRIGGER_LOW : IRQF_TRIGGER_HIGH);
 
 	if (val) {
 		if (espresso_charger_callbacks && espresso_charger_callbacks->get_status_reg)
 			res = espresso_charger_callbacks->
 				get_status_reg(espresso_charger_callbacks);
 
-		if (res == CHARGER_STATUS_FULL &&
-			batman_callback &&
-				batman_callback->set_full_charge)
+		if (res == CHARGER_STATUS_FULL && batman_callback &&
+			batman_callback->set_full_charge)
 			batman_callback->set_full_charge(batman_callback);
 	}
 
@@ -98,7 +81,7 @@ static irqreturn_t fuel_alert_isr(int irq, void *_data)
 {
 	int val;
 
-	val = gpio_get_value(charger_gpios[FUEL_ALERT].gpio);
+	val = gpio_get_value(GPIO_FUEL_ALERT);
 	pr_info("%s: fuel alert interrupt occured : %d\n", __func__, val);
 
 	if (batman_callback && batman_callback->fuel_alert_lowbat)
@@ -109,46 +92,57 @@ static irqreturn_t fuel_alert_isr(int irq, void *_data)
 
 static void charger_gpio_init(void)
 {
-	int i;
 	int irq, fuel_irq;
 	int ret;
-
-	for (i = 0; i < ARRAY_SIZE(charger_gpios); i++) {
-		charger_gpios[i].gpio =
-			omap_muxtbl_get_gpio_by_name(charger_gpios[i].label);
-	}
+	struct gpio charger_gpios[] = {
+		{
+			.flags = GPIOF_IN,
+			.gpio  = GPIO_TA_NCHG,
+			.label = "TA_nCHG"
+		},
+		{
+			.flags = GPIOF_OUT_INIT_LOW,
+			.gpio  = GPIO_TA_EN,
+			.label = "TA_EN"
+		},
+		{
+			.flags = GPIOF_IN,
+			.gpio  = GPIO_FUEL_ALERT,
+			.label = "FUEL_ALERT"
+		},
+	};
 
 	gpio_request_array(charger_gpios, ARRAY_SIZE(charger_gpios));
 
-	irq = gpio_to_irq(charger_gpios[TA_CHG_ING_N].gpio);
+	irq = gpio_to_irq(GPIO_TA_NCHG);
 	ret = request_threaded_irq(irq, NULL, charger_state_isr,
-			IRQF_TRIGGER_LOW | IRQF_ONESHOT | \
-			IRQF_NO_SUSPEND,
+			IRQF_TRIGGER_LOW | IRQF_ONESHOT | IRQF_NO_SUSPEND,
 			"Charge_Status", NULL);
 	if (unlikely(ret < 0))
-		pr_err("request irq %d failed for gpio %d\n",
-			irq, charger_gpios[TA_CHG_ING_N].gpio);
+		pr_err("%s: request irq %d failed for gpio %d\n",
+			__func__, irq, GPIO_TA_NCHG);
 
-	fuel_irq = gpio_to_irq(charger_gpios[FUEL_ALERT].gpio);
+	fuel_irq = gpio_to_irq(GPIO_FUEL_ALERT);
 	ret = request_threaded_irq(fuel_irq, NULL, fuel_alert_isr,
-			IRQF_TRIGGER_FALLING, "Fuel Alert irq",
-			NULL);
+			IRQF_TRIGGER_FALLING,
+			"Fuel Alert irq", NULL);
 	if (unlikely(ret < 0))
-		pr_err("request fuel alert irq %d failed for gpio %d\n",
-			fuel_irq, charger_gpios[FUEL_ALERT].gpio);
+		pr_err("%s: request fuel alert irq %d failed for gpio %d\n",
+			__func__, fuel_irq, GPIO_FUEL_ALERT);
 }
 
 static void charger_enble_set(int state)
 {
-	gpio_set_value(charger_gpios[TA_ENABLE].gpio, !state);
-	pr_debug("%s: Set charge status : %d, current status: %d\n",
-		__func__, state,
-		gpio_get_value(charger_gpios[TA_ENABLE].gpio));
+	gpio_set_value(GPIO_TA_EN, !state);
+	pr_debug("%s: Set charge status: %d, current status: %d\n",
+		__func__, state, !state);
 }
 
 static struct i2c_gpio_platform_data espresso_gpio_i2c5_pdata = {
 	.udelay = 10,
 	.timeout = 0,
+	.sda_pin = GPIO_CHG_SDA,
+	.scl_pin = GPIO_CHG_SCL,
 };
 
 static struct platform_device espresso_gpio_i2c5_device = {
@@ -162,6 +156,8 @@ static struct platform_device espresso_gpio_i2c5_device = {
 static struct i2c_gpio_platform_data espresso_gpio_i2c7_pdata = {
 	.udelay = 3,
 	.timeout = 0,
+	.sda_pin = GPIO_FUEL_SDA,
+	.scl_pin = GPIO_FUEL_SCL,
 };
 
 static struct platform_device espresso_gpio_i2c7_device = {
@@ -171,21 +167,6 @@ static struct platform_device espresso_gpio_i2c7_device = {
 		.platform_data = &espresso_gpio_i2c7_pdata,
 	},
 };
-
-static void __init espresso_gpio_i2c_init(void)
-{
-	/* gpio-i2c 5 */
-	espresso_gpio_i2c5_pdata.sda_pin =
-		omap_muxtbl_get_gpio_by_name("CHG_SDA_1.8V");
-	espresso_gpio_i2c5_pdata.scl_pin =
-		omap_muxtbl_get_gpio_by_name("CHG_SCL_1.8V");
-
-	/* gpio-i2c 7 */
-	espresso_gpio_i2c7_pdata.sda_pin =
-		omap_muxtbl_get_gpio_by_name("FUEL_SDA_1.8V");
-	espresso_gpio_i2c7_pdata.scl_pin =
-		omap_muxtbl_get_gpio_by_name("FUEL_SCL_1.8V");
-}
 
 static void smb_charger_register_callbacks(
 		struct smb_charger_callbacks *ptr)
@@ -278,8 +259,7 @@ static const __initdata struct i2c_board_info max17042_i2c[] = {
 static int read_fuel_value(enum fuel_property fg_prop)
 {
 	if (fuelgauge_callback && fuelgauge_callback->get_value)
-		return fuelgauge_callback->get_value(fuelgauge_callback,
-						fg_prop);
+		return fuelgauge_callback->get_value(fuelgauge_callback, fg_prop);
 	return 0;
 }
 
@@ -293,9 +273,9 @@ static int check_charger_type(void)
 			CABLE_TYPE_AC :
 			CABLE_TYPE_USB;
 
-	pr_info("%s : Charger type is [%s], adc = %d\n",
+	pr_info("%s: Charger type is [%s], adc = %d\n",
 		__func__,
-		cable_type == CABLE_TYPE_AC ? "TA" : "USB",
+		cable_type == CABLE_TYPE_AC ? "AC" : "USB",
 		adc);
 
 	return cable_type;
@@ -317,8 +297,7 @@ static void fuel_gauge_full_comp(u32 is_recharging, u32 pre_update)
 {
 	if (fuelgauge_callback &&
 			fuelgauge_callback->full_charged_compensation)
-		fuelgauge_callback->
-			full_charged_compensation(fuelgauge_callback,
+		fuelgauge_callback->full_charged_compensation(fuelgauge_callback,
 					is_recharging, pre_update);
 }
 
@@ -333,8 +312,7 @@ static int fuel_gauge_lowbat_compensation(struct bat_information bat_info)
 	if (fuelgauge_callback &&
 			fuelgauge_callback->check_low_batt_compensation) {
 		return fuelgauge_callback->
-			check_low_batt_compensation(fuelgauge_callback,
-					bat_info);
+			check_low_batt_compensation(fuelgauge_callback, bat_info);
 	}
 	return 0;
 }
@@ -343,8 +321,7 @@ static int fuel_gauge_check_cap_corruption(void)
 {
 	if (fuelgauge_callback &&
 			fuelgauge_callback->check_cap_corruption) {
-		return fuelgauge_callback->
-			check_cap_corruption(fuelgauge_callback);
+		return fuelgauge_callback->check_cap_corruption(fuelgauge_callback);
 	}
 	return 0;
 }
@@ -353,8 +330,7 @@ static void fuel_gauge_update_fullcap(void)
 {
 	if (fuelgauge_callback &&
 			fuelgauge_callback->update_remcap_to_fullcap)
-		fuelgauge_callback->
-			update_remcap_to_fullcap(fuelgauge_callback);
+		fuelgauge_callback->update_remcap_to_fullcap(fuelgauge_callback);
 }
 
 static int fuelgauge_register_value(u8 addr)
@@ -394,6 +370,7 @@ static struct batman_platform_data battery_manager_pdata = {
 	.recharge_voltage = 4150000,
 	.limit_charging_time = 36000,   /* 10hour */
 	.limit_recharging_time = 5400,  /* 90min */
+	.ta_gpio = GPIO_TA_NCONNECTED,
 };
 
 static struct platform_device battery_manager_device = {
@@ -407,7 +384,7 @@ static struct platform_device battery_manager_device = {
 void check_jig_status(int status)
 {
 	if (status) {
-		pr_info("%s: JIG On so reset fuel gauge capacity\n", __func__);
+		pr_info("%s: JIG on, resetting fuel gauge capacity\n", __func__);
 		if (fuelgauge_callback && fuelgauge_callback->reset_capacity)
 			fuelgauge_callback->reset_capacity(fuelgauge_callback);
 	}
@@ -432,23 +409,12 @@ void __init omap4_espresso_charger_init(void)
 	int ret;
 
 	charger_gpio_init();
-	espresso_gpio_i2c_init();
-	if (board_is_espresso10() && board_is_bestbuy_variant() && bootmode == 5) {
-		battery_manager_pdata.high_block_temp = BB_HIGH_BLOCK_TEMP;
-		battery_manager_pdata.high_recover_temp = BB_HIGH_RECOVER_TEMP;
-		battery_manager_pdata.low_block_temp = BB_LOW_BLOCK_TEMP;
-		battery_manager_pdata.low_recover_temp = BB_LOW_RECOVER_TEMP;
-	}
 
 	battery_manager_pdata.bootmode = bootmode;
-	if (!board_is_espresso10())
-		smb_pdata.hw_revision = system_rev;
+	smb_pdata.hw_revision = system_rev;
 
-	battery_manager_pdata.ta_gpio =
-			omap_muxtbl_get_gpio_by_name("TA_nCONNECTED");
-
-	if (!gpio_is_valid(battery_manager_pdata.ta_gpio))
-		gpio_request(battery_manager_pdata.ta_gpio, "TA_nCONNECTED");
+	if (!gpio_is_valid(GPIO_TA_NCONNECTED))
+		gpio_request(GPIO_TA_NCONNECTED, "TA_nCONNECTED");
 
 	ret = platform_device_register(&espresso_gpio_i2c5_device);
 	if (ret < 0)
