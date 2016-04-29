@@ -30,6 +30,7 @@
 #include <linux/bitops.h>
 #include <linux/debugfs.h>
 #include <linux/platform_device.h>
+#include <linux/ctype.h>
 #include <linux/slab.h>
 #include <sound/ac97_codec.h>
 #include <sound/core.h>
@@ -37,6 +38,7 @@
 #include <sound/pcm.h>
 #include <sound/pcm_params.h>
 #include <sound/soc.h>
+#include <sound/soc-dsp.h>
 #include <sound/initval.h>
 
 #define CREATE_TRACE_POINTS
@@ -1577,6 +1579,7 @@ static int soc_post_component_init(struct snd_soc_card *card,
 	rtd->dev.parent = card->dev;
 	rtd->dev.release = rtd_release;
 	rtd->dev.init_name = name;
+	mutex_init(&rtd->pcm_mutex);
 	ret = device_register(&rtd->dev);
 	if (ret < 0) {
 		dev_err(card->dev,
@@ -1617,6 +1620,7 @@ static int soc_probe_dai_link(struct snd_soc_card *card, int num)
 	cpu_dai->platform = platform;
 	codec_dai->card = card;
 	cpu_dai->card = card;
+	codec->dapm.card = platform->dapm.card = card;
 
 	/* set default power off timeout */
 	rtd->pmdown_time = pmdown_time;
@@ -1652,6 +1656,7 @@ static int soc_probe_dai_link(struct snd_soc_card *card, int num)
 		if (!try_module_get(platform->dev->driver->owner))
 			return -ENODEV;
 
+		platform->card = card;
 		if (platform->driver->probe) {
 			ret = platform->driver->probe(platform);
 			if (ret < 0) {
@@ -1878,6 +1883,7 @@ static void snd_soc_instantiate_card(struct snd_soc_card *card)
 	card->dapm.bias_level = SND_SOC_BIAS_OFF;
 	card->dapm.dev = card->dev;
 	card->dapm.card = card;
+	card->dapm.stream_event = card->stream_event;
 	list_add(&card->dapm.list, &card->dapm_list);
 
 #ifdef CONFIG_DEBUG_FS
@@ -2197,6 +2203,28 @@ int snd_soc_codec_volatile_register(struct snd_soc_codec *codec,
 		return 0;
 }
 EXPORT_SYMBOL_GPL(snd_soc_codec_volatile_register);
+
+unsigned int snd_soc_platform_read(struct snd_soc_platform *platform,
+					unsigned int reg)
+{
+	unsigned int ret;
+
+	ret = platform->driver->read(platform, reg);
+	dev_dbg(platform->dev, "read %x => %x\n", reg, ret);
+	trace_snd_soc_preg_read(platform, reg, ret);
+
+	return ret;
+}
+EXPORT_SYMBOL_GPL(snd_soc_platform_read);
+
+unsigned int snd_soc_platform_write(struct snd_soc_platform *platform,
+					 unsigned int reg, unsigned int val)
+{
+	dev_dbg(platform->dev, "write %x = %x\n", reg, val);
+	trace_snd_soc_preg_write(platform, reg, val);
+	return platform->driver->write(platform, reg, val);
+}
+EXPORT_SYMBOL_GPL(snd_soc_platform_write);
 
 /**
  * snd_soc_codec_readable_register: Report if a register is readable.
@@ -3402,10 +3430,9 @@ int snd_soc_register_card(struct snd_soc_card *card)
 	INIT_LIST_HEAD(&card->list);
 	card->instantiated = 0;
 	mutex_init(&card->mutex);
-
-#ifdef CONFIG_ARCH_OMAP
+	mutex_init(&card->dapm_mutex);
+	mutex_init(&card->dsp_mutex);
 	mutex_init(&card->power_mutex);
-#endif
 
 	mutex_lock(&client_mutex);
 	list_add(&card->list, &card_list);
@@ -3659,7 +3686,10 @@ int snd_soc_register_platform(struct device *dev,
 	}
 
 	platform->dev = dev;
+	platform->dapm.platform = platform;
 	platform->driver = platform_drv;
+	platform->dapm.dev = dev;
+	platform->dapm.stream_event = platform_drv->stream_event;
 
 	mutex_lock(&client_mutex);
 	list_add(&platform->list, &platform_list);
@@ -3772,6 +3802,7 @@ int snd_soc_register_codec(struct device *dev,
 	codec->dapm.dev = dev;
 	codec->dapm.codec = codec;
 	codec->dapm.seq_notifier = codec_drv->seq_notifier;
+	codec->dapm.stream_event = codec_drv->stream_event;
 	codec->dev = dev;
 	codec->driver = codec_drv;
 	codec->num_dai = num_dai;
