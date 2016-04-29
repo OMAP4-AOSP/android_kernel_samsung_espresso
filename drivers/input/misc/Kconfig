@@ -650,4 +650,16 @@ config INPUT_PALMAS_PWRBUTTON
 	  Say Y here if you want to eable power key reporting for the palmas
 	  familty of PMICs
 
+config OPTICAL_GP2A
+	depends on I2C && GENERIC_GPIO
+	tristate "GP2A ambient light and proximity input device"
+	help
+	  This option enables proximity & light sensors using gp2a driver.
+
+config GP2A_MODE_B
+	bool "GP2A MODE B"
+	depends on OPTICAL_GP2A
+	help
+	  This option enables proximity mode B
+
 endif
