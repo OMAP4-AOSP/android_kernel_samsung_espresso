@@ -12,6 +12,10 @@
 
 #include <linux/battery.h>
 
+#define USB_EVENT_HOST_NONE		0x10	/* usb host disconnected */
+#define USB_EVENT_VBUS_CHARGER	0x11	/* ta/usb event */
+#define USB_EVENT_CHARGER_NONE	0x12	/* TA disconnected */
+
 struct battery_manager_callbacks {
 	void (*set_cable)(struct battery_manager_callbacks *ptr,
 			enum cable_type_t status);

@@ -472,7 +472,7 @@ int twl6030_unregister_notifier(struct notifier_block *nb,
 
 #define TWL4030_PM_MASTER_GLOBAL_TST		0xb6
 
-#define TWL6030_PHOENIX_DEV_ON			0x25
+#define TWL6030_PHOENIX_DEV_ON			0x06
 
 /*
  * TWL6030 PM Master module register offsets (use TWL_MODULE_PM_MASTER)
@@ -960,8 +960,6 @@ static inline int twl4030charger_usb_en(int enable) { return 0; }
 #define TWL6030_REG_VCXIO	44
 #define TWL6030_REG_VDAC	45
 #define TWL6030_REG_VUSB	46
-
-#define TWL6030_REG_CFG_SMPS_PD		0xF6
 
 /* INTERNAL LDOs */
 #define TWL6030_REG_VRTC	47

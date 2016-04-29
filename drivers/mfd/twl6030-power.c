@@ -148,7 +148,7 @@ static __init void twl6030_process_system_config(void)
 			" MOD & CON group would be kept active.\n", __func__);
 
 	if (dev_on_group) {
-		r = twl_i2c_read_u8(TWL6030_MODULE_ID0, &grp,
+		r = twl_i2c_read_u8(TWL_MODULE_PM_MASTER, &grp,
 				TWL6030_PHOENIX_DEV_ON);
 		if (r) {
 			pr_err("%s: Error(%d) reading  {addr=0x%02x}",
@@ -312,7 +312,7 @@ static int twl6030_power_notifier_cb(struct notifier_block *notifier,
 
 	switch (pm_event) {
 	case PM_SUSPEND_PREPARE:
-		r = twl_i2c_write_u8(TWL6030_MODULE_ID0, dev_on_group,
+		r = twl_i2c_write_u8(TWL_MODULE_PM_MASTER, dev_on_group,
 				TWL6030_PHOENIX_DEV_ON);
 		if (r)
 			pr_err("%s: Error(%d) programming {addr=0x%02x}",

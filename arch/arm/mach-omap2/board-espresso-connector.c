@@ -33,6 +33,7 @@
 #include <linux/mfd/stmpe811.h>
 #include <linux/sec_dock_keyboard.h>
 #include <linux/battery.h>
+#include <linux/bat_manager.h>
 #include <linux/irq.h>
 
 #include <plat/usb.h>

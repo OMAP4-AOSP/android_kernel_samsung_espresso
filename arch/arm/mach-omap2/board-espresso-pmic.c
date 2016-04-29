@@ -432,8 +432,6 @@ static void espresso_twl6030_init(void)
 			pr_err("%s:TWL6030 CFG_LDO_PD2 write fail!\n",
 					__func__);
 	}
-
-	return;
 }
 
 static struct twl4030_resconfig espresso_rconfig[] = {
