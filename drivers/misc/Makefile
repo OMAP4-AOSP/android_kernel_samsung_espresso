@@ -56,3 +56,4 @@ obj-$(CONFIG_GCIOCTL)		+= gcx/gcioctl/
 obj-$(CONFIG_CACHE2DMANAGER)	+= cache-2dmanager/
 obj-$(CONFIG_EARLYCAMERA_MPU)		+= ti-ec/
 obj-$(CONFIG_SEC_30PIN_CON)	+= 30pin_con.o
+obj-$(CONFIG_SAMSUNG_JACK)	+= sec_jack.o
