@@ -56,3 +56,4 @@ obj-$(CONFIG_LATTICE_ECP3_CONFIG)	+= lattice-ecp3-config.o
 obj-$(CONFIG_SRAM)		+= sram.o
 obj-$(CONFIG_UID_CPUTIME) += uid_cputime.o
 obj-$(CONFIG_SEC_30PIN_CON)	+= 30pin_con.o
+obj-$(CONFIG_SAMSUNG_JACK)	+= sec_jack.o
