@@ -489,7 +489,6 @@ out:
 static void ltn_panel_get_resolution(struct omap_dss_device *dssdev,
 					    u16 *xres, u16 *yres)
 {
-
 	*xres = dssdev->panel.timings.x_res;
 	*yres = dssdev->panel.timings.y_res;
 }
