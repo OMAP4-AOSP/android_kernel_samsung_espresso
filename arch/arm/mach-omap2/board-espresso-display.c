@@ -37,10 +37,6 @@
 #define GPIO_LCD_EN			135
 #define GPIO_LVDS_NSHDN		136
 
-#ifdef CONFIG_FB_OMAP_BOOTLOADER_INIT
-static struct clk *dss_ick, *dss_sys_fclk, *dss_dss_fclk;
-#endif
-
 static void espresso_lcd_set_power(bool enable)
 {
 	pr_debug("%s: %d\n", __func__, enable);
@@ -56,15 +52,6 @@ static void espresso_lcd_set_gptimer_idle(void)
 	if (likely(timer10_hwmod))
 		omap_hwmod_idle(timer10_hwmod);
 }
-
-#ifdef CONFIG_FB_OMAP_BOOTLOADER_INIT
-static void dss_clks_disable(void)
-{
-	clk_disable(dss_ick);
-	clk_disable(dss_dss_fclk);
-	clk_disable(dss_sys_fclk);
-}
-#endif
 
 static struct ltn_panel_data espresso_panel_data = {
 	.set_power			= espresso_lcd_set_power,
@@ -88,7 +75,6 @@ static struct omap_dss_device espresso_lcd_device = {
 	.channel		= OMAP_DSS_CHANNEL_LCD2,
 #ifdef CONFIG_FB_OMAP_BOOTLOADER_INIT
 	.skip_init		= true,
-	.dss_clks_disable	= dss_clks_disable,
 #else
 	.skip_init		= false,
 #endif
@@ -181,6 +167,9 @@ void __init omap4_espresso_display_early_init(void)
 void __init omap4_espresso_display_init(void)
 {
 	int ret;
+#ifdef CONFIG_FB_OMAP_BOOTLOADER_INIT
+	struct clk *dss_dss_fclk;
+#endif
 
 	if (board_is_espresso10())
 		espresso_panel_data.pwm_duty_max = 1600; /* 25kHz */
@@ -188,17 +177,6 @@ void __init omap4_espresso_display_init(void)
 		espresso_panel_data.pwm_duty_max = 1200; /* 32kHz */
 
 #ifdef CONFIG_FB_OMAP_BOOTLOADER_INIT
-	dss_ick = clk_get(NULL, "ick");
-	if (IS_ERR(dss_ick)) {
-		pr_err("Could not get dss interface clock\n");
-		/* return -ENOENT; */
-	 }
-
-	dss_sys_fclk = omap_clk_get_by_name("dss_sys_clk");
-	if (IS_ERR(dss_sys_fclk)) {
-		pr_err("Could not get dss system clock\n");
-		/* return -ENOENT; */
-	}
 	dss_dss_fclk = omap_clk_get_by_name("dss_dss_clk");
 	if (IS_ERR(dss_dss_fclk)) {
 		pr_err("Could not get dss functional clock\n");

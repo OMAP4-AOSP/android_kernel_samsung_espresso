@@ -540,7 +540,6 @@ static u32 dispc_calculate_threshold(enum omap_plane plane, u32 paddr,
 int dispc_runtime_get(void)
 {
 	int r;
-	struct powerdomain *dss_powerdomain = pwrdm_lookup("dss_pwrdm");
 
 	mutex_lock(&dispc.runtime_lock);
 
@@ -576,11 +575,6 @@ int dispc_runtime_get(void)
 			clkdm_deny_idle(l3_2_clkdm);
 		}
 
-		/* Removes latency constraint */
-		omap_pm_set_max_dev_wakeup_lat(&dispc.pdev->dev,
-			&dispc.pdev->dev,
-			dss_powerdomain->wakeup_lat[PWRDM_FUNC_PWRST_ON]);
-
 		r = dss_runtime_get();
 		if (r)
 			goto err_dss_get;
@@ -611,6 +605,7 @@ err_dss_get:
 
 void dispc_runtime_put(void)
 {
+	struct powerdomain *dss_powerdomain = pwrdm_lookup("dss_pwrdm");
 	mutex_lock(&dispc.runtime_lock);
 
 	if (--dispc.runtime_count == 0) {
@@ -623,10 +618,10 @@ void dispc_runtime_put(void)
 		/* Sets DSS max latency constraint
 		 * * (allowing for deeper power state)
 		 * */
-		 omap_pm_set_max_dev_wakeup_lat(
-			 &dispc.pdev->dev,
-			&dispc.pdev->dev,
-			-1);
+		omap_pm_set_max_dev_wakeup_lat(
+				&dispc.pdev->dev,
+				&dispc.pdev->dev,
+				dss_powerdomain->wakeup_lat[PWRDM_FUNC_PWRST_OFF]);
 
 		r = pm_runtime_put_sync(&dispc.pdev->dev);
 		WARN_ON(r);
@@ -897,7 +892,7 @@ dispc_get_scaling_coef(u32 inc, bool five_taps)
 	static const struct dispc_hv_coef coef_M32[8] = {
 		{    7,   34,   46,   34,    7 },
 		{    4,   31,   46,   37,   10 },
-		{    1,   27,   46,   39,   14 },
+		{    1,   28,   46,   39,   14 },
 		{   -1,   24,   46,   42,   17 },
 		{   21,   45,   45,   21,   -4 },
 		{   17,   42,   46,   24,   -1 },
@@ -1556,6 +1551,10 @@ static void _dispc_set_scale_param(enum omap_plane plane,
 		enum omap_color_component color_comp)
 {
 	int fir_hinc, fir_vinc;
+	int hscaleup, vscaleup;
+
+	hscaleup = orig_width <= out_width;
+	vscaleup = orig_height <= out_height;
 
 	fir_hinc = 1024 * orig_width / out_width;
 	fir_vinc = 1024 * orig_height / out_height;
@@ -2702,18 +2701,6 @@ int dispc_setup_wb(struct writeback_cache_data *wb)
 								out_height);
 	}
 
-	/* change resolution of manager if it works in MEM2MEM mode */
-	if (wb->mode == OMAP_WB_MEM2MEM_MODE) {
-		if (source == OMAP_WB_TV)
-			dispc_set_digit_size(out_width, out_height);
-		else if (source == OMAP_WB_LCD2)
-			dispc_set_lcd_size(OMAP_DSS_CHANNEL_LCD2, out_width,
-								out_height);
-		else if (source == OMAP_WB_LCD1)
-			dispc_set_lcd_size(OMAP_DSS_CHANNEL_LCD, out_width,
-								out_height);
-	}
-
 	/*
 	 * configure wb mode:
 	 * 0-capture-mode; 1-memory-to-memory mode
@@ -2919,7 +2906,6 @@ static void dispc_enable_lcd_out(enum omap_channel channel, bool enable)
 
 		r = omap_dispc_unregister_isr(dispc_disable_isr,
 				&frame_done_completion, irq);
-		synchronize_irq(dispc.irq);
 
 		if (r)
 			DSSERR("failed to unregister FRAMEDONE isr\n");
@@ -2981,8 +2967,6 @@ static void dispc_enable_digit_out(enum omap_display_type type, bool enable)
 			&frame_done_completion,
 			DISPC_IRQ_EVSYNC_EVEN | DISPC_IRQ_EVSYNC_ODD
 						| DISPC_IRQ_FRAMEDONETV);
-	synchronize_irq(dispc.irq);
-
 	if (r)
 		DSSERR("failed to unregister EVSYNC isr\n");
 
@@ -4257,14 +4241,15 @@ static void dispc_error_worker(struct work_struct *work)
 			mgr = omap_dss_get_overlay_manager(i);
 
 			if (mgr->id == OMAP_DSS_CHANNEL_LCD2) {
-				if (!mgr->device->first_vsync)
-					DSSERR("First SYNC_LOST.. ignoring\n");
+				if(!mgr->device->first_vsync){
+					DSSERR("First SYNC_LOST.. ignoring \n");
+					break;
+				}
+
 				manager = mgr;
 				enable = mgr->device->state ==
 						OMAP_DSS_DISPLAY_ACTIVE;
-				mgr->device->sync_lost_error = 1;
 				mgr->device->driver->disable(mgr->device);
-				mgr->device->sync_lost_error = 0;
 				break;
 			}
 		}
@@ -4331,8 +4316,6 @@ int omap_dispc_wait_for_irq_timeout(u32 irqmask, unsigned long timeout)
 
 	omap_dispc_unregister_isr(dispc_irq_wait_handler, &completion, irqmask);
 
-	synchronize_irq(dispc.irq);
-
 	if (timeout == 0)
 		return -ETIMEDOUT;
 
@@ -4367,8 +4350,6 @@ int omap_dispc_wait_for_irq_interruptible_timeout(u32 irqmask,
 			timeout);
 
 	omap_dispc_unregister_isr(dispc_irq_wait_handler, &completion, irqmask);
-
-	synchronize_irq(dispc.irq);
 
 	if (timeout == 0)
 		r = -ETIMEDOUT;
@@ -4434,8 +4415,6 @@ void dispc_disable_sidle(void)
 	REG_FLD_MOD(DISPC_SYSCONFIG, 1, 4, 3);	/* SIDLEMODE: no idle */
 }
 
-#define RESOLUTION_1280_720 (1280 * 720)
-
 static void _omap_dispc_initial_config(void)
 {
 	u32 l;
@@ -4470,20 +4449,8 @@ static void _omap_dispc_initial_config(void)
 
 	dispc_read_plane_fifo_sizes();
 
-	if (dss_has_feature(FEAT_GLOBAL_MFLAG)) {
-		u32 size_reg = dispc_read_reg(DISPC_OVL_SIZE(OMAP_DSS_GFX));
-		u16 sizex = (size_reg & 0x7ff) + 1;
-		u16 sizey = ((size_reg >> 16) & 0x7ff) + 1;
-		u32 tot_size = sizex * sizey;
-
-
-		if (tot_size <= RESOLUTION_1280_720)
-			/* Disable the Display sub system global MFLAG */
-			dispc_write_reg(DISPC_GLOBAL_MFLAG, 0);
-		else
-			/* Enable the Display sub system global MFLAG*/
-			dispc_write_reg(DISPC_GLOBAL_MFLAG, 2);
-	}
+	if (dss_has_feature(FEAT_GLOBAL_MFLAG))
+		dispc_write_reg(DISPC_GLOBAL_MFLAG, 2);
 }
 
 /* DISPC HW IP initialisation */
@@ -4555,9 +4522,9 @@ static int omap_dispchw_probe(struct platform_device *pdev)
 	rev = dispc_read_reg(DISPC_REVISION);
 	dev_dbg(&pdev->dev, "OMAP DISPC rev %d.%d\n",
 	       FLD_GET(rev, 7, 4), FLD_GET(rev, 3, 0));
-#ifndef CONFIG_FB_OMAP_BOOTLOADER_INIT
+
 	dispc_runtime_put();
-#endif
+
 	return 0;
 
 err_runtime_get:
@@ -4600,16 +4567,3 @@ void dispc_uninit_platform_driver(void)
 {
 	return platform_driver_unregister(&omap_dispchw_driver);
 }
-
-#ifdef CONFIG_FB_OMAP_BOOTLOADER_INIT
-int dispc_l3_clkdm_deny_idle(void)
-{
-
-	if (cpu_is_omap44xx()) {
-		clkdm_deny_idle(l3_1_clkdm);
-		clkdm_deny_idle(l3_2_clkdm);
-	}
-	return 0;
-}
-late_initcall(dispc_l3_clkdm_deny_idle);
-#endif

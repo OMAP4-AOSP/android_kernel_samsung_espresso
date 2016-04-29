@@ -740,9 +740,6 @@ struct omap_dss_device {
 
 	struct omap_video_timings *dispc_timings;
 	struct omap_dsi_timings *dsi_timings;
-#ifdef CONFIG_FB_OMAP_BOOTLOADER_INIT
-	void (*dss_clks_disable)(void);
-#endif
 };
 
 struct omap_dss_hdmi_data
