@@ -316,8 +316,8 @@ static struct omap_voltdm_pmic omap443x_446x_iva_pmic = {
 	.vp_timeout_us		= OMAP4_VP_VLIMITTO_TIMEOUT_US,
 	.i2c_slave_addr		= TWL6030_SRI2C_SLAVE_ADDR,
 #ifdef CONFIG_MACH_OMAP4_ESPRESSO
-	.volt_reg_addr		= TWL6032_SMPS5_SR_VOLT_REG;
-	.cmd_reg_addr		= TWL6032_SMPS5_SR_CMD_REG;
+	.volt_reg_addr		= TWL6032_SMPS5_SR_VOLT_REG,
+	.cmd_reg_addr		= TWL6032_SMPS5_SR_CMD_REG,
 #else
 	.volt_reg_addr		= TWL6030_VCORE2_SR_VOLT_REG,
 	.cmd_reg_addr		= TWL6030_VCORE2_SR_CMD_REG,
@@ -375,8 +375,8 @@ static struct omap_voltdm_pmic omap443x_core_pmic = {
 	.vp_timeout_us		= OMAP4_VP_VLIMITTO_TIMEOUT_US,
 	.i2c_slave_addr		= TWL6030_SRI2C_SLAVE_ADDR,
 #ifdef CONFIG_MACH_OMAP4_ESPRESSO
-	.volt_reg_addr		= TWL6032_SMPS2_SR_VOLT_REG;
-	.cmd_reg_addr		= TWL6032_SMPS2_SR_CMD_REG;
+	.volt_reg_addr		= TWL6032_SMPS2_SR_VOLT_REG,
+	.cmd_reg_addr		= TWL6032_SMPS2_SR_CMD_REG,
 #else
 	.volt_reg_addr		= TWL6030_VCORE3_SR_VOLT_REG,
 	.cmd_reg_addr		= TWL6030_VCORE3_SR_CMD_REG,

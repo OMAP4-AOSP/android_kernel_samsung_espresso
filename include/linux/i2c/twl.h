@@ -186,10 +186,8 @@ static inline int twl_class_is_ ##class(void)	\
 TWL_CLASS_IS(4030, TWL4030_CLASS_ID)
 TWL_CLASS_IS(6030, TWL6030_CLASS_ID)
 
-#define TWL6030_CLASS		BIT(3)	/* TWL6030 class */
 #define TWL6032_SUBCLASS	BIT(4)  /* Phoenix Lite is a varient*/
 
-bool is_twl6030_lite(void);
 /*
  * Read and write single 8-bit registers
  */

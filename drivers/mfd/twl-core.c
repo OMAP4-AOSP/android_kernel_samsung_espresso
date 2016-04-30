@@ -267,13 +267,6 @@ unsigned int twl_rev(void)
 }
 EXPORT_SYMBOL(twl_rev);
 
-static bool twl_6030_lite;
-bool is_twl6030_lite(void)
-{
-	return twl_6030_lite;
-}
-EXPORT_SYMBOL(is_twl6030_lite);
-
 /* Structure for each TWL4030/TWL6030 Slave */
 struct twl_client {
 	struct i2c_client *client;
@@ -1372,12 +1365,6 @@ twl_probe(struct i2c_client *client, const struct i2c_device_id *id)
 	} else {
 		twl_id = TWL4030_CLASS_ID;
 		twl_map = &twl4030_map[0];
-	}
-
-	if (((id->driver_data) & TWL6030_CLASS) &&
-			(id->driver_data & TWL6032_SUBCLASS)) {
-		twl_6030_lite = true;
-		dev_info(&client->dev, "Board PMIC is TWL6032\n");
 	}
 
 	/* setup clock framework */

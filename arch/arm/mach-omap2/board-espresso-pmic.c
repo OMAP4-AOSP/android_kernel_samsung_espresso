@@ -354,7 +354,7 @@ static struct regulator_init_data espresso_clk32kaudio = {
 
 static struct twl4030_madc_platform_data espresso_madc = {
 	.irq_line	= -1,
-	.features	= TWL6030_CLASS | TWL6032_SUBCLASS,
+	.features	= TWL6032_SUBCLASS,
 };
 
 static struct platform_device espresso_madc_device = {
