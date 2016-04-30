@@ -48,6 +48,8 @@
 #define WM8994_DEFAULT_MCLK2	32768
 #define WM8994_DEFAULT_SYNC_CLK	11289600
 
+#define USE_SND_EAR_GND_SEL
+
 struct snd_soc_codec *the_codec;
 int dock_status;
 
@@ -68,7 +70,7 @@ static struct gpio sub_mic_bias = {
 	.label  = "SUB_MICBIAS_EN",
 };
 
-#ifdef CONFIG_SND_EAR_GND_SEL
+#ifdef USE_SND_EAR_GND_SEL
 static struct gpio ear_select = {
 	.flags = GPIOF_OUT_INIT_LOW,
 	.label = "EAR_GND_SEL",
@@ -78,7 +80,7 @@ static int hp_output_mode;
 const char *hp_analogue_text[] = {
 	"VoiceCall Mode", "Playback Mode"
 };
-#endif /* CONFIG_SND_EAR_GND_SEL */
+#endif /* USE_SND_EAR_GND_SEL */
 
 static int input_clamp;
 const char *input_clamp_text[] = {
@@ -117,7 +119,7 @@ static int sub_mic_bias_event(struct snd_soc_dapm_widget *w,
 	return 0;
 }
 
-#ifdef CONFIG_SND_EAR_GND_SEL
+#ifdef USE_SND_EAR_GND_SEL
 static const struct soc_enum hp_mode_enum[] = {
 	SOC_ENUM_SINGLE_EXT(ARRAY_SIZE(hp_analogue_text), hp_analogue_text),
 };
@@ -142,7 +144,7 @@ static int set_hp_output_mode(struct snd_kcontrol *kcontrol,
 
 	return 0;
 }
-#endif /* CONFIG_SND_EAR_GND_SEL */
+#endif /* USE_SND_EAR_GND_SEL */
 
 static const struct soc_enum input_clamp_enum[] = {
 	SOC_ENUM_SINGLE_EXT(ARRAY_SIZE(input_clamp_text), input_clamp_text),
@@ -400,10 +402,10 @@ static const struct snd_kcontrol_new omap4_controls[] = {
 
 	SOC_DAPM_PIN_SWITCH("Headset Mic"),
 
-#ifdef CONFIG_SND_EAR_GND_SEL
+#ifdef USE_SND_EAR_GND_SEL
 	SOC_ENUM_EXT("HP Output Mode", hp_mode_enum[0],
 		get_hp_output_mode, set_hp_output_mode),
-#endif /* CONFIG_SND_EAR_GND_SEL */
+#endif /* USE_SND_EAR_GND_SEL */
 
 	SOC_ENUM_EXT("Input Clamp", input_clamp_enum[0],
 		get_input_clamp, set_input_clamp),
@@ -482,14 +484,14 @@ int omap4_wm8994_init(struct snd_soc_pcm_runtime *rtd)
 		goto main_mic_err;
 	gpio_direction_output(main_mic_bias.gpio, 0);
 
-#ifdef CONFIG_SND_EAR_GND_SEL
+#ifdef USE_SND_EAR_GND_SEL
 	hp_output_mode = 1;
 	ear_select.gpio = wm8994->pdata->ear_select_gpio;
 	ret = gpio_request(ear_select.gpio, "ear_select");
 	if (ret < 0)
 		goto ear_select_err;
 	gpio_direction_output(ear_select.gpio, hp_output_mode);
-#endif /* CONFIG_SND_EAR_GND_SEL */
+#endif /* USE_SND_EAR_GND_SEL */
 
 	set_mclk(true); /* enable 26M CLK */
 
@@ -569,10 +571,10 @@ submic_error:
 
 	return snd_soc_dapm_sync(dapm);
 
-#ifdef CONFIG_SND_EAR_GND_SEL
+#ifdef USE_SND_EAR_GND_SEL
 ear_select_err:
 	gpio_free(ear_select.gpio);
-#endif /* CONFIG_SND_EAR_GND_SEL */
+#endif /* USE_SND_EAR_GND_SEL */
 main_mic_err:
 	gpio_free(main_mic_bias.gpio);
 mclk_err:

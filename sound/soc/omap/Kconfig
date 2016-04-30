@@ -201,7 +201,4 @@ config SND_OMAP_SOC_ESPRESSO
 	select SND_SOC_WM8994
 	select SND_SOC_WM_HUBS
 	help
-	  Say Y if you want to add support for SoC audio on the espresso board.
-
-config SND_EAR_GND_SEL
-	bool "Use EAR_GND_SEL"
+	  Say Y if you want to add support for SoC audio on the Espresso board.
