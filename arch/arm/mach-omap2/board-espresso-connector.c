@@ -567,28 +567,40 @@ static void espresso_30pin_detected(int device, bool connected)
 	case P30_KEYBOARDDOCK:
 		if (connected) {
 			espresso_set_dock_switch(UEVENT_DOCK_KEYBOARD);
+#ifdef CONFIG_SND_OMAP_SOC_ESPRESSO
 			notify_dock_status(1);
+#endif
 		} else {
 			espresso_set_dock_switch(UEVENT_DOCK_NONE);
+#ifdef CONFIG_SND_OMAP_SOC_ESPRESSO
 			notify_dock_status(0);
+#endif
 		}
 		break;
 	case P30_DESKDOCK:
 		if (connected) {
 			espresso_deskdock_attached();
+#ifdef CONFIG_SND_OMAP_SOC_ESPRESSO
 			notify_dock_status(1);
+#endif
 		} else {
 			espresso_deskdock_detached();
+#ifdef CONFIG_SND_OMAP_SOC_ESPRESSO
 			notify_dock_status(0);
+#endif
 		}
 		break;
 	case P30_CARDOCK:
 		if (connected) {
 			espresso_set_dock_switch(UEVENT_DOCK_CAR);
+#ifdef CONFIG_SND_OMAP_SOC_ESPRESSO
 			notify_dock_status(1);
+#endif
 		} else {
 			espresso_set_dock_switch(UEVENT_DOCK_NONE);
+#ifdef CONFIG_SND_OMAP_SOC_ESPRESSO
 			notify_dock_status(0);
+#endif
 		}
 		break;
 	case P30_JIG:

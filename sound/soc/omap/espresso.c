@@ -42,18 +42,14 @@
 #include "omap-mcbsp.h"
 #include "../codecs/wm8994.h"
 
-#ifdef CONFIG_MACH_SAMSUNG_ESPRESSO
 #include "../../../arch/arm/mach-omap2/board-espresso.h"
-#endif
 
 #define WM8994_DEFAULT_MCLK1	26000000
 #define WM8994_DEFAULT_MCLK2	32768
 #define WM8994_DEFAULT_SYNC_CLK	11289600
 
-#ifdef CONFIG_MACH_SAMSUNG_ESPRESSO
 struct snd_soc_codec *the_codec;
 int dock_status;
-#endif /* defined ESPRESSO */
 
 static struct pm_qos_request_list pm_qos_handle;
 
@@ -232,7 +228,6 @@ static int set_pm_mode(struct snd_kcontrol *kcontrol,
 	return 0;
 }
 
-#ifdef CONFIG_MACH_SAMSUNG_ESPRESSO
 void notify_dock_status(int status)
 {
 	if (!the_codec)
@@ -249,7 +244,6 @@ void notify_dock_status(int status)
 	else
 		wm8994_vmid_mode(the_codec, WM8994_VMID_NORMAL);
 }
-#endif /* defined ESPRESSO */
 
 static int omap4_wm8994_start_fll1(struct snd_soc_dai *aif1_dai)
 {
@@ -450,13 +444,8 @@ const struct snd_soc_dapm_route omap4_dapm_routes[] = {
 	{ "RCV", NULL, "HPOUT2N" },
 	{ "RCV", NULL, "HPOUT2P" },
 
-#ifdef CONFIG_MACH_SAMSUNG_ESPRESSO
 	{ "LINEOUT", NULL, "LINEOUT1N" },
 	{ "LINEOUT", NULL, "LINEOUT1P" },
-#else /* defined ESPRESSO */
-	{ "LINEOUT", NULL, "LINEOUT2N" },
-	{ "LINEOUT", NULL, "LINEOUT2P" },
-#endif /* not ESPRESSO for OMAP4470 Project */
 
 	{ "IN1LP", NULL, "Main Mic" },
 	{ "IN1LN", NULL, "Main Mic" },
@@ -479,9 +468,7 @@ int omap4_wm8994_init(struct snd_soc_pcm_runtime *rtd)
 	struct snd_soc_dai *aif1_dai = rtd->codec_dai;
 	int ret;
 
-#ifdef CONFIG_MACH_SAMSUNG_ESPRESSO
 	the_codec = codec;
-#endif	/* defined ESPRESSO */
 
 	mclk.gpio = wm8994->pdata->mclk_gpio;
 	ret = gpio_request(mclk.gpio, "mclk");
@@ -668,7 +655,6 @@ static struct snd_soc_dai_link omap4_dai[] = {
 },
 };
 
-#ifdef CONFIG_MACH_SAMSUNG_ESPRESSO
 static int wm8994_suspend_pre(struct snd_soc_card *card)
 {
 	struct snd_soc_codec *codec = card->rtd->codec;
@@ -698,10 +684,6 @@ static int wm8994_resume_post(struct snd_soc_card *card)
 
 	return 0;
 }
-#else /* defined ESPRESSO */
-#define wm8994_resume_post NULL
-#define wm8994_suspend_pre NULL
-#endif /* not ESPRESSO for OMAP4470 Project */
 
 static int wm8994_suspend_post(struct snd_soc_card *card)
 {

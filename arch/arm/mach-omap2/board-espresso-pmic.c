@@ -19,9 +19,9 @@
 #include <linux/kernel.h>
 #include <linux/regulator/driver.h>
 #include <linux/regulator/machine.h>
-
-#ifdef CONFIG_SND_SOC_WM8994
 #include <linux/regulator/fixed.h>
+
+#ifdef CONFIG_SND_OMAP_SOC_ESPRESSO
 #include <linux/mfd/wm8994/pdata.h>
 #include <linux/mfd/wm8994/gpio.h>
 #endif
@@ -60,7 +60,7 @@
 static bool enable_sr = true;
 module_param(enable_sr, bool, S_IRUSR | S_IRGRP | S_IROTH);
 
-#ifdef CONFIG_SND_SOC_WM8994
+#ifdef CONFIG_SND_OMAP_SOC_ESPRESSO
 static struct regulator_consumer_supply vbatt_supplies[] = {
 	REGULATOR_SUPPLY("LDO1VDD", "1-001a"),
 	REGULATOR_SUPPLY("SPKVDD1", "1-001a"),
@@ -551,7 +551,7 @@ static struct i2c_board_info espresso_twl6032_i2c1_board_info[] __initdata = {
 		.irq		= OMAP44XX_IRQ_SYS_1N,
 		.platform_data	= &espresso_twl6032_pdata,
 	},
-#ifdef CONFIG_SND_SOC_WM8994
+#ifdef CONFIG_SND_OMAP_SOC_ESPRESSO
 	{
 		I2C_BOARD_INFO("wm1811", 0x34>>1),
 		.platform_data = &wm1811_pdata,
@@ -610,7 +610,7 @@ static struct platform_device espresso_vmmc_external_device = {
 
 static void __init espresso_audio_init(void)
 {
-#ifdef CONFIG_SND_SOC_WM8994
+#ifdef CONFIG_SND_OMAP_SOC_ESPRESSO
 	platform_device_register(&vbatt_device);
 
 	if (!board_is_espresso10()) {
