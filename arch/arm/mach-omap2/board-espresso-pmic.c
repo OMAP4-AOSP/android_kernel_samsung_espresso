@@ -658,8 +658,6 @@ void __init omap4_espresso_pmic_init(void)
 
 		espresso_twl6032_pdata.rtc = &espresso_rtc;
 
-		espresso_power_data.resource_config = NULL;
-
 		/*
 		 * only best buy Wi-Fi verstion support MHL from rev0.4
 		 * Set ldoln regulator as VDAC regulator which is used by MHL.
