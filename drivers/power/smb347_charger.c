@@ -29,71 +29,54 @@
 #include <linux/slab.h>
 #include <linux/battery.h>
 
-/* Slave address */
-#define SMB347_SLAVE_ADDR		0x0C
-
 /* SMB347 Registers. */
-#define SMB347_CHARGE_CURRENT		0X00
-#define SMB347_INPUT_CURRENTLIMIT	0X01
-#define SMB347_VARIOUS_FUNCTIONS	0X02
-#define SMB347_FLOAT_VOLTAGE		0X03
-#define SMB347_CHARGE_CONTROL		0X04
-#define SMB347_STAT_TIMERS_CONTROL	0x05
-#define SMB347_PIN_ENABLE_CONTROL	0x06
-#define SMB347_THERM_CONTROL_A		0x07
-#define SMB347_SYSOK_USB30_SELECTION	0x08
-#define SMB347_OTHER_CONTROL_A	0x09
-#define SMB347_OTG_TLIM_THERM_CONTROL	0x0A
+#define SMB347_CHARGE_CURRENT			0x00
+#define SMB347_INPUT_CURRENTLIMIT		0x01
+#define SMB347_VARIOUS_FUNCTIONS		0x02
+#define SMB347_FLOAT_VOLTAGE			0x03
+#define SMB347_CHARGE_CONTROL			0x04
+#define SMB347_STAT_TIMERS_CONTROL		0x05
+#define SMB347_PIN_ENABLE_CONTROL		0x06
+#define SMB347_THERM_CONTROL_A			0x07
+#define SMB347_SYSOK_USB30_SELECTION		0x08
+#define SMB347_OTHER_CONTROL_A			0x09
+#define SMB347_OTG_TLIM_THERM_CONTROL		0x0A
 #define SMB347_LIMIT_CELL_TEMPERATURE_MONITOR	0x0B
-#define SMB347_FAULT_INTERRUPT	0x0C
-#define SMB347_STATUS_INTERRUPT	0x0D
-#define SMB347_I2C_BUS_SLAVE_ADDR	0x0E
+#define SMB347_FAULT_INTERRUPT			0x0C
+#define SMB347_STATUS_INTERRUPT			0x0D
 
-#define SMB347_COMMAND_A	0x30
-#define SMB347_COMMAND_B	0x31
-#define SMB347_COMMAND_C	0x33
-#define SMB347_INTERRUPT_STATUS_A	0x35
-#define SMB347_INTERRUPT_STATUS_B	0x36
-#define SMB347_INTERRUPT_STATUS_C	0x37
-#define SMB347_INTERRUPT_STATUS_D	0x38
-#define SMB347_INTERRUPT_STATUS_E	0x39
-#define SMB347_INTERRUPT_STATUS_F	0x3A
-#define SMB347_STATUS_A	0x3B
-#define SMB347_STATUS_B	0x3C
-#define SMB347_STATUS_C	0x3D
-#define SMB347_STATUS_D	0x3E
-#define SMB347_STATUS_E	0x3F
+#define SMB347_COMMAND_A			0x30
+#define SMB347_COMMAND_B			0x31
+#define SMB347_STATUS_C				0x3D
 
 /* Status register C */
-#define SMB347_CHARGING_ENABLE	(1 << 0)
-#define SMB347_CHARGING_STATUS	(1 << 5)
-#define SMB347_CHARGER_ERROR	(1 << 6)
+#define SMB347_CHARGING_STATUS			(1 << 5)
+#define SMB347_CHARGER_ERROR			(1 << 6)
 
-#define CHARGER_STATUS_FULL             0x1
-#define CHARGER_STATUS_CHARGERERR       0x2
-#define CHARGER_STATUS_USB_FAIL         0x3
-#define CHARGER_VBATT_UVLO              0x4
+#define CHARGER_STATUS_FULL			0x1
+#define CHARGER_STATUS_CHARGERERR		0x2
+#define CHARGER_STATUS_USB_FAIL			0x3
+#define CHARGER_VBATT_UVLO			0x4
 
 struct smb347_chg_data {
 	struct device *dev;
 	struct i2c_client *client;
 	struct smb_charger_data *pdata;
 	struct smb_charger_callbacks callbacks;
-	struct work_struct charger_work;
 };
 
 static int smb347_i2c_read(struct i2c_client *client, u8 reg, u8 *data)
 {
 	int ret = 0;
 
-	if (!client) {
-		dev_err(&client->dev, "%s: err\n", __func__);
+	if (!client)
 		return -ENODEV;
-	}
 
 	ret = i2c_smbus_read_byte_data(client, reg);
-	if (ret < 0)
+	if (ret < 0) {
 		dev_err(&client->dev, "%s: err %d\n", __func__, ret);
+		return -EIO;
+	}
 
 	*data = ret & 0xff;
 	return 0;
@@ -101,12 +84,10 @@ static int smb347_i2c_read(struct i2c_client *client, u8 reg, u8 *data)
 
 static int smb347_i2c_write(struct i2c_client *client, u8 reg, u8 data)
 {
-	int ret = 0;
+	int ret;
 
-	if (!client) {
-		dev_err(&client->dev, "%s: err\n", __func__);
+	if (!client)
 		return -ENODEV;
-	}
 
 	ret = i2c_smbus_write_byte_data(client, reg, data);
 	if (ret < 0)
@@ -182,14 +163,14 @@ static int smb347_read_status(struct smb_charger_callbacks *ptr)
 
 	ret = smb347_i2c_read(chg->client, SMB347_STATUS_C, &reg_c);
 	if (ret < 0) {
-		dev_err(&chg->client->dev, "%s: I2C Read fail addr : 0x%x\n",
+		dev_err(&chg->client->dev, "%s: I2C Read fail addr: 0x%x\n",
 			__func__, SMB347_STATUS_C);
 		msleep(50);
 		smb347_i2c_read(chg->client, SMB347_STATUS_C, &reg_c);
 	}
 
-	dev_info(&chg->client->dev,
-		"addr : 0x%x, data : 0x%x\n", SMB347_STATUS_C, reg_c);
+	dev_dbg(&chg->client->dev,
+		"addr: 0x%x, data: 0x%x\n", SMB347_STATUS_C, reg_c);
 
 	if (reg_c & SMB347_CHARGER_ERROR)
 		res = CHARGER_STATUS_CHARGERERR;
@@ -218,59 +199,23 @@ static void smb347_set_charging_state(struct smb_charger_callbacks *ptr,
 			/* CommandB : High-current mode */
 			smb347_i2c_write(chg->client, SMB347_COMMAND_B, 0x03);
 
-			pr_info("%s : 1.8A charging enable\n", __func__);
+			dev_info(&chg->client->dev,
+				"charging current limit set to 1.8A\n");
 			break;
 		case CABLE_TYPE_USB:
 			/* CommandB : USB5 */
 			smb347_i2c_write(chg->client, SMB347_COMMAND_B, 0x02);
-			pr_info("%s : LOW(USB5) charging enable\n", __func__);
+			dev_info(&chg->client->dev,
+				"charging current limit set to 0.5A\n");
 			break;
 		default:
 			/* CommandB : USB1 */
 			smb347_i2c_write(chg->client, SMB347_COMMAND_B, 0x00);
-			pr_info("%s : LOW(USB1) charging enable\n", __func__);
+			dev_info(&chg->client->dev,
+				"charging current limit set to 0.1A\n");
 			break;
 		}
 	}
-}
-
-int smb347_get_charging_current(struct smb347_chg_data *chg)
-{
-	u8 data = 0;
-	int get_current = 0;
-
-	smb347_i2c_read(chg->client, SMB347_CHARGE_CURRENT, &data);
-	switch (data >> 5) {
-	case 0:
-		get_current = 700;
-		break;
-	case 1:
-		get_current = 900;
-		break;
-	case 2:
-		get_current = 1200;
-		break;
-	case 3:
-		get_current = 1500;
-		break;
-	case 4:
-		get_current = 1800;
-		break;
-	case 5:
-		get_current = 2000;
-		break;
-	case 6:
-		get_current = 2200;
-		break;
-	case 7:
-		get_current = 2500;
-		break;
-	default:
-		get_current = 700;
-		break;
-	}
-	pr_debug("%s: Get charging current as %dmA.\n", __func__, get_current);
-	return get_current;
 }
 
 static int smb347_i2c_probe(struct i2c_client *client,
@@ -289,7 +234,7 @@ static int smb347_i2c_probe(struct i2c_client *client,
 
 	chg->client = client;
 	if (!chg->client) {
-		dev_err(&client->dev, "%s : No client\n", __func__);
+		dev_err(&client->dev, "%s: no client\n", __func__);
 		ret = -EINVAL;
 		goto err_client;
 	} else {
@@ -298,8 +243,7 @@ static int smb347_i2c_probe(struct i2c_client *client,
 
 	chg->pdata = client->dev.platform_data;
 	if (!chg->pdata) {
-		dev_err(&client->dev, "%s : No platform data supplied\n",
-			__func__);
+		dev_err(&client->dev, "%s: no platform data supplied\n", __func__);
 		ret = -EINVAL;
 		goto err_pdata;
 	}
@@ -317,6 +261,7 @@ static int smb347_i2c_probe(struct i2c_client *client,
 
 err_pdata:
 err_client:
+	dev_err(&client->dev, "%s: probe failed\n", __func__);
 	kfree(chg);
 	return ret;
 }
@@ -334,6 +279,7 @@ static int __devexit smb347_remove(struct i2c_client *client)
 
 static const struct i2c_device_id smb347_id[] = {
 	{ "smb347-charger", 0 },
+	{ }
 };
 
 

@@ -117,7 +117,7 @@ static void set_full_charge(struct battery_manager_callbacks *ptr)
 
 static int fuelgauge_recovery(struct charger_device_info *di)
 {
-	int current_soc;
+	int current_soc = 0;
 
 	if (di->bat_info.soc > 0) {
 		pr_err("%s: Reduce the Reported SOC by 1 unit, wait for 30s\n",

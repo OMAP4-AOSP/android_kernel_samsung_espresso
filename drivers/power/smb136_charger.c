@@ -23,59 +23,24 @@
 #include <linux/slab.h>
 #include <linux/battery.h>
 
-/* Slave address */
-#define SMB136_SLAVE_ADDR		0x9A
-
 /* SMB136 Registers. */
-#define SMB_ChargeCurrent		0x00
-#define SMB_InputCurrentLimit		0x01
-#define SMB_FloatVoltage		0x02
-#define SMB_ControlA			0x03
-#define SMB_ControlB			0x04
-#define SMB_PinControl			0x05
-#define SMB_OTGControl			0x06
-#define SMB_Fault			0x07
-#define SMB_Temperature			0x08
-#define SMB_SafetyTimer			0x09
-#define SMB_VSYS			0x0A
-#define SMB_I2CAddr			0x0B
+#define SMB136_CHARGE_CURRENT			0x00
+#define SMB136_INPUT_CURRENTLIMIT		0x01
+#define SMB136_FLOAT_VOLTAGE			0x02
+#define SMB136_CHARGE_CONTROL_A			0x03
+#define SMB136_CHARGE_CONTROL_B			0x04
+#define SMB136_PIN_ENABLE_CONTROL		0x05
+#define SMB136_OTG_CONTROL			0x06
+#define SMB136_SAFTY				0x09
 
-#define SMB_IRQreset			0x30
-#define SMB_CommandA			0x31
-#define SMB_StatusA			0x32
-#define SMB_StatusB			0x33
-#define SMB_StatusC			0x34
-#define SMB_StatusD			0x35
-#define SMB_StatusE			0x36
-#define SMB_StatusF			0x37
-#define SMB_StatusG			0x38
-#define SMB_StatusH			0x39
-#define SMB_DeviceID			0x3B
-#define SMB_CommandB			0x3C
+#define SMB136_COMMAND_A			0x31
+#define SMB136_STATUS_D				0x35
+#define SMB136_STATUS_E				0x36
 
-/* SMB_StatusC register bit. */
-#define SMB_USB				1
-#define SMB_CHARGER			0
-#define Compelete			1
-#define Busy				0
-#define InputCurrent275			0xE
-#define InputCurrent500			0xF
-#define InputCurrent700			0x0
-#define InputCurrent800			0x1
-#define InputCurrent900			0x2
-#define InputCurrent1000		0x3
-#define InputCurrent1100		0x4
-#define InputCurrent1200		0x5
-#define InputCurrent1300		0x6
-#define InputCurrent1400		0x7
-
-/* SIOP */
-#define CHARGING_CURRENT_HIGH_LOW_STANDARD	450
-
-#define CHARGER_STATUS_FULL		0x1
-#define CHARGER_STATUS_CHARGERERR	0x2
-#define CHARGER_STATUS_USB_FAIL		0x3
-#define CHARGER_VBATT_UVLO		0x4
+#define CHARGER_STATUS_FULL			0x1
+#define CHARGER_STATUS_CHARGERERR		0x2
+#define CHARGER_STATUS_USB_FAIL			0x3
+#define CHARGER_VBATT_UVLO			0x4
 
 struct smb136_chg_data {
 	struct device *dev;
@@ -105,10 +70,8 @@ static int smb136_i2c_write(struct i2c_client *client, u8 reg, u8 data)
 {
 	int ret;
 
-	if (!client) {
-		dev_err(&client->dev, "%s: err\n", __func__);
+	if (!client)
 		return -ENODEV;
-	}
 
 	ret = i2c_smbus_write_byte_data(client, reg, data);
 	if (ret < 0)
@@ -126,25 +89,25 @@ static int smb136_read_status(struct smb_charger_callbacks *ptr)
 	u8 res = 0;
 	int ret;
 
-	ret = smb136_i2c_read(chg->client, SMB_StatusD, &reg_d);
+	ret = smb136_i2c_read(chg->client, SMB136_STATUS_D, &reg_d);
 	if (ret < 0) {
-		dev_err(&chg->client->dev, "%s : I2C read fail addr: 0x%x\n",
-			__func__, SMB_StatusD);
+		dev_err(&chg->client->dev, "%s: I2C read fail addr: 0x%x\n",
+			__func__, SMB136_STATUS_D);
 		msleep(50);
-		smb136_i2c_read(chg->client, SMB_StatusD, &reg_d);
+		smb136_i2c_read(chg->client, SMB136_STATUS_D, &reg_d);
 	}
 
-	ret = smb136_i2c_read(chg->client, SMB_StatusE, &reg_e);
+	ret = smb136_i2c_read(chg->client, SMB136_STATUS_E, &reg_e);
 	if (ret < 0) {
-		dev_err(&chg->client->dev, "%s : I2C read fail addr: 0x%x\n",
-				__func__, SMB_StatusE);
+		dev_err(&chg->client->dev, "%s: I2C read fail addr: 0x%x\n",
+				__func__, SMB136_STATUS_E);
 		msleep(50);
-		smb136_i2c_read(chg->client, SMB_StatusE, &reg_e);
+		smb136_i2c_read(chg->client, SMB136_STATUS_E, &reg_e);
 	}
 
 	dev_dbg(&chg->client->dev,
-	"addr : 0x%x, data : 0x%x, addr : 0x%x, data : 0x%x\n",
-		SMB_StatusD, reg_d, SMB_StatusE, reg_e);
+		"addr: 0x%x, data: 0x%x, addr: 0x%x, data: 0x%x\n",
+		SMB136_STATUS_D, reg_d, SMB136_STATUS_E, reg_e);
 
 	if (reg_e & 0x40) {
 		dev_dbg(&chg->client->dev,
@@ -167,133 +130,79 @@ static int smb136_read_status(struct smb_charger_callbacks *ptr)
 	return res;
 }
 
-static int smb136_get_charging_current(struct smb136_chg_data *chg)
-{
-	u8 data = 0;
-	int get_current = 0;
-
-	smb136_i2c_read(chg->client, SMB_ChargeCurrent, &data);
-	switch (data >> 5) {
-	case 0:
-		get_current = 500;
-		break;
-	case 1:
-		get_current = 650;
-		break;
-	case 2:
-		get_current = 750;
-		break;
-	case 3:
-		get_current = 850;
-		break;
-	case 4:
-		get_current = 950;
-		break;
-	case 5:
-		get_current = 1100;
-		break;
-	case 6:
-		get_current = 1300;
-		break;
-	case 7:
-		get_current = 1500;
-		break;
-	default:
-		get_current = 500;
-		break;
-	}
-
-	dev_info(&chg->client->dev, "%s: Get charging current as %dmA.\n",
-		__func__, get_current);
-
-	return get_current;
-}
-
 static void smb136_set_charging_state(struct smb_charger_callbacks *ptr,
 		int cable_status)
 {
 	struct smb136_chg_data *chg = container_of(ptr,
 			struct smb136_chg_data, callbacks);
-	u8 data = 0;
+	u8 data;
 
 	switch (cable_status) {
 	case CABLE_TYPE_AC:
 		dev_info(&chg->client->dev,
-				"%s: set charger current TA\n",
-				__func__);
+			"charging current limit set to 1.3A/1.5A\n");
 		/* HC mode */
-		data = 0x8c;
-		smb136_i2c_write(chg->client, SMB_CommandA, data);
+		smb136_i2c_write(chg->client, SMB136_COMMAND_A, 0x8c);
 
 		/* Set charge current */
 		/* Over HW Rev 09 : 1.5A, else 1.3A */
 		data = 0xF4;
 		if (chg->pdata->hw_revision < 0x9)
 			data = 0xD4;
-		smb136_i2c_write(chg->client, SMB_ChargeCurrent, data);
+		smb136_i2c_write(chg->client, SMB136_CHARGE_CURRENT, data);
 		break;
 
 	case CABLE_TYPE_USB:
 		/* Prevent in-rush current */
 		dev_info(&chg->client->dev,
-				"%s: set charger current USB & Default\n",
-				__func__);
+			"charging current limit set to 0.5A\n");
 
 		/* USBIN 500mA mode */
-		data = 0x88;
-		smb136_i2c_write(chg->client, SMB_CommandA, data);
+		smb136_i2c_write(chg->client, SMB136_COMMAND_A, 0x88);
 
 		/* Set charge current to 500mA */
-		data = 0x14;
-		smb136_i2c_write(chg->client, SMB_ChargeCurrent, data);
+		smb136_i2c_write(chg->client, SMB136_CHARGE_CURRENT, 0x14);
 		break;
 
 	case CABLE_TYPE_NONE:
 	default:
-		dev_info(&chg->client->dev, "%s: Set discharging default\n",
-				__func__);
+		dev_info(&chg->client->dev,
+			"charging current limit set to 0.1A\n");
 		/* USB 100mA Mode, USB5/1 Current Levels */
 		/* Prevent in-rush current */
-		data = 0x80;
-		smb136_i2c_write(chg->client, SMB_CommandA, data);
+		smb136_i2c_write(chg->client, SMB136_COMMAND_A, 0x80);
 		udelay(10);
 
 		/* Set charge current to 100mA */
 		/* Prevent in-rush current */
-		data = 0x14;
-		smb136_i2c_write(chg->client, SMB_ChargeCurrent, data);
+		smb136_i2c_write(chg->client, SMB136_CHARGE_CURRENT, 0x14);
 		udelay(10);
 	}
 
 	/* 2. Change USB5/1/HC Control from Pin to I2C */
-	smb136_i2c_write(chg->client, SMB_PinControl, 0x8);
+	smb136_i2c_write(chg->client, SMB136_PIN_ENABLE_CONTROL, 0x8);
 
 	/* 4. Disable Automatic Input Current Limit */
 	/* Over HW Rev 09 : 1.3A, else 1.0A */
 	data = 0xE6;
 	if (chg->pdata->hw_revision < 0x09)
 		data = 0x66;
-	smb136_i2c_write(chg->client, SMB_InputCurrentLimit, data);
+	smb136_i2c_write(chg->client, SMB136_INPUT_CURRENTLIMIT, data);
 
 	/* 4. Automatic Recharge Disabed */
-	data = 0x8c;
-	smb136_i2c_write(chg->client, SMB_ControlA, data);
+	smb136_i2c_write(chg->client, SMB136_CHARGE_CONTROL_A, 0x8c);
 
 	/* 5. Safty timer Disabled */
-	data = 0x28;
-	smb136_i2c_write(chg->client, SMB_ControlB, data);
+	smb136_i2c_write(chg->client, SMB136_CHARGE_CONTROL_B, 0x28);
 
 	/* 6. Disable USB D+/D- Detection */
-	data = 0x28;
-	smb136_i2c_write(chg->client, SMB_OTGControl, data);
+	smb136_i2c_write(chg->client, SMB136_OTG_CONTROL, 0x28);
 
 	/* 7. Set Output Polarity for STAT */
-	data = 0xCA;
-	smb136_i2c_write(chg->client, SMB_FloatVoltage, data);
+	smb136_i2c_write(chg->client, SMB136_FLOAT_VOLTAGE, 0xCA);
 
 	/* 9. Re-load Enable */
-	data = 0x4b;
-	smb136_i2c_write(chg->client, SMB_SafetyTimer, data);
+	smb136_i2c_write(chg->client, SMB136_SAFTY, 0x4b);
 }
 
 static int smb136_i2c_probe(struct i2c_client *client,
@@ -312,7 +221,7 @@ static int smb136_i2c_probe(struct i2c_client *client,
 
 	chg->client = client;
 	if (!chg->client) {
-		pr_err("%s : No client\n", __func__);
+		dev_err(&client->dev, "%s: no client\n", __func__);
 		ret = -EINVAL;
 		goto err_client;
 	} else {
@@ -321,7 +230,7 @@ static int smb136_i2c_probe(struct i2c_client *client,
 
 	chg->pdata = client->dev.platform_data;
 	if (!chg->pdata) {
-		pr_err("%s : No platform data supplied\n", __func__);
+		dev_err(&client->dev, "%s: no platform data supplied\n", __func__);
 		ret = -EINVAL;
 		goto err_pdata;
 	}
@@ -334,12 +243,12 @@ static int smb136_i2c_probe(struct i2c_client *client,
 		chg->pdata->register_callbacks(&chg->callbacks);
 
 	dev_info(&client->dev, "probed\n");
+
 	return 0;
 
 err_pdata:
 err_client:
-	dev_info(&client->dev, "%s: SMB136 probe fail !!!!!\n",
-		__func__);
+	dev_err(&client->dev, "%s: probe failed\n", __func__);
 	kfree(chg);
 	return ret;
 }
