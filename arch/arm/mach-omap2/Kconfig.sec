@@ -20,38 +20,7 @@ config MACH_OMAP4_SAMSUNG
 	select REGULATOR_FIXED_VOLTAGE
 	default n
 
-config MACH_SAMSUNG_ESPRESSO
+config MACH_OMAP4_ESPRESSO
 	bool "Samsung Espresso / Espresso10 (Galaxy Tab 2) Board"
 	default n
 	select MACH_OMAP4_SAMSUNG
-
-if BT
-config BT_BCM4330
-	bool "Enable BCM4330 driver"
-	default n
-	help
-		Adds BCM4330 RFKILL driver for Broadcom BCM4330 chipset
-
-config BT_BCM4334
-	bool "Enable BCM4334 driver"
-	default n
-	help
-		Adds BCM4334 RFKILL driver for Broadcom BCM4334 chipset
-
-config BT_MGMT
-	bool "Bluetooth Mgmt"
-	default n
-	help
-		This is for bluetooth mgmt
-endif
-
-config OMAP_STMPE_NR
-	int "Number used STMPE MFD device for OMAP"
-	default 1
-	depends on ARCH_OMAP && MFD_STMPE
-	help
-		Define a number of used STMPE MFD device attached to OMAP.
-		STMPE is can be used for a GPIO-Expander / Key-Matrix
-		device, and it rquires its own IRQ number. Generally, only
-		one STMPE is used on one device but two or more STMPE device
-		are also used if number of GPIOs are not enough on OMAP.

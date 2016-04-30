@@ -195,7 +195,7 @@ config SND_OMAP_SOC_IGEP0020
 
 config SND_OMAP_SOC_ESPRESSO
 	tristate "SoC Audio support for espresso using Wolfson WM1811 Codec"
-	depends on MACH_SAMSUNG_ESPRESSO
+	depends on MACH_OMAP4_ESPRESSO
 	depends on SND_OMAP_SOC
 	select SND_OMAP_SOC_MCBSP
 	select SND_SOC_WM8994

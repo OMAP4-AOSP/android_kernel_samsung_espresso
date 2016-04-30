@@ -852,7 +852,7 @@ out:
 }
 EXPORT_SYMBOL(twl6030_gpadc_conversion);
 
-#ifdef CONFIG_MACH_SAMSUNG_ESPRESSO
+#ifdef CONFIG_MACH_OMAP4_ESPRESSO
 int twl6030_get_gpadc_conversion(int channel_no)
 {
 	struct twl6030_gpadc_request req;

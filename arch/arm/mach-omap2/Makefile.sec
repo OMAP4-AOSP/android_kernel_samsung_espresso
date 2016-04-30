@@ -21,7 +21,7 @@ obj-$(CONFIG_MACH_OMAP4_SAMSUNG)	+= hsmmc.o \
 ldflags-$(CONFIG_MACH_OMAP4_SAMSUNG)	+= \
 				-T $(srctree)/arch/arm/mach-omap2/sec_omap.lds
 
-obj-$(CONFIG_MACH_SAMSUNG_ESPRESSO)	+= board-espresso.o \
+obj-$(CONFIG_MACH_OMAP4_ESPRESSO)	+= board-espresso.o \
 					   board-espresso-emif.o \
 					   board-espresso-serial.o \
 					   board-espresso-pmic.o \
@@ -38,7 +38,7 @@ obj-$(CONFIG_MACH_SAMSUNG_ESPRESSO)	+= board-espresso.o \
 					   board-espresso-vibrator.o \
 					   board-espresso-irled.o
 
-obj-$(CONFIG_MACH_SAMSUNG_ESPRESSO)	+= board-espresso-muxset-r03.o \
+obj-$(CONFIG_MACH_OMAP4_ESPRESSO)	+= board-espresso-muxset-r03.o \
 					   board-espresso-muxset-r04.o \
 					   board-espresso-muxset-r06.o \
 					   board-espresso-muxset-r07.o \
