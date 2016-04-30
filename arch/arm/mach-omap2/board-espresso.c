@@ -470,7 +470,7 @@ static void __init espresso_reserve(void)
 	omap_reserve();
 }
 
-MACHINE_START(OMAP4_SAMSUNG, "Espresso")
+MACHINE_START(OMAP4_ESPRESSO, "OMAP4 Espresso board")
 	/* Maintainer: Daniel Jarai */
 	.boot_params	= 0x80000100,
 	.reserve	= espresso_reserve,

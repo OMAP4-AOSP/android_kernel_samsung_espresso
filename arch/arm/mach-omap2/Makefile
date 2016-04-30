@@ -304,6 +304,41 @@ obj-$(CONFIG_MACH_CRANEBOARD)		+= board-am3517crane.o
 obj-$(CONFIG_MACH_SBC3530)		+= board-omap3stalker.o \
 					   hsmmc.o
 obj-$(CONFIG_MACH_TI8168EVM)		+= board-ti8168evm.o
+
+obj-$(CONFIG_MACH_OMAP4_ESPRESSO)	+= hsmmc.o \
+					   omap_phy_internal.o \
+					   omap_muxtbl.o \
+					   omap44xx_muxtbl.o \
+					   sec_muxtbl.o \
+					   board-espresso.o \
+					   board-espresso-emif.o \
+					   board-espresso-serial.o \
+					   board-espresso-pmic.o \
+					   board-espresso-sdio.o \
+					   board-espresso-connector.o \
+					   board-espresso-display.o \
+					   board-espresso-input.o \
+					   board-espresso-wifi.o \
+					   board-espresso-modems.o \
+					   board-espresso-sensors.o \
+					   board-espresso-bluetooth.o \
+					   board-espresso-jack.o \
+					   board-espresso-power.o \
+					   board-espresso-vibrator.o \
+					   board-espresso-irled.o \
+					   board-espresso-muxset-r03.o \
+					   board-espresso-muxset-r04.o \
+					   board-espresso-muxset-r06.o \
+					   board-espresso-muxset-r07.o \
+					   board-espresso-muxset-r09.o \
+					   board-espresso-muxset-r10.o \
+					   board-espresso10-muxset-r00.o \
+					   board-espresso10-muxset-r05.o \
+					   board-espresso10-muxset-r07.o \
+					   board-espresso10-usa-bby-muxset-r07.o \
+					   board-espresso10-muxset-r08.o
+ldflags-$(CONFIG_MACH_OMAP4_ESPRESSO)	+= -T $(srctree)/arch/arm/mach-omap2/sec_omap.lds
+
 # Platform specific device init code
 usbfs-$(CONFIG_ARCH_OMAP_OTG)		:= usb-fs.o
 obj-y					+= $(usbfs-m) $(usbfs-y)
@@ -343,5 +378,3 @@ endif
 obj-$(CONFIG_OMAP_RAM_CONSOLE)		+= omap_ram_console.o
 obj-$(CONFIG_ARCH_OMAP4)		+= omap_gcxxx.o
 obj-$(CONFIG_OMAP_RFKILL_STE_MODEM)	+= omap-rfkill-ste.o
-
-include arch/arm/mach-omap2/Makefile.sec
