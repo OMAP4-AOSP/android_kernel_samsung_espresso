@@ -382,7 +382,7 @@ void iommu_set_twl(struct iommu *obj, bool on)
 }
 EXPORT_SYMBOL_GPL(iommu_set_twl);
 
-#if defined(CONFIG_OMAP_IOMMU_DEBUG)
+#if defined(CONFIG_OMAP_IOMMU_DEBUG_MODULE)
 
 ssize_t iommu_dump_ctx(struct iommu *obj, char *buf, ssize_t bytes)
 {
@@ -449,7 +449,7 @@ int foreach_iommu_device(void *data, int (*fn)(struct device *, void *))
 }
 EXPORT_SYMBOL_GPL(foreach_iommu_device);
 
-#endif /* CONFIG_OMAP_IOMMU_DEBUG */
+#endif /* CONFIG_OMAP_IOMMU_DEBUG_MODULE */
 
 /*
  *	H/W pagetable operations
