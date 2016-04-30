@@ -175,6 +175,7 @@ static inline void __arch_decomp_setup(unsigned long arch_id)
 
 		/* TI8168 base boards using UART3 */
 		DEBUG_LL_TI816X(3, ti8168evm);
+
 	} while (0);
 }
 

@@ -414,7 +414,7 @@ static void omap_init_aess(void)
 static inline void omap_init_aess(void) {}
 #endif
 
-#if defined(CONFIG_ARCH_OMAP4) && defined(CONFIG_SND_TI_SOC_SOURCE)
+#if defined CONFIG_ARCH_OMAP4
 
 static struct platform_device codec_dmic0 = {
 	.name	= "dmic-codec",

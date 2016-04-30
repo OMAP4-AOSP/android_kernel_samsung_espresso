@@ -6203,10 +6203,8 @@ static __initdata struct omap_hwmod *omap44xx_hwmods[] = {
 	/* mpu_bus class */
 	&omap44xx_mpu_private_hwmod,
 
-#ifdef CONFIG_SND_OMAP_SOC_ABE_DSP
 	/* aess class */
 	&omap44xx_aess_hwmod,
-#endif
 
 	/* bandgap class */
 	&omap443x_bandgap_hwmod,
@@ -6296,10 +6294,8 @@ static __initdata struct omap_hwmod *omap44xx_hwmods[] = {
 	&omap44xx_mcbsp3_hwmod,
 	&omap44xx_mcbsp4_hwmod,
 
-#ifdef CONFIG_SND_OMAP_SOC_MCPDM
 	/* mcpdm class */
 	&omap44xx_mcpdm_hwmod,
-#endif
 
 	/* mcspi class */
 	&omap44xx_mcspi1_hwmod,

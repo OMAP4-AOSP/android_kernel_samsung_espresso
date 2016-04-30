@@ -562,15 +562,6 @@ config SEC_30PIN_CON
 	  support accessary devices for Samsunt Tablet device this feature
 	  must be enabled.
 
-config LEDS_AN30259A
-        tristate "LED driver for panasonic AN30259A RGB LED"
-        depends on I2C
-        help
-          This option enables support for AN30259A RGB LED chips
-          accessed via the I2C bus.
-          AN30259A has three channel LED driver. By synchronous clock
-          function, combined operation is possible.
-
 config UID_CPUTIME
 	tristate "Per-UID cpu time statistics"
 	depends on PROFILING
