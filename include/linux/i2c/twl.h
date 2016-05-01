@@ -817,7 +817,7 @@ struct twl4030_codec_data {
 
 struct twl4030_rtc_data {
 	unsigned int	auto_comp;
-	s16	comp_value;
+	s16		comp_value;
 };
 
 struct twl4030_platform_data {
@@ -829,7 +829,6 @@ struct twl4030_platform_data {
 	struct twl4030_keypad_data		*keypad;
 	struct twl4030_usb_data			*usb;
 	struct twl4030_power_data		*power;
-
 	struct twl4030_rtc_data			*rtc;
 	struct twl4030_codec_data		*codec;
 
