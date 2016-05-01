@@ -443,24 +443,6 @@ static void SynaProgramFirmware(void)
 	SynaFlashFirmwareWrite();
 }
 
-/* eraseConfigBlock erases the config block */
-static void eraseConfigBlock(void)
-{
-	u8 uData;
-
-	pr_info("tsp fw. : eraseConfigBlock\n");
-	/* Erase of config block is done by first entering into
-	bootloader mode */
-	SynaReadBootloadID();
-	SynaWriteBootloadID();
-
-	/* Command 7 to erase config block */
-	uData = 7;
-	writeRMI(SynaF34_FlashControl, &uData, 1);
-
-	SynaWaitATTN();
-}
-
 bool synaptics_fw_update(struct i2c_client *ts_client, const u8 *fw_data,
 							const int gpio)
 {
@@ -851,5 +833,4 @@ void F01_SetTABit(struct i2c_client *ts_client, bool set)
 	command = set ? 0x20 : 0x00;
 
 	writeRMI(F01_Control_Base, &command, 1);
-	return;
 }
