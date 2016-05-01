@@ -410,13 +410,12 @@ static int mmc_read_ext_csd(struct mmc_card *card, u8 *ext_csd)
 	/* moviNAND VHX 4.41 device supports a discard*/
 	if (card->cid.movi_pnm == 0x47324741 ||
 		card->cid.movi_pnm == 0x47344741 ||
-		card->cid.movi_pnm == 0x47344741 ||
 		card->cid.movi_pnm == 0x47384741) {
-		printk(KERN_DEBUG "%s : moviNAND VHX 4.41 "
-			"DISCARD feature is enabled\n",
+		pr_info("%s: moviNAND VHX 4.41 DISCARD feature enabled\n",
 			mmc_hostname(card->host));
 		card->ext_csd.feature_support |= MMC_DISCARD_FEATURE;
 	}
+
 	card->ext_csd.raw_erased_mem_count = ext_csd[EXT_CSD_ERASED_MEM_CONT];
 	if (ext_csd[EXT_CSD_ERASED_MEM_CONT])
 		card->erased_byte = 0xFF;
