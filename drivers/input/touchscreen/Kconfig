@@ -781,28 +781,4 @@ config TOUCHSCREEN_SYNAPTICS_S7301
 		To compile this driver as a module, choose M here: the
 		module will be called synaptics_ts.
 
-config SEC_TSP_FACTORY_TEST
-	bool "Samsung TSP Factory Test Mode"
-	depends on TOUCHSCREEN_MELFAS_MMS136 || TOUCHSCREEN_SYNAPTICS_S7301
-	help
-		Say Y here if you want to support for Samsung Factory Test
-		mode for TSP.
-
-config TOUCH_SCREEN_BOOST_MODE
-	bool "Touch Boost Mode"
-	depends on TOUCHSCREEN_MELFAS_MMS136
-	help
-		Say Y here if you want to support for touch boost mode.
-		It boosts AP frequency up to 800 MHz during 1 second at last
-		touch point released.
-
-		If unsure, say N.
-
-config TOUCHSCREEN_OLD_FW_STD
-	bool "Separate codes old firmware standrad and new firmware standard"
-	depends on TOUCHSCREEN_SYNAPTICS_S7301
-	help
-		Say Y here if you want to support for samsung old firmware
-		standard declare.
-
 endif
