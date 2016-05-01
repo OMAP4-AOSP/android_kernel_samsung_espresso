@@ -1576,9 +1576,9 @@ EXPORT_SYMBOL(mmc_can_trim);
 int mmc_can_discard(struct mmc_card *card)
 {
 	/*
-	* As there's no way to detect the discard support bit at v4.5
-	* use the s/w feature support filed.
-	*/
+	 * As there's no way to detect the discard support bit at v4.5
+	 * use the s/w feature support filed.
+	 */
 	if (card->ext_csd.feature_support & MMC_DISCARD_FEATURE)
 		return 1;
 	return 0;
@@ -1701,12 +1701,6 @@ void mmc_rescan(struct work_struct *work)
 
 	mmc_claim_host(host);
 	for (i = 0; i < ARRAY_SIZE(freqs); i++) {
-		if (!mmc_rescan_try_freq(host, max(freqs[i], host->f_min))) {
-			extend_wakelock = true;
-			break;
-		}
-		/*retry again after power off/on if detection is failed*/
-		mdelay(50);
 		if (!mmc_rescan_try_freq(host, max(freqs[i], host->f_min))) {
 			extend_wakelock = true;
 			break;
@@ -1896,9 +1890,6 @@ int mmc_suspend_host(struct mmc_host *host)
 	if (!err && !mmc_card_keep_power(host))
 		mmc_power_off(host);
 
-	if (host->nesting_cnt < 0)
-		host->nesting_cnt = 0;
-
 	return err;
 }
 
@@ -1961,7 +1952,6 @@ int mmc_pm_notify(struct notifier_block *notify_block,
 {
 	struct mmc_host *host = container_of(
 		notify_block, struct mmc_host, pm_notify);
-	struct omapsdcc_host *omaphost = mmc_priv(host);
 	unsigned long flags;
 
 
@@ -1988,10 +1978,6 @@ int mmc_pm_notify(struct notifier_block *notify_block,
 			host->bus_ops->remove(host);
 
 		mmc_detach_bus(host);
-        /* for BCM WIFI */
-        if (host->card && omaphost)
-        printk(KERN_WARNING"%s(): WIFI SKIP MMC POWER OFF\n",__func__);
-        else
 		mmc_power_off(host);
 		mmc_release_host(host);
 		host->pm_flags = 0;
@@ -2008,11 +1994,7 @@ int mmc_pm_notify(struct notifier_block *notify_block,
 		}
 		host->rescan_disable = 0;
 		spin_unlock_irqrestore(&host->lock, flags);
-		/* for BCM WIFI */
-		if (host->card && omaphost)
-			printk(KERN_WARNING"%s(): WIFI SKIP DETECT CHANGE\n",__func__);
-		else
-			mmc_detect_change(host, 0);
+		mmc_detect_change(host, 0);
 
 	}
 
