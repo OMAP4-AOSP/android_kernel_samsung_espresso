@@ -20,8 +20,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef __MAX17042_BATTERY_H_
-#define __MAX17042_BATTERY_H_
+#ifndef __MAX17042_BATTERY_MANAGER_H_
+#define __MAX17042_BATTERY_MANAGER_H_
 
 #include <linux/battery.h>
 

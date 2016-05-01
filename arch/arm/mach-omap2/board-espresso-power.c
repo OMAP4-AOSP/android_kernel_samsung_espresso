@@ -26,7 +26,7 @@
 #include <linux/i2c-gpio.h>
 #include <linux/i2c/twl.h>
 #include <linux/power/smb_charger.h>
-#include <linux/power/max17042_battery.h>
+#include <linux/power/max17042_battery_manager.h>
 #include <linux/bat_manager.h>
 #include <linux/battery.h>
 #include <linux/irq.h>
