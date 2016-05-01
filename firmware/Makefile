@@ -99,6 +99,8 @@ fw-shipped-$(CONFIG_TIGON3) += tigon/tg3.bin tigon/tg3_tso.bin \
 
 fw-shipped-$(CONFIG_VIDEO_LOAD_KERNEL_VPDMA) += vpdma-1b8.fw
 
+fw-shipped-$(CONFIG_TOUCHSCREEN_MELFAS_MMS136) += melfas/p3100.fw
+fw-shipped-$(CONFIG_TOUCHSCREEN_SYNAPTICS_S7301) += synaptics/p5100.fw
 fw-shipped-$(CONFIG_TYPHOON) += 3com/typhoon.bin
 fw-shipped-$(CONFIG_USB_EMI26) += emi26/loader.fw emi26/firmware.fw \
 				  emi26/bitstream.fw
