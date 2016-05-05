@@ -14,7 +14,7 @@
 
 #include <linux/gpio.h>
 
-#include <plat/io.h>
+#include <plat/usb.h>
 
 #include <mach/ctrl_module_pad_core_44xx.h>
 #include <mach/ctrl_module_pad_wkup_44xx.h>
