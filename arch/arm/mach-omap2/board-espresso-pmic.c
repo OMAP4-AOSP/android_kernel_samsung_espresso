@@ -74,7 +74,7 @@ static struct regulator_consumer_supply vbatt_supplies[] = {
 
 static struct regulator_init_data vbatt_initdata = {
 	.constraints = {
-		.always_on = 1,
+		.always_on = true,
 	},
 	.num_consumer_supplies = ARRAY_SIZE(vbatt_supplies),
 	.consumer_supplies = vbatt_supplies,
@@ -155,10 +155,6 @@ static struct wm8994_pdata wm1811_pdata = {
 };
 #endif
 
-static struct regulator_consumer_supply espresso_vaux1_supplies[] = {
-	REGULATOR_SUPPLY("GPS_LNA_2.8V", NULL),
-};
-
 static struct regulator_init_data espresso_vaux1 = {
 	.constraints = {
 		.min_uV			= 2800000,
@@ -168,13 +164,10 @@ static struct regulator_init_data espresso_vaux1 = {
 					| REGULATOR_MODE_STANDBY,
 		.valid_ops_mask		= REGULATOR_CHANGE_MODE
 					| REGULATOR_CHANGE_STATUS,
-		.always_on		= true,
 		.state_mem = {
-			.enabled = true,
+			.disabled = true,
 		},
 	},
-	.num_consumer_supplies	= ARRAY_SIZE(espresso_vaux1_supplies),
-	.consumer_supplies	= espresso_vaux1_supplies,
 };
 
 static struct regulator_consumer_supply espresso_vaux2_supplies[] = {
@@ -193,6 +186,9 @@ static struct regulator_init_data espresso_vaux2 = {
 		.valid_ops_mask		= REGULATOR_CHANGE_VOLTAGE
 					| REGULATOR_CHANGE_MODE
 					| REGULATOR_CHANGE_STATUS,
+		.state_mem = {
+			.disabled = true,
+		},
 	},
 	.num_consumer_supplies	= ARRAY_SIZE(espresso_vaux2_supplies),
 	.consumer_supplies	= espresso_vaux2_supplies,
@@ -200,7 +196,6 @@ static struct regulator_init_data espresso_vaux2 = {
 
 static struct regulator_consumer_supply espresso_vmmc_supply[] = {
 	REGULATOR_SUPPLY("vmmc", "omap_hsmmc.0"),
-	REGULATOR_SUPPLY("VSD_2.8V", NULL),
 };
 
 static struct regulator_init_data espresso_vmmc = {
@@ -218,10 +213,6 @@ static struct regulator_init_data espresso_vmmc = {
 	.consumer_supplies	= espresso_vmmc_supply,
 };
 
-static struct regulator_consumer_supply espresso_vusim_supply[] = {
-	REGULATOR_SUPPLY("VAP_IO_3.3V", NULL),
-};
-
 static struct regulator_init_data espresso_vusim = {
 	.constraints = {
 		.min_uV			= 3300000,
@@ -231,17 +222,11 @@ static struct regulator_init_data espresso_vusim = {
 					| REGULATOR_MODE_STANDBY,
 		.valid_ops_mask		= REGULATOR_CHANGE_MODE
 					| REGULATOR_CHANGE_STATUS,
-			.state_mem = {
-				.enabled = true,
-			},
-			.always_on = true,
+		.always_on		= true,
+		.state_mem = {
+			.enabled        = true,
+		},
 	},
-	.num_consumer_supplies	= ARRAY_SIZE(espresso_vusim_supply),
-	.consumer_supplies	= espresso_vusim_supply,
-};
-
-static struct regulator_consumer_supply espresso_vana_supply[] = {
-	REGULATOR_SUPPLY("VDD_ANA", NULL),
 };
 
 static struct regulator_init_data espresso_vana = {
@@ -254,15 +239,12 @@ static struct regulator_init_data espresso_vana = {
 					| REGULATOR_CHANGE_STATUS,
 		.always_on		= true,
 		.state_mem = {
-			.enabled = true,
+			.disabled	= true,
 		},
 	},
-	.num_consumer_supplies	= ARRAY_SIZE(espresso_vana_supply),
-	.consumer_supplies	= espresso_vana_supply,
 };
 
 static struct regulator_consumer_supply espresso_vcxio_supply[] = {
-	REGULATOR_SUPPLY("VCXIO_1.8V", NULL),
 	REGULATOR_SUPPLY("vdds_dsi", "omapdss_dss"),
 	REGULATOR_SUPPLY("vdds_dsi", "omapdss_dsi1"),
 };
@@ -277,34 +259,14 @@ static struct regulator_init_data espresso_vcxio = {
 					| REGULATOR_CHANGE_STATUS,
 		.always_on		= true,
 		.state_mem = {
-			.disabled = true,
+			.disabled	= true,
 		},
 	},
 	.num_consumer_supplies	= ARRAY_SIZE(espresso_vcxio_supply),
 	.consumer_supplies	= espresso_vcxio_supply,
 };
 
-static struct regulator_consumer_supply espresso_vdac_supply[] = {
-	{
-		.supply		= "hdmi_vref",
-	},
-};
-
-static struct regulator_init_data espresso_vdac = {
-	.constraints = {
-		.min_uV			= 1800000,
-		.max_uV			= 1800000,
-		.valid_modes_mask	= REGULATOR_MODE_NORMAL
-					| REGULATOR_MODE_STANDBY,
-		.valid_ops_mask		= REGULATOR_CHANGE_MODE
-					| REGULATOR_CHANGE_STATUS,
-	},
-	.num_consumer_supplies	= ARRAY_SIZE(espresso_vdac_supply),
-	.consumer_supplies	= espresso_vdac_supply,
-};
-
 static struct regulator_consumer_supply espresso_vusb_supply[] = {
-	REGULATOR_SUPPLY("VUSB_3.3V", NULL),
 	REGULATOR_SUPPLY("vusb", "espresso_otg"),
 };
 
@@ -324,23 +286,11 @@ static struct regulator_init_data espresso_vusb = {
 	.consumer_supplies	= espresso_vusb_supply,
 };
 
-static struct regulator_consumer_supply espresso_clk32kg_supply[] = {
-	REGULATOR_SUPPLY("GPS_BT_CLK32K", NULL),
-};
-
 static struct regulator_init_data espresso_clk32kg = {
 	.constraints = {
 		.valid_ops_mask	= REGULATOR_CHANGE_STATUS,
 		.always_on	= true,
 	},
-	.num_consumer_supplies	= ARRAY_SIZE(espresso_clk32kg_supply),
-	.consumer_supplies	= espresso_clk32kg_supply,
-};
-
-static struct regulator_consumer_supply espresso_clk32kaudio_supply[] = {
-	REGULATOR_SUPPLY("CLK32K_AUDIO", NULL),
-	REGULATOR_SUPPLY("clk32kaudio", NULL),
-	REGULATOR_SUPPLY("twl6040_clk32k", NULL),
 };
 
 static struct regulator_init_data espresso_clk32kaudio = {
@@ -348,8 +298,6 @@ static struct regulator_init_data espresso_clk32kaudio = {
 		.valid_ops_mask	= REGULATOR_CHANGE_STATUS,
 		.always_on	= true,
 	},
-	.num_consumer_supplies	= ARRAY_SIZE(espresso_clk32kaudio_supply),
-	.consumer_supplies	= espresso_clk32kaudio_supply,
 };
 
 static struct twl4030_madc_platform_data espresso_madc = {
@@ -383,14 +331,14 @@ static void espresso_twl6030_init(void)
 					REG_INT_MSK_LINE_C);
 
 	if (ret)
-		pr_err("%s:disable charger interrupt fail!\n", __func__);
+		pr_err("%s: disable charger interrupt fail!\n", __func__);
 
 	/* use only preq1 of twl6032 */
 	ret = twl_i2c_write_u8(TWL6030_MODULE_ID0,
 			~(DEV_GRP_P1) << TWL6030_PHEONIX_MSK_TRANS_SHIFT,
 			TWL6030_PHOENIX_MSK_TRANSITION);
 	if (ret)
-		pr_err("%s:PHOENIX_MSK_TRANSITION write fail!\n", __func__);
+		pr_err("%s: PHOENIX_MSK_TRANSITION write fail!\n", __func__);
 
 
 	if (board_is_espresso10()) {
@@ -440,6 +388,7 @@ static struct twl4030_resconfig espresso_rconfig[] = {
 	{ .resource = RES_LDOLN, .devgroup = 0, },
 	{ .resource = TWL4030_RESCONFIG_UNDEF, 0},
 };
+
 static struct twl4030_power_data espresso_power_data = {
 	.twl4030_board_init	= espresso_twl6030_init,
 	.resource_config = espresso_rconfig,
@@ -460,6 +409,7 @@ static struct regulator_init_data espresso_ldo2_nc = {
 		},
 	},
 };
+
 static struct regulator_init_data espresso_ldo7_nc = {
 	.constraints = {
 		.min_uV = 1000000,
@@ -475,6 +425,7 @@ static struct regulator_init_data espresso_ldo7_nc = {
 		},
 	},
 };
+
 static struct regulator_init_data espresso_ldoln_nc = {
 	.constraints = {
 		.min_uV = 1000000,
@@ -507,10 +458,14 @@ static struct regulator_init_data espresso_ldo5 = {
 		.min_uV = 1800000,
 		.max_uV = 1800000,
 		.apply_uV = true,
-		.valid_modes_mask	= REGULATOR_MODE_NORMAL,
-		.valid_ops_mask	 = REGULATOR_CHANGE_MODE
+		.valid_modes_mask	= REGULATOR_MODE_NORMAL
+					| REGULATOR_MODE_STANDBY,
+		.valid_ops_mask		= REGULATOR_CHANGE_MODE
 					| REGULATOR_CHANGE_STATUS,
+		.state_mem = {
+			.disabled = true,
 		},
+	},
 	.num_consumer_supplies	= ARRAY_SIZE(espresso_vdd_io_1V8_supplies),
 	.consumer_supplies	= espresso_vdd_io_1V8_supplies,
 };
@@ -631,40 +586,8 @@ void __init omap4_espresso_pmic_init(void)
 	 */
 	regulator_has_full_constraints();
 
-	if (board_is_espresso10()) {
-		espresso_vana.constraints.state_mem.enabled = false;
-		espresso_vana.num_consumer_supplies = 0;
-		
-		espresso_vaux1.constraints.state_mem.enabled = false;
-		espresso_vaux1.num_consumer_supplies = 0;
-		
-		espresso_vaux2.num_consumer_supplies = 2;
-		espresso_vaux2.constraints.always_on = true;
-
-		espresso_vmmc.num_consumer_supplies = 1;
-
-		espresso_vusim.constraints.state_mem.enabled = false;
-		espresso_vusim.num_consumer_supplies = 0;
-
-		espresso_ldo5.constraints.valid_modes_mask |= REGULATOR_MODE_STANDBY;
-		espresso_ldo5.constraints.valid_ops_mask |= REGULATOR_CHANGE_VOLTAGE;
-		espresso_ldo5.constraints.always_on = true,
-		espresso_ldo5.num_consumer_supplies = 2;
-
-		espresso_clk32kaudio.num_consumer_supplies = 0;
-		espresso_clk32kg.num_consumer_supplies = 0;
-
-		espresso_vusb_supply[1].dev_name = NULL;
-
+	if (board_is_espresso10())
 		espresso_twl6032_pdata.rtc = &espresso_rtc;
-
-		/*
-		 * only best buy Wi-Fi verstion support MHL from rev0.4
-		 * Set ldoln regulator as VDAC regulator which is used by MHL.
-		 */
-		if (board_is_espresso10() && board_is_bestbuy_variant() && system_rev >= 7)
-			espresso_twl6032_pdata.ldoln = &espresso_vdac;
-	}
 
 	espresso_audio_init();
 
@@ -689,6 +612,6 @@ void __init omap4_espresso_pmic_init(void)
 	if (enable_sr)
 		omap_enable_smartreflex_on_init();
 
-	/*enable off-mode*/
+	/* enable off-mode */
 	omap_pm_enable_off_mode();
 }
