@@ -290,36 +290,10 @@ static void espresso_accessory_power(u32 device, bool enable)
 	}
 }
 
-#ifdef USB_TWL6030_5VOUT
-static void espresso_set_vbus_drive(bool enable)
-{
-	if (enable) {
-		/* Set the VBUS current limit to 500mA */
-		twl_i2c_write_u8(TWL_MODULE_MAIN_CHARGE, 0x09,
-				 CHARGERUSB_CINLIMIT);
-
-		/* The TWL6030 has a feature to automatically turn on
-		 * boost mode (VBUS Drive) when the ID signal is not
-		 * grounded.  This feature needs to be disabled on Tuna
-		 * as the ID signal is not hooked up to the TWL6030.
-		 */
-		twl_i2c_write_u8(TWL_MODULE_MAIN_CHARGE, 0x21,
-				 CHARGERUSB_CTRL3);
-		twl_i2c_write_u8(TWL_MODULE_MAIN_CHARGE, 0x40,
-				 CHARGERUSB_CTRL1);
-	} else {
-		twl_i2c_write_u8(TWL_MODULE_MAIN_CHARGE, 0x01,
-				 CHARGERUSB_CTRL3);
-		twl_i2c_write_u8(TWL_MODULE_MAIN_CHARGE, 0x00,
-				 CHARGERUSB_CTRL1);
-	}
-}
-#else
 static void espresso_set_vbus_drive(bool enable)
 {
 	espresso_accessory_power(2, enable);
 }
-#endif
 
 static void espresso_ap_usb_attach(struct omap4_otg *otg)
 {
@@ -734,7 +708,6 @@ static ssize_t espresso_uart_sel_store(struct device *dev,
 	mutex_unlock(&espresso_otg->lock);
 
 	return size;
-
 }
 
 static ssize_t espresso_usb_sel_show(struct device *dev,
@@ -1040,7 +1013,7 @@ struct platform_device espresso_device_dock_keyboard = {
 	.id = 0,
 	.dev = {
 		.platform_data = &espresso_dock_keyboard_pdata,
-		},
+	},
 };
 
 static void __init espresso_switch_initial_setup(void)
@@ -1077,7 +1050,6 @@ static int __init espresso_save_init_switch_param(char *str)
 }
 __setup("switch_sel=", espresso_save_init_switch_param);
 
-
 static void connector_gpio_init(void)
 {
 	if ((board_is_espresso10() && system_rev >= 8) ||
@@ -1099,7 +1071,6 @@ static int __init espresso_plugged_usb_cable_init(void)
 
 	return 0;
 }
-
 fs_initcall(espresso_plugged_usb_cable_init);
 
 void __init omap4_espresso_connector_init(void)
@@ -1154,7 +1125,6 @@ void __init omap4_espresso_connector_init(void)
 		pr_err("fail to  create manual switch_sel sysfs group (%d)\n",
 									ret);
 switch_dev_fail:
-
 	espresso_switch_initial_setup();
 
 	/* dock keyboard */
