@@ -16,6 +16,7 @@
  * 02110-1301 USA
  */
 
+#include <linux/module.h>
 #include <linux/interrupt.h>
 #include <linux/irq.h>
 #include <linux/i2c.h>
@@ -882,19 +883,7 @@ static struct i2c_driver gp2a_i2c_driver = {
 	.id_table = gp2a_device_id,
 };
 
-
-static int __init gp2a_init(void)
-{
-	return i2c_add_driver(&gp2a_i2c_driver);
-}
-
-static void __exit gp2a_exit(void)
-{
-	i2c_del_driver(&gp2a_i2c_driver);
-}
-
-module_init(gp2a_init);
-module_exit(gp2a_exit);
+module_i2c_driver(gp2a_i2c_driver);
 
 MODULE_AUTHOR("mjchen@sta.samsung.com");
 MODULE_DESCRIPTION("Optical Sensor driver for gp2ap002a00f");
