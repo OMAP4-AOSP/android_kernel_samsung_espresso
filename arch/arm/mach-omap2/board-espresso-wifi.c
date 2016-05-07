@@ -109,11 +109,6 @@ int __init espresso_init_wifi_mem(void)
 
 #define WLC_CNTRY_BUF_SZ	4
 
-/* wifi private data */
-static int espresso_wifi_cd; /* WIFI virtual 'card detect' status */
-static void (*wifi_status_cb)(int card_present, void *dev_id);
-static void *wifi_status_cb_devid;
-
 static unsigned char espresso_mac_addr[IFHWADDRLEN]
 	= { 0, 0x90, 0x4c, 0, 0, 0 };
 
@@ -125,45 +120,6 @@ static struct resource espresso_wifi_resources[] = {
 			| IORESOURCE_IRQ_SHAREABLE,
 	},
 };
-
-static int espresso_wifi_status_register(
-		void (*callback)(int card_present, void *dev_id),
-		void *dev_id)
-{
-	if (wifi_status_cb)
-		return -EAGAIN;
-
-	wifi_status_cb = callback;
-	wifi_status_cb_devid = dev_id;
-
-	return 0;
-}
-
-static unsigned int espresso_wifi_status(struct device *dev)
-{
-	return espresso_wifi_cd;
-}
-
-struct mmc_platform_data espresso_wifi_data = {
-	.ocr_mask		= MMC_VDD_165_195 | MMC_VDD_20_21,
-	.built_in		= 1,
-	.status			= espresso_wifi_status,
-	.card_present		= 0,
-	.register_status_notify	= espresso_wifi_status_register,
-};
-
-static int espresso_wifi_set_carddetect(int val)
-{
-	pr_debug("%s: %d\n", __func__, val);
-	espresso_wifi_cd = val;
-
-	if (wifi_status_cb)
-		wifi_status_cb(val, wifi_status_cb_devid);
-	else
-		pr_warning("%s: Nobody to notify\n", __func__);
-
-	return 0;
-}
 
 struct fixed_voltage_data {
 	struct regulator_desc desc;
@@ -344,7 +300,6 @@ static void *espresso_wifi_get_country_code(char *ccode)
 static struct wifi_platform_data espresso_wifi_control = {
 	.set_power		= espresso_wifi_power,
 	.set_reset		= espresso_wifi_reset,
-	.set_carddetect		= espresso_wifi_set_carddetect,
 #ifdef CONFIG_DHD_USE_STATIC_BUF
 	.mem_prealloc		= espresso_wifi_mem_prealloc,
 #else
