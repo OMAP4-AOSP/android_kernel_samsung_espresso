@@ -764,7 +764,6 @@ static struct omap_hwmod_class_sysconfig omap44xx_aess_sysc = {
 static struct omap_hwmod_class omap44xx_aess_hwmod_class = {
 	.name	= "aess",
 	.sysc	= &omap44xx_aess_sysc,
-	.enable_preprogram = omap_hwmod_aess_preprogram,
 };
 
 /* aess */
