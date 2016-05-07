@@ -38,6 +38,8 @@
 
 #include <mach/id.h>
 
+#include <asm/hardware/gic.h>
+
 #include <asm/mach-types.h>
 #include <asm/mach/arch.h>
 
@@ -417,12 +419,6 @@ static void __init espresso_init(void)
 #endif
 }
 
-static void __init espresso_map_io(void)
-{
-	omap2_set_globals_443x();
-	omap44xx_map_common_io();
-}
-
 static void __init espresso_reserve(void)
 {
 	omap_ram_console_init(OMAP_RAM_CONSOLE_START_DEFAULT,
@@ -438,9 +434,11 @@ MACHINE_START(OMAP4_ESPRESSO, "OMAP4 Espresso board")
 	/* Maintainer: Daniel Jarai */
 	.atag_offset	= 0x100,
 	.reserve	= espresso_reserve,
-	.map_io		= espresso_map_io,
+	.map_io		= omap4_map_io,
 	.init_early	= omap4430_init_early,
 	.init_irq	= gic_init_irq,
+	.handle_irq	= gic_handle_irq,
 	.init_machine	= espresso_init,
 	.timer		= &omap4_timer,
+	.restart	= omap_prcm_restart,
 MACHINE_END
