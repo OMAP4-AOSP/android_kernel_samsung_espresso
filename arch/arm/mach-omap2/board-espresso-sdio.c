@@ -60,22 +60,23 @@ static struct omap2_hsmmc_info espresso_mmc_info[] = {
 
 static int espresso_hsmmc_late_init(struct device *dev)
 {
-	int ret = 0;
+	int irq = 0;
 	struct platform_device *pdev =
 		container_of(dev, struct platform_device, dev);
 	struct omap_mmc_platform_data *pdata = dev->platform_data;
 
 	/* Setting MMC1 Card detect IRQ */
 	if (pdev->id == 0) {
-		ret = twl6030_mmc_card_detect_config();
-		if (ret)
-			pr_err("%s: failed configuring MMC1 card detect\n", __func__);
-		pdata->slots[0].card_detect_irq =
-			TWL6030_IRQ_BASE + MMCDETECT_INTR_OFFSET;
+		irq = twl6030_mmc_card_detect_config();
+		if (irq < 0) {
+			pr_err("%s: failed configuring MMC1 card detect (%d)\n",
+				__func__, irq);
+			return irq;
+		}
+		pdata->slots[0].card_detect_irq = irq;
 		pdata->slots[0].card_detect = twl6030_mmc_card_detect;
 	}
-
-	return ret;
+	return 0;
 }
 
 static void __init espresso_hsmmc_set_late_init(struct device *dev)
