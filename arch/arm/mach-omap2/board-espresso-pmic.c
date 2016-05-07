@@ -26,6 +26,8 @@
 #include <linux/mfd/wm8994/gpio.h>
 #endif
 
+#include <asm/system_info.h>
+
 #include <plat/omap-pm.h>
 #include "pm.h"
 
@@ -56,9 +58,6 @@
 #define TWL_BBSPOR_CFG_VRTC_EN_SLP_STS	(1 << 6)
 
 #define TWL6030_CFG_LDO_PD2	0xF5
-
-static bool enable_sr = true;
-module_param(enable_sr, bool, S_IRUSR | S_IRGRP | S_IROTH);
 
 #ifdef CONFIG_SND_OMAP_SOC_ESPRESSO
 static struct regulator_consumer_supply vbatt_supplies[] = {
@@ -229,21 +228,6 @@ static struct regulator_init_data espresso_vusim = {
 	},
 };
 
-static struct regulator_init_data espresso_vana = {
-	.constraints = {
-		.min_uV			= 2100000,
-		.max_uV			= 2100000,
-		.valid_modes_mask	= REGULATOR_MODE_NORMAL
-					| REGULATOR_MODE_STANDBY,
-		.valid_ops_mask		= REGULATOR_CHANGE_MODE
-					| REGULATOR_CHANGE_STATUS,
-		.always_on		= true,
-		.state_mem = {
-			.disabled	= true,
-		},
-	},
-};
-
 static struct regulator_consumer_supply espresso_vcxio_supply[] = {
 	REGULATOR_SUPPLY("vdds_dsi", "omapdss_dss"),
 	REGULATOR_SUPPLY("vdds_dsi", "omapdss_dsi1"),
@@ -286,20 +270,6 @@ static struct regulator_init_data espresso_vusb = {
 	.consumer_supplies	= espresso_vusb_supply,
 };
 
-static struct regulator_init_data espresso_clk32kg = {
-	.constraints = {
-		.valid_ops_mask	= REGULATOR_CHANGE_STATUS,
-		.always_on	= true,
-	},
-};
-
-static struct regulator_init_data espresso_clk32kaudio = {
-	.constraints = {
-		.valid_ops_mask	= REGULATOR_CHANGE_STATUS,
-		.always_on	= true,
-	},
-};
-
 static struct twl4030_madc_platform_data espresso_madc = {
 	.irq_line	= -1,
 	.features	= TWL6032_SUBCLASS,
@@ -313,6 +283,7 @@ static struct platform_device espresso_madc_device = {
 	},
 };
 
+#if 0
 static void espresso_twl6030_init(void)
 {
 	int ret;
@@ -381,6 +352,7 @@ static void espresso_twl6030_init(void)
 					__func__);
 	}
 }
+#endif
 
 static struct twl4030_resconfig espresso_rconfig[] = {
 	{ .resource = RES_LDO2, .devgroup = 0, },
@@ -390,7 +362,9 @@ static struct twl4030_resconfig espresso_rconfig[] = {
 };
 
 static struct twl4030_power_data espresso_power_data = {
+#if 0
 	.twl4030_board_init	= espresso_twl6030_init,
+#endif
 	.resource_config = espresso_rconfig,
 };
 
@@ -442,10 +416,12 @@ static struct regulator_init_data espresso_ldoln_nc = {
 	},
 };
 
+#if 0
 struct twl4030_rtc_data espresso_rtc = {
 	.auto_comp = 1,
 	.comp_value = -3200,
 };
+#endif
 
 static struct regulator_consumer_supply espresso_vdd_io_1V8_supplies[] = {
 	REGULATOR_SUPPLY("VDD_IO_1.8V", NULL),
@@ -471,14 +447,10 @@ static struct regulator_init_data espresso_ldo5 = {
 };
 
 static struct twl4030_platform_data espresso_twl6032_pdata = {
-	.irq_base	= TWL6030_IRQ_BASE,
-	.irq_end	= TWL6030_IRQ_END,
-
 	/* pmic power data*/
 	.power		= &espresso_power_data,
 
 	/* TWL6025 LDO regulators */
-	.vana		= &espresso_vana,
 	.ldo1		= &espresso_vaux1,
 	.ldo2		= &espresso_ldo2_nc,
 	.ldo3		= &espresso_vusim,
@@ -488,8 +460,6 @@ static struct twl4030_platform_data espresso_twl6032_pdata = {
 	.ldo7		= &espresso_ldo7_nc,
 	.ldoln		= &espresso_ldoln_nc,
 	.ldousb		= &espresso_vusb,
-	.clk32kg	= &espresso_clk32kg,
-	.clk32kaudio	= &espresso_clk32kaudio,
 
 	/* children */
 	.madc		= &espresso_madc,
@@ -499,18 +469,12 @@ static struct platform_device *espresso_pmic_devices[] __initdata = {
 	&espresso_madc_device,
 };
 
-static struct i2c_board_info espresso_twl6032_i2c1_board_info[] __initdata = {
-	{
-		I2C_BOARD_INFO("twl6032", 0x48),
-		.flags		= I2C_CLIENT_WAKE,
-		.irq		= OMAP44XX_IRQ_SYS_1N,
-		.platform_data	= &espresso_twl6032_pdata,
-	},
+static struct i2c_board_info espresso_i2c1_board_info[] __initdata = {
 #ifdef CONFIG_SND_OMAP_SOC_ESPRESSO
 	{
 		I2C_BOARD_INFO("wm1811", 0x34>>1),
 		.platform_data = &wm1811_pdata,
-	}
+	},
 #endif
 };
 
@@ -586,16 +550,26 @@ void __init omap4_espresso_pmic_init(void)
 	 */
 	regulator_has_full_constraints();
 
+#if 0
 	if (board_is_espresso10())
 		espresso_twl6032_pdata.rtc = &espresso_rtc;
+#endif
 
-	espresso_audio_init();
+	omap4_pmic_get_config(&espresso_twl6032_pdata, TWL_COMMON_PDATA_USB,
+			TWL_COMMON_REGULATOR_VANA |
+			TWL_COMMON_REGULATOR_CLK32KAUDIO |
+			TWL_COMMON_REGULATOR_CLK32KG);
+
+	omap4_pmic_init("twl6032", &espresso_twl6032_pdata,
+			NULL, OMAP44XX_IRQ_SYS_2N);
+
+	i2c_register_board_info(1, espresso_i2c1_board_info,
+		ARRAY_SIZE(espresso_i2c1_board_info));
 
 	platform_add_devices(espresso_pmic_devices,
-			ARRAY_SIZE(espresso_pmic_devices));
+		ARRAY_SIZE(espresso_pmic_devices));
 
-	i2c_register_board_info(1, espresso_twl6032_i2c1_board_info,
-			ARRAY_SIZE(espresso_twl6032_i2c1_board_info));
+	espresso_audio_init();
 
 	/*
 	 * Register fixed regulators to control external LDO.
@@ -609,8 +583,7 @@ void __init omap4_espresso_pmic_init(void)
 	gpio_request(GPIO_SYS_DRM_MSEC, "SYS_DRM_MSEC");
 	gpio_direction_output(GPIO_SYS_DRM_MSEC, 1);
 
-	if (enable_sr)
-		omap_enable_smartreflex_on_init();
+	omap_enable_smartreflex_on_init();
 
 	/* enable off-mode */
 	omap_pm_enable_off_mode();
