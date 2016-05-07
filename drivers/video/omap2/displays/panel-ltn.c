@@ -20,6 +20,7 @@
  * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
+#include <linux/module.h>
 #include <linux/wait.h>
 #include <linux/fb.h>
 #include <linux/delay.h>
@@ -35,7 +36,6 @@
 #include <plat/hardware.h>
 #include <video/omapdss.h>
 #include <asm/mach-types.h>
-#include <mach/omap4-common.h>
 
 #include <plat/dmtimer.h>
 
@@ -404,7 +404,6 @@ static int ltn_start(struct omap_dss_device *dssdev)
 		dssdev->state = OMAP_DSS_DISPLAY_DISABLED;
 	} else {
 		dssdev->state = OMAP_DSS_DISPLAY_ACTIVE;
-		dssdev->manager->enable(dssdev->manager);
 	}
 
 	return r;
@@ -416,8 +415,6 @@ static void ltn_stop(struct omap_dss_device *dssdev)
 		return;
 
 	dev_dbg(&dssdev->dev, "stop\n");
-
-	dssdev->manager->disable(dssdev->manager);
 
 	ltn_power_off(dssdev);
 }
