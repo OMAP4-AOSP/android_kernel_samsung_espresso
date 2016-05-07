@@ -490,7 +490,7 @@ static struct i2c_board_info espresso_i2c1_board_info[] __initdata = {
 
 static struct fixed_voltage_config espresso_vmmc_config = {
 	.supply_name		= "vmmc",
-	.microvolts		= 2800000, /* 2.8V */
+	.microvolts		= 1800000, /* 1.8V */
 	.gpio			= GPIO_TF_EN,
 	.startup_delay		= 0,
 	.enable_high		= 1,
