@@ -46,6 +46,7 @@
 #include <asm/mach/arch.h>
 
 #include "board-espresso.h"
+#include "common.h"
 #include "control.h"
 #include "mux.h"
 #include "omap_ram_console.h"
@@ -94,8 +95,7 @@ static struct platform_device *espresso_devices[] __initdata = {
 
 static void __init espresso_init_early(void)
 {
-	omap2_init_common_infrastructure();
-	omap2_init_common_devices(NULL, NULL);
+	omap4430_init_early();
 
 	omap4_espresso_display_early_init();
 }
