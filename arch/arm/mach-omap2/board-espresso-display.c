@@ -73,11 +73,6 @@ static struct omap_dss_device espresso_lcd_device = {
 	.phy.dpi.data_lines	= 24,
 	.data			= &espresso_panel_data,
 	.channel		= OMAP_DSS_CHANNEL_LCD2,
-#ifdef CONFIG_FB_OMAP_BOOTLOADER_INIT
-	.skip_init		= true,
-#else
-	.skip_init		= false,
-#endif
 	.panel = {
 		.timings	= {
 			.x_res		= 1024,
@@ -123,6 +118,22 @@ static struct omap_dss_board_info espresso_dss_data = {
 	.default_device	= &espresso_lcd_device,
 };
 
+static struct dsscomp_platform_data espresso_dsscomp_config = {
+	.tiler1d_slotsz = SZ_16M,
+};
+
+static struct sgx_omaplfb_config espresso_omaplfb_config[] = {
+	{
+		.vram_buffers = 4,
+		.swap_chain_length = 2,
+	},
+};
+
+static struct sgx_omaplfb_platform_data espresso_omaplfb_plat_data = {
+	.num_configs = ARRAY_SIZE(espresso_omaplfb_config),
+	.configs = espresso_omaplfb_config,
+};
+
 static struct omapfb_platform_data espresso_fb_pdata = {
 	.mem_desc = {
 		.region_cnt = 1,
@@ -135,10 +146,9 @@ void __init omap4_espresso_memory_display_init(void)
 		espresso_dss_data.devices[0]->panel = espresso10_lcd_config.panel;
 
 	omap_android_display_setup(&espresso_dss_data,
-				   NULL,
-				   NULL,
-				   &espresso_fb_pdata,
-				   get_omap_ion_platform_data());
+				   &espresso_dsscomp_config,
+				   &espresso_omaplfb_plat_data,
+				   &espresso_fb_pdata);
 }
 
 void __init omap4_espresso_display_early_init(void)
