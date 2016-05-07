@@ -46,6 +46,7 @@
 #include <asm/mach/arch.h>
 
 #include "board-espresso.h"
+#include "common.h"
 #include "control.h"
 #include "mux.h"
 #include "omap_ram_console.h"
@@ -91,12 +92,6 @@ static struct platform_device bcm4330_bluetooth_device = {
 static struct platform_device *espresso_devices[] __initdata = {
 	&bcm4330_bluetooth_device,
 };
-
-static void __init espresso_init_early(void)
-{
-	omap2_init_common_infrastructure();
-	omap2_init_common_devices(NULL, NULL);
-}
 
 static struct omap_musb_board_data musb_board_data = {
 	.interface_type	= MUSB_INTERFACE_UTMI,
@@ -473,7 +468,7 @@ MACHINE_START(OMAP4_ESPRESSO, "OMAP4 Espresso board")
 	.boot_params	= 0x80000100,
 	.reserve	= espresso_reserve,
 	.map_io		= espresso_map_io,
-	.init_early	= espresso_init_early,
+	.init_early	= omap4430_init_early,
 	.init_irq	= gic_init_irq,
 	.init_machine	= espresso_init,
 	.timer		= &omap_timer,
