@@ -582,14 +582,12 @@ static void espresso_30pin_detected(int device, bool connected)
 		break;
 	case P30_JIG:
 		if (connected) {
-			check_jig_status(1);
 			if (espresso_otg->uart_manual_mode ==
 					ESPRESSO_MANUAL_UART_MODEM)
 				espresso_cp_uart_actions();
 			else
 				espresso_ap_uart_actions();
-		} else
-			check_jig_status(0);
+		}
 		break;
 	case P30_USB:
 		if (connected)
