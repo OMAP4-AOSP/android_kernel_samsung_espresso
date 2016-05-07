@@ -514,6 +514,7 @@ static struct regulator_consumer_supply espresso_vmmc_external_supplies = {
 static struct regulator_init_data espresso_vmmc_external_data = {
 	.constraints = {
 		.valid_ops_mask	= REGULATOR_CHANGE_STATUS,
+		.always_on	= 1,
 	},
 	.num_consumer_supplies	= 1,
 	.consumer_supplies = &espresso_vmmc_external_supplies,
