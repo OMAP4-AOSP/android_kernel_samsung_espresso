@@ -578,7 +578,7 @@ static void __init espresso_audio_init(void)
 void __init omap4_espresso_pmic_init(void)
 {
 	/* Update oscillator information */
-	omap_pm_set_osc_lp_time(15000, 1);
+	omap_pm_setup_oscillator(15000, 1);
 
 	/*
 	 * This will allow unused regulator to be shutdown. This flag
