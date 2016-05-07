@@ -33,6 +33,8 @@ static struct omap2_hsmmc_info espresso_mmc_info[] = {
 		.ocr_mask	= MMC_VDD_165_195,
 		.gpio_wp	= -EINVAL,
 		.gpio_cd	= -EINVAL,
+		.no_off_init	= true,
+		.built_in	= 1,
 	},
 	{
 		.mmc		= 1,
@@ -48,6 +50,7 @@ static struct omap2_hsmmc_info espresso_mmc_info[] = {
 		.gpio_cd	= -EINVAL,
 		.ocr_mask	= MMC_VDD_165_195 | MMC_VDD_20_21,
 		.nonremovable	= false,
+		.built_in	= 1,
 #if 0
 		.mmc_data	= &espresso_wifi_data,
 #endif
