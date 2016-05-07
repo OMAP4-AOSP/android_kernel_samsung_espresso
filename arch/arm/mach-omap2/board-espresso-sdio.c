@@ -91,9 +91,9 @@ static void __init espresso_hsmmc_init(struct omap2_hsmmc_info *controllers)
 {
 	struct omap2_hsmmc_info *c;
 
-	omap2_hsmmc_init(controllers);
+	omap_hsmmc_init(controllers);
 	for (c = controllers; c->mmc; c++)
-		espresso_hsmmc_set_late_init(c->dev);
+		espresso_hsmmc_set_late_init(&c->pdev->dev);
 }
 
 void __init omap4_espresso_sdio_init(void)
