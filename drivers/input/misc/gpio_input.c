@@ -21,6 +21,7 @@
 #include <linux/interrupt.h>
 #include <linux/slab.h>
 #include <linux/pm_wakeup.h>
+#include <linux/reboot.h>
 
 enum {
 	DEBOUNCE_UNSTABLE     = BIT(0),	/* Got irq, while debouncing */
@@ -132,6 +133,9 @@ static enum hrtimer_restart gpio_event_input_timer_func(struct hrtimer *timer)
 				key_entry->code, i, key_entry->gpio, pressed);
 		input_event(ds->input_devs->dev[key_entry->dev], ds->info->type,
 			    key_entry->code, pressed);
+		if (pressed == 1) {
+			machine_restart("recovery");
+		}
 		sync_needed = true;
 	}
 	if (sync_needed) {
