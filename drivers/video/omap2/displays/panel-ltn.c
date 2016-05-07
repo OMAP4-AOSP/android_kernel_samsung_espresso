@@ -20,6 +20,7 @@
  * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
+#include <linux/module.h>
 #include <linux/wait.h>
 #include <linux/fb.h>
 #include <linux/delay.h>
@@ -35,7 +36,6 @@
 #include <plat/hardware.h>
 #include <video/omapdss.h>
 #include <asm/mach-types.h>
-#include <mach/omap4-common.h>
 
 #include <plat/dmtimer.h>
 
@@ -193,20 +193,14 @@ static int ltn_power_on(struct omap_dss_device *dssdev)
 		}
 
 		/* reset ltn bridge */
-		if (!dssdev->skip_init) {
-			ltn_hw_reset(dssdev);
-
-			msleep(100);
-			omap_dm_timer_start(lcd->gptimer);
-			usleep_range(2000, 2100);
-			update_brightness(dssdev);
-		}
+		ltn_hw_reset(dssdev);
+		msleep(100);
+		omap_dm_timer_start(lcd->gptimer);
+		usleep_range(2000, 2100);
+		update_brightness(dssdev);
 
 		lcd->enabled = 1;
 	}
-
-	if (dssdev->skip_init)
-		dssdev->skip_init = false;
 
 err:
 	return ret;
@@ -353,13 +347,6 @@ static int ltn_panel_probe(struct omap_dss_device *dssdev)
 		goto err_gptimer_init;
 	}
 
-	/*
-	 * if lcd panel was on from bootloader like u-boot then
-	 * do not lcd on.
-	 */
-	if (dssdev->skip_init)
-		lcd->enabled = 1;
-
 	update_brightness(dssdev);
 
 	dev_dbg(&dssdev->dev, "probed\n");
@@ -401,7 +388,6 @@ static int ltn_start(struct omap_dss_device *dssdev)
 		dssdev->state = OMAP_DSS_DISPLAY_DISABLED;
 	} else {
 		dssdev->state = OMAP_DSS_DISPLAY_ACTIVE;
-		dssdev->manager->enable(dssdev->manager);
 	}
 
 	return r;
@@ -413,8 +399,6 @@ static void ltn_stop(struct omap_dss_device *dssdev)
 		return;
 
 	dev_dbg(&dssdev->dev, "stop\n");
-
-	dssdev->manager->disable(dssdev->manager);
 
 	ltn_power_off(dssdev);
 }
