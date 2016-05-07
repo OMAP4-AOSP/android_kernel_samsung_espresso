@@ -436,11 +436,11 @@ static void __init espresso_reserve(void)
 
 MACHINE_START(OMAP4_ESPRESSO, "OMAP4 Espresso board")
 	/* Maintainer: Daniel Jarai */
-	.boot_params	= 0x80000100,
+	.atag_offset	= 0x100,
 	.reserve	= espresso_reserve,
 	.map_io		= espresso_map_io,
 	.init_early	= omap4430_init_early,
 	.init_irq	= gic_init_irq,
 	.init_machine	= espresso_init,
-	.timer		= &omap_timer,
+	.timer		= &omap4_timer,
 MACHINE_END
