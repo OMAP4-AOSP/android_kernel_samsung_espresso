@@ -77,8 +77,6 @@
 #define REBOOT_FLAG_POWER_OFF	(1 << 4)
 #define REBOOT_FLAG_DOWNLOAD	(1 << 5)
 
-#define ESPRESSO_RAM_CONSOLE_START	(PLAT_PHYS_OFFSET + SZ_512M)
-
 #define ESPRESSO_ATTR_RO(_type, _name, _show) \
 	struct kobj_attribute espresso_##_type##_prop_attr_##_name = \
 		__ATTR(_name, S_IRUGO, _show, NULL)
@@ -458,7 +456,7 @@ static void __init espresso_reserve(void)
 #endif
 	/* do the static reservations first */
 #ifdef CONFIG_OMAP_RAM_CONSOLE
-	omap_ram_console_init(ESPRESSO_RAM_CONSOLE_START,
+	omap_ram_console_init(OMAP_RAM_CONSOLE_START_DEFAULT,
 				OMAP_RAM_CONSOLE_SIZE_DEFAULT);
 #endif
 	memblock_remove(PHYS_ADDR_SMC_MEM, PHYS_ADDR_SMC_SIZE);
