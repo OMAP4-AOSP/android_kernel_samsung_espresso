@@ -418,9 +418,11 @@ static void __init espresso_init(void)
 	omap4_espresso_jack_init();
 	omap4_espresso_none_modem_init();
 
+#if 0
 #ifdef CONFIG_OMAP_HSI_DEVICE
 	/* Allow HSI omap_device to be registered later */
 	omap_hsi_allow_registration();
+#endif
 #endif
 }
 

@@ -74,7 +74,6 @@ void omap4_espresso_serial_init(void);
 
 /** @category MMCHS, WiFi */
 void omap4_espresso_sdio_init(void);
-extern struct mmc_platform_data espresso_wifi_data;
 
 /** @category WiFi */
 void omap4_espresso_wifi_init(void);
