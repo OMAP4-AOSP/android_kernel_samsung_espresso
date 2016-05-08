@@ -38,6 +38,20 @@ static void espresso_lcd_set_power(bool enable)
 	gpio_set_value(GPIO_LCD_EN, enable);
 }
 
+static int espresso_lcd_enable(struct omap_dss_device *dssdev)
+{
+	pr_debug("%s\n", __func__);
+	gpio_set_value(GPIO_LCD_EN, 1);
+
+	return 0;
+}
+
+static void espresso_lcd_disable(struct omap_dss_device *dssdev)
+{
+	pr_debug("%s\n", __func__);
+	gpio_set_value(GPIO_LCD_EN, 0);
+}
+
 static struct ltn_panel_data espresso_panel_data = {
 	.set_power			= espresso_lcd_set_power,
 	.lvds_nshdn_gpio		= GPIO_LVDS_NSHDN,
@@ -58,6 +72,8 @@ static struct omap_dss_device espresso_lcd_device = {
 	.data			= &espresso_panel_data,
 	.channel		= OMAP_DSS_CHANNEL_LCD2,
 	.skip_init		= false,
+	.platform_enable	= espresso_lcd_enable,
+	.platform_disable	= espresso_lcd_disable,
 	.panel = {
 		.timings	= {
 			.x_res		= 1024,
