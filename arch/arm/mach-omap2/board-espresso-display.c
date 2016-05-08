@@ -18,7 +18,6 @@
 #include <linux/gpio.h>
 #include <linux/kernel.h>
 #include <linux/omapfb.h>
-#include <linux/regulator/consumer.h>
 #include <linux/platform_data/panel-ltn.h>
 
 #include <plat/omap_hwmod.h>
@@ -27,11 +26,6 @@
 #include <video/omapdss.h>
 
 #include "board-espresso.h"
-
-#ifdef CONFIG_FB_OMAP_BOOTLOADER_INIT
-#include <plat/clock.h>
-#include <linux/clk.h>
-#endif
 
 #define GPIO_LED_BACKLIGHT_RESET	95
 #define GPIO_LCD_EN			135
@@ -140,7 +134,7 @@ static struct dsscomp_platform_data espresso_dsscomp_config = {
 
 static struct sgx_omaplfb_config espresso_omaplfb_config[] = {
 	{
-		.vram_buffers = 4,
+		.tiler2d_buffers = 2,
 		.swap_chain_length = 2,
 	},
 };
@@ -152,7 +146,7 @@ static struct sgx_omaplfb_platform_data espresso_omaplfb_plat_data = {
 
 static struct omapfb_platform_data espresso_fb_pdata = {
 	.mem_desc = {
-		.region_cnt = 1,
+		.region_cnt = ARRAY_SIZE(espresso_omaplfb_config),
 	},
 };
 
@@ -193,29 +187,19 @@ void __init omap4_espresso_display_early_init(void)
 void __init omap4_espresso_display_init(void)
 {
 	int ret;
-#ifdef CONFIG_FB_OMAP_BOOTLOADER_INIT
-	struct clk *dss_dss_fclk;
-#endif
 
 	if (board_is_espresso10())
 		espresso_panel_data.pwm_duty_max = 1600; /* 25kHz */
 	else
 		espresso_panel_data.pwm_duty_max = 1200; /* 32kHz */
 
-#ifdef CONFIG_FB_OMAP_BOOTLOADER_INIT
-	dss_dss_fclk = omap_clk_get_by_name("dss_dss_clk");
-	if (IS_ERR(dss_dss_fclk)) {
-		pr_err("Could not get dss functional clock\n");
-		/* return -ENOENT; */
-	 }
-	 clk_enable(dss_dss_fclk);
-#endif
-
 	ret = gpio_request(GPIO_LCD_EN, "lcd_en");
 	if (ret < 0)
 		pr_err("%s: gpio_request %d failed!\n", __func__, GPIO_LCD_EN);
 
 	gpio_direction_output(GPIO_LCD_EN, 1);
+
+	omapfb_set_platform_data(&espresso_fb_pdata);
 
 	omap_display_init(&espresso_dss_data);
 }
