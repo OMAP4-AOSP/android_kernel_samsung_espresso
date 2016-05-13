@@ -45,7 +45,6 @@
 
 #define CHARGER_STATUS_FULL	0x1
 
-#define CABLE_DETECT_VALUE	1150
 #define HIGH_BLOCK_TEMP	500
 #define HIGH_RECOVER_TEMP	420
 #define LOW_BLOCK_TEMP		(-50)
@@ -180,6 +179,24 @@ static const __initdata struct i2c_board_info max17042_i2c[] = {
 		.platform_data = &max17042_pdata,
 	},
 };
+
+int check_charger_type(void)
+{
+	int cable_type;
+	short adc;
+
+	adc = omap4_espresso_get_adc(ADC_CHECK_1);
+	cable_type = adc > CABLE_DETECT_VALUE ?
+			CABLE_TYPE_AC :
+			CABLE_TYPE_USB;
+
+	pr_info("%s: Charger type is [%s], adc = %d\n",
+		__func__,
+		cable_type == CABLE_TYPE_AC ? "AC" : "USB",
+		adc);
+
+	return cable_type;
+}
 
 void __init omap4_espresso_charger_init(void)
 {
