@@ -150,29 +150,6 @@ void __init omap4_espresso_memory_display_init(void)
 				   &espresso_fb_pdata);
 }
 
-void __init omap4_espresso_display_early_init(void)
-{
-	struct omap_hwmod *timer10_hwmod;
-	struct omap_hwmod *gpio3_hwmod;
-	struct omap_hwmod *gpio5_hwmod;
-
-	/* correct timer10 hwmod flag settings for espresso board. */
-	timer10_hwmod = omap_hwmod_lookup("timer10");
-	if (likely(timer10_hwmod))
-		timer10_hwmod->flags =
-			(HWMOD_INIT_NO_IDLE | HWMOD_INIT_NO_RESET);
-
-	/* correct gpio3 hwmod flag settings for espresso board. */
-	gpio3_hwmod = omap_hwmod_lookup("gpio3");
-	if (likely(gpio3_hwmod))
-		gpio3_hwmod->flags = HWMOD_INIT_NO_RESET;
-
-	/* correct gpio5 hwmod flag settings for espresso board. */
-	gpio5_hwmod = omap_hwmod_lookup("gpio5");
-	if (likely(gpio5_hwmod))
-		gpio5_hwmod->flags = HWMOD_INIT_NO_RESET;
-}
-
 void __init omap4_espresso_display_init(void)
 {
 	int ret;

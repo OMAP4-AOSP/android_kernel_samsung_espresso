@@ -95,13 +95,6 @@ static struct platform_device *espresso_devices[] __initdata = {
 	&bcm4330_bluetooth_device,
 };
 
-static void __init espresso_init_early(void)
-{
-	omap4430_init_early();
-
-	omap4_espresso_display_early_init();
-}
-
 static struct omap_musb_board_data musb_board_data = {
 	.interface_type	= MUSB_INTERFACE_UTMI,
 #ifdef CONFIG_USB_MUSB_OTG
@@ -445,7 +438,7 @@ MACHINE_START(OMAP4_ESPRESSO, "OMAP4 Espresso board")
 	.atag_offset	= 0x100,
 	.reserve	= espresso_reserve,
 	.map_io		= omap4_map_io,
-	.init_early	= espresso_init_early,
+	.init_early	= omap4430_init_early,
 	.init_irq	= gic_init_irq,
 	.handle_irq	= gic_handle_irq,
 	.init_machine	= espresso_init,
