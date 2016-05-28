@@ -199,8 +199,8 @@ static int ltn_power_on(struct omap_dss_device *dssdev)
 	dev_dbg(&dssdev->dev, "%s\n", __func__);
 
 	if (lcd->enabled != 1) {
-		if (lcd->pdata->set_power)
-			lcd->pdata->set_power(true);
+		if (dssdev->platform_enable)
+			dssdev->platform_enable(dssdev);
 
 		ret = omapdss_dpi_display_enable(dssdev);
 		if (ret) {
@@ -240,8 +240,8 @@ static int ltn_power_off(struct omap_dss_device *dssdev)
 
 	gpio_set_value(lcd->pdata->led_backlight_reset_gpio, 0);
 
-	if (lcd->pdata->set_power)
-		lcd->pdata->set_power(false);
+	if (dssdev->platform_disable)
+		dssdev->platform_disable(dssdev);
 
 	msleep(300);
 
