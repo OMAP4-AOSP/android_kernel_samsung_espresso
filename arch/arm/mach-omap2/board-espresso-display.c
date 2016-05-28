@@ -31,16 +31,6 @@
 #define GPIO_LCD_EN			135
 #define GPIO_LVDS_NSHDN		136
 
-static void espresso_lcd_set_gptimer_idle(void)
-{
-	struct omap_hwmod *timer10_hwmod;
-	pr_debug("espresso_lcd_set_gptimer_idle\n");
-
-	timer10_hwmod = omap_hwmod_lookup("timer10");
-	if (likely(timer10_hwmod))
-		omap_hwmod_idle(timer10_hwmod);
-}
-
 static int espresso_lcd_enable(struct omap_dss_device *dssdev)
 {
 	pr_debug("%s\n", __func__);
@@ -56,7 +46,6 @@ static void espresso_lcd_disable(struct omap_dss_device *dssdev)
 }
 
 static struct ltn_panel_data espresso_panel_data = {
-	.set_gptimer_idle		= espresso_lcd_set_gptimer_idle,
 	.lvds_nshdn_gpio		= GPIO_LVDS_NSHDN,
 	.led_backlight_reset_gpio	= GPIO_LED_BACKLIGHT_RESET,
 	.backlight_gptimer_num		= 10,
