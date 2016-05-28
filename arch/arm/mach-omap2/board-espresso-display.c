@@ -31,12 +31,6 @@
 #define GPIO_LCD_EN			135
 #define GPIO_LVDS_NSHDN		136
 
-static void espresso_lcd_set_power(bool enable)
-{
-	pr_debug("%s: %d\n", __func__, enable);
-	gpio_set_value(GPIO_LCD_EN, enable);
-}
-
 static void espresso_lcd_set_gptimer_idle(void)
 {
 	struct omap_hwmod *timer10_hwmod;
@@ -62,7 +56,6 @@ static void espresso_lcd_disable(struct omap_dss_device *dssdev)
 }
 
 static struct ltn_panel_data espresso_panel_data = {
-	.set_power			= espresso_lcd_set_power,
 	.set_gptimer_idle		= espresso_lcd_set_gptimer_idle,
 	.lvds_nshdn_gpio		= GPIO_LVDS_NSHDN,
 	.led_backlight_reset_gpio	= GPIO_LED_BACKLIGHT_RESET,
