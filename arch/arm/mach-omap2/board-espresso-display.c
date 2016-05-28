@@ -128,10 +128,6 @@ static struct omap_dss_board_info espresso_dss_data = {
 	.default_device	= &espresso_lcd_device,
 };
 
-static struct dsscomp_platform_data espresso_dsscomp_config = {
-	.tiler1d_slotsz = SZ_16M,
-};
-
 static struct sgx_omaplfb_config espresso_omaplfb_config[] = {
 	{
 		.tiler2d_buffers = 2,
@@ -156,7 +152,7 @@ void __init omap4_espresso_memory_display_init(void)
 		espresso_dss_data.devices[0]->panel = espresso10_lcd_config.panel;
 
 	omap_android_display_setup(&espresso_dss_data,
-				   &espresso_dsscomp_config,
+				   NULL,
 				   &espresso_omaplfb_plat_data,
 				   &espresso_fb_pdata);
 }
