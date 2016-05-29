@@ -34,6 +34,7 @@
 #include <linux/battery.h>
 #include <linux/irq.h>
 #include <linux/usb/omap4_usb_phy.h>
+#include <linux/power_supply.h>
 
 #include <plat/usb.h>
 
@@ -631,24 +632,49 @@ static void espresso_30pin_detected(int device, bool connected)
 static void omap4_espresso_usb_detected(int cable_type)
 {
 	struct omap4_otg *espresso_otg = &espresso_otg_xceiv;
+	struct power_supply *smb347_usb = power_supply_get_by_name("smb347-usb");
+	struct power_supply *smb347_mains = power_supply_get_by_name("smb347-mains");
+	union power_supply_propval usb_online = { cable_type == CABLE_TYPE_USB ? 1 : 0 };
+	union power_supply_propval ac_online = { cable_type == CABLE_TYPE_AC ? 1 : 0 };
+
+	if (smb347_usb) {
+		smb347_usb->set_property(
+			smb347_usb,
+			POWER_SUPPLY_PROP_ONLINE,
+			&usb_online);
+		smb347_usb->set_property(
+			smb347_usb,
+			POWER_SUPPLY_PROP_USB_HC,
+			&ac_online);
+	}
 
 	switch (cable_type) {
 	case CABLE_TYPE_USB:
 		espresso_30pin_detected(P30_USB, 1);
 		break;
 	case CABLE_TYPE_AC:
+		if (smb347_mains)
+			smb347_mains->set_property(
+				smb347_mains,
+				POWER_SUPPLY_PROP_ONLINE,
+				&ac_online);
 		espresso_30pin_detected(P30_TA, 1);
 		break;
 	case CABLE_TYPE_NONE:
-		if (espresso_otg->current_device & BIT(P30_USB))
+		if (espresso_otg->current_device & BIT(P30_USB)) {
 			espresso_30pin_detected(P30_USB, 0);
-		else
+		} else {
+			if (smb347_mains)
+				smb347_mains->set_property(
+					smb347_mains,
+					POWER_SUPPLY_PROP_ONLINE,
+					&ac_online);
 			espresso_30pin_detected(P30_TA, 0);
+		}
 		break;
 	default:
 		pr_warning("wrong usb detected information!\n");
 		break;
-
 	}
 }
 
