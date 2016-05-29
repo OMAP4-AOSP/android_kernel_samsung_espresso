@@ -134,6 +134,10 @@ static struct max17042_platform_data max17042_pdata = {
 	.enable_current_sense = true,
 	.r_sns = 10000,
 	.enable_por_init = false,
+	.vmin = 2500000,
+	.vmax = 4300000,
+	.temp_min = -50,
+	.temp_max = 500,
 };
 
 static const __initdata struct i2c_board_info max17042_i2c[] = {
