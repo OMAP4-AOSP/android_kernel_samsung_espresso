@@ -44,45 +44,14 @@
 #define GPIO_FUEL_SDA		62
 #define GPIO_FUEL_SCL		61
 
+#define IRQ_FUEL_ALERT		204
+
 #define CHARGER_STATUS_FULL	0x1
 
 #define HIGH_BLOCK_TEMP	500
 #define HIGH_RECOVER_TEMP	420
 #define LOW_BLOCK_TEMP		(-50)
 #define LOW_RECOVER_TEMP	0
-
-static irqreturn_t fuel_alert_isr(int irq, void *_data)
-{
-	int val;
-
-	val = gpio_get_value(GPIO_FUEL_ALERT);
-	pr_info("%s: fuel alert interrupt occured : %d\n", __func__, val);
-
-	return IRQ_HANDLED;
-}
-
-static void charger_gpio_init(void)
-{
-	int fuel_irq;
-	int ret;
-	struct gpio charger_gpios[] = {
-		{
-			.flags = GPIOF_IN,
-			.gpio  = GPIO_FUEL_ALERT,
-			.label = "FUEL_ALERT"
-		},
-	};
-
-	gpio_request_array(charger_gpios, ARRAY_SIZE(charger_gpios));
-
-	fuel_irq = gpio_to_irq(GPIO_FUEL_ALERT);
-	ret = request_threaded_irq(fuel_irq, NULL, fuel_alert_isr,
-			IRQF_TRIGGER_FALLING,
-			"Fuel Alert irq", NULL);
-	if (unlikely(ret < 0))
-		pr_err("%s: request fuel alert irq %d failed for gpio %d\n",
-			__func__, fuel_irq, GPIO_FUEL_ALERT);
-}
 
 static struct i2c_gpio_platform_data espresso_gpio_i2c5_pdata = {
 	.udelay = 10,
@@ -171,6 +140,7 @@ static const __initdata struct i2c_board_info max17042_i2c[] = {
 	{
 		I2C_BOARD_INFO("max17042", 0x36),
 		.platform_data = &max17042_pdata,
+		.irq = IRQ_FUEL_ALERT,
 	},
 };
 
@@ -198,8 +168,6 @@ int check_charger_type(void)
 void __init omap4_espresso_charger_init(void)
 {
 	int ret;
-
-	charger_gpio_init();
 
 	if (!gpio_is_valid(GPIO_TA_NCONNECTED))
 		gpio_request(GPIO_TA_NCONNECTED, "TA_nCONNECTED");
