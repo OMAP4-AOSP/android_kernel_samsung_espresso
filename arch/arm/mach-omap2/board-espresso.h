@@ -86,7 +86,7 @@ void bcm_bt_lpm_exit_lpm_locked(struct uart_port *uport);
 void omap4_espresso_charger_init(void);
 
 /** @category modem*/
-void omap4_espresso_none_modem_init(void);
+void omap4_espresso_modem_init(void);
 
 void check_jig_status(int status);
 
