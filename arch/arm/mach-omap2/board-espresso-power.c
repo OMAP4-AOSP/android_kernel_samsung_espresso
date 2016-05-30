@@ -111,7 +111,7 @@ static struct smb347_charger_platform_data smb347_charger_pdata = {
 	.use_usb_otg		= false,
 	.disable_automatic_recharge = false,
 	.irq_gpio		= GPIO_TA_NCHG,
-	.disable_stat_interrupts = true,
+	.disable_stat_interrupts = false,
 	.enable_control		= SMB347_CHG_ENABLE_PIN_ACTIVE_LOW,
 	.usb_mode_pin_ctrl	= false,
 	.supplied_to		= espresso_battery,
@@ -169,6 +169,32 @@ int check_charger_type(void)
 		adc);
 
 	return cable_type;
+}
+
+void omap4_espresso_update_charger(int cable_type)
+{
+	struct power_supply *smb347_usb = power_supply_get_by_name("smb347-usb");
+	struct power_supply *smb347_mains = power_supply_get_by_name("smb347-mains");
+	union power_supply_propval usb_online = { cable_type == CABLE_TYPE_USB ? 1 : 0 };
+	union power_supply_propval ac_online = { cable_type == CABLE_TYPE_AC ? 1 : 0 };
+
+	if (smb347_mains && smb347_mains->set_property) {
+		smb347_mains->set_property(
+			smb347_mains,
+			POWER_SUPPLY_PROP_ONLINE,
+			&ac_online);
+	}
+
+	if (smb347_usb && smb347_usb->set_property) {
+		smb347_usb->set_property(
+			smb347_usb,
+			POWER_SUPPLY_PROP_ONLINE,
+			&usb_online);
+		smb347_usb->set_property(
+			smb347_usb,
+			POWER_SUPPLY_PROP_USB_HC,
+			&ac_online);
+	}
 }
 
 void __init omap4_espresso_charger_init(void)
