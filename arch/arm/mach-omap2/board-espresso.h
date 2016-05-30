@@ -83,6 +83,7 @@ void bcm_bt_lpm_exit_lpm_locked(struct uart_port *uport);
 
 /** @category charger */
 void omap4_espresso_charger_init(void);
+void omap4_espresso_update_charger(int cable_type);
 
 /** @category modem*/
 void omap4_espresso_modem_init(void);
