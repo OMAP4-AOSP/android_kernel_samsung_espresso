@@ -51,6 +51,7 @@ static struct omap2_hsmmc_info espresso_mmc_info[] = {
 		.gpio_cd	= -EINVAL,
 		.ocr_mask	= MMC_VDD_165_195 | MMC_VDD_20_21,
 		.nonremovable	= false,
+		.mmc_data	= &espresso_wifi_data,
 	},
 	{}	/* Terminator */
 };
