@@ -44,6 +44,7 @@ static struct omap2_hsmmc_info espresso_mmc_info[] = {
 		.name		= "omap_wlan",
 		.mmc		= 5,
 		.caps		= MMC_CAP_4_BIT_DATA,
+		.caps2		= MMC_CAP2_BROKEN_VOLTAGE,
 		.gpio_wp	= -EINVAL,
 		.gpio_cd	= -EINVAL,
 		.ocr_mask	= MMC_VDD_165_195 | MMC_VDD_20_21,
