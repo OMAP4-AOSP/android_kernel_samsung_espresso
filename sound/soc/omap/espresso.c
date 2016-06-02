@@ -628,7 +628,7 @@ static struct snd_soc_dai_link omap4_dai[] = {
 {
 	.name = "MCBSP AIF1",
 	.stream_name = "HIFI MCBSP Tx/RX",
-	.cpu_dai_name = "omap-mcbsp.2",
+	.cpu_dai_name = "omap-mcbsp.3",
 	.codec_dai_name = "wm8994-aif1",
 	.platform_name = "omap-pcm-audio",
 	.codec_name = "wm8994-codec",
