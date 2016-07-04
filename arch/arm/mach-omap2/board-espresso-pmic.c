@@ -168,8 +168,9 @@ static struct regulator_init_data espresso_vaux1 = {
 					| REGULATOR_MODE_STANDBY,
 		.valid_ops_mask		= REGULATOR_CHANGE_MODE
 					| REGULATOR_CHANGE_STATUS,
+		.always_on		= true,
 		.state_mem = {
-			.disabled = true,
+			.enabled	= true,
 		},
 	},
 };
@@ -190,9 +191,6 @@ static struct regulator_init_data espresso_vaux2 = {
 		.valid_ops_mask		= REGULATOR_CHANGE_VOLTAGE
 					| REGULATOR_CHANGE_MODE
 					| REGULATOR_CHANGE_STATUS,
-		.state_mem = {
-			.enabled = true,
-		},
 	},
 	.num_consumer_supplies	= ARRAY_SIZE(espresso_vaux2_supplies),
 	.consumer_supplies	= espresso_vaux2_supplies,
@@ -229,6 +227,21 @@ static struct regulator_init_data espresso_vusim = {
 		.always_on		= true,
 		.state_mem = {
 			.enabled        = true,
+		},
+	},
+};
+
+static struct regulator_init_data espresso_vana = {
+	.constraints = {
+		.min_uV			= 2100000,
+		.max_uV			= 2100000,
+		.valid_modes_mask	= REGULATOR_MODE_NORMAL
+					| REGULATOR_MODE_STANDBY,
+		.valid_ops_mask		= REGULATOR_CHANGE_MODE
+					| REGULATOR_CHANGE_STATUS,
+		.always_on		= true,
+		.state_mem = {
+			.enabled	= true,
 		},
 	},
 };
@@ -440,13 +453,9 @@ static struct regulator_init_data espresso_ldo5 = {
 		.min_uV = 1800000,
 		.max_uV = 1800000,
 		.apply_uV = true,
-		.valid_modes_mask	= REGULATOR_MODE_NORMAL
-					| REGULATOR_MODE_STANDBY,
+		.valid_modes_mask	= REGULATOR_MODE_NORMAL,
 		.valid_ops_mask		= REGULATOR_CHANGE_MODE
 					| REGULATOR_CHANGE_STATUS,
-		.state_mem = {
-			.disabled = true,
-		},
 	},
 	.num_consumer_supplies	= ARRAY_SIZE(espresso_vdd_io_1V8_supplies),
 	.consumer_supplies	= espresso_vdd_io_1V8_supplies,
@@ -457,6 +466,7 @@ static struct twl4030_platform_data espresso_twl6032_pdata = {
 	.power		= &espresso_power_data,
 
 	/* TWL6025 LDO regulators */
+	.vana		= &espresso_vana,
 	.ldo1		= &espresso_vaux1,
 	.ldo2		= &espresso_ldo2_nc,
 	.ldo3		= &espresso_vusim,
@@ -559,13 +569,23 @@ void __init omap4_espresso_pmic_init(void)
 	 */
 	regulator_has_full_constraints();
 
+	if (board_is_espresso10()) {
+		espresso_vana.constraints.state_mem.enabled = false;
+
+		espresso_vaux1.constraints.state_mem.enabled = false;
+
+		espresso_vaux2.constraints.always_on = true;
+
+		espresso_vusim.constraints.state_mem.enabled = false;
+
+		espresso_ldo5.constraints.valid_modes_mask |= REGULATOR_MODE_STANDBY;
+		espresso_ldo5.constraints.always_on = true;
 #if 0
-	if (board_is_espresso10())
 		espresso_twl6032_pdata.rtc = &espresso_rtc;
 #endif
+	}
 
 	omap4_pmic_get_config(&espresso_twl6032_pdata, TWL_COMMON_PDATA_USB,
-			TWL_COMMON_REGULATOR_VANA |
 			TWL_COMMON_REGULATOR_CLK32KAUDIO |
 			TWL_COMMON_REGULATOR_CLK32KG);
 

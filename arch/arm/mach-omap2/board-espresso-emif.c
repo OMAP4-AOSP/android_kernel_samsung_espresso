@@ -46,10 +46,10 @@ void __init omap4_espresso_emif_init(void)
 {
 	omap_emif_set_device_details(1, &lpddr2_samsung_4G_S4_info,
 			lpddr2_jedec_timings,
-			ARRAY_SIZE(lpddr2_jedec_timings) - 1,
+			ARRAY_SIZE(lpddr2_jedec_timings),
 			&lpddr2_jedec_min_tck, &custom_configs);
 	omap_emif_set_device_details(2, &lpddr2_samsung_4G_S4_info,
 			lpddr2_jedec_timings,
-			ARRAY_SIZE(lpddr2_jedec_timings) - 1,
+			ARRAY_SIZE(lpddr2_jedec_timings),
 			&lpddr2_jedec_min_tck, &custom_configs);
 }

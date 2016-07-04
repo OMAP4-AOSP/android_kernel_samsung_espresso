@@ -53,6 +53,18 @@ struct ltn {
 
 static struct brightness_data ltn_brightness_data;
 
+static void backlight_gptimer_start(struct omap_dss_device *dssdev)
+{
+	struct ltn *lcd = dev_get_drvdata(&dssdev->dev);
+	int ret;
+
+	dev_dbg(&dssdev->dev, "%s\n", __func__);
+
+	ret = omap_dm_timer_start(lcd->gptimer);
+	if (ret)
+		dev_err(&dssdev->dev, "failed to start pwm timer (%d)\n", ret);
+}
+
 static void backlight_gptimer_update(struct omap_dss_device *dssdev)
 {
 	struct ltn *lcd = dev_get_drvdata(&dssdev->dev);
@@ -163,13 +175,20 @@ static int get_gamma_value_from_bl(struct omap_dss_device *dssdev, int bl)
 static void update_brightness(struct omap_dss_device *dssdev)
 {
 	struct ltn *lcd = dev_get_drvdata(&dssdev->dev);
+	int prev_brightness = lcd->current_brightness;
 
 	lcd->current_brightness = lcd->bl;
 
-	if (lcd->current_brightness == BRIGHTNESS_OFF)
+	if (lcd->current_brightness == BRIGHTNESS_OFF &&
+		prev_brightness != BRIGHTNESS_OFF) {
 		backlight_gptimer_stop(dssdev);
-	else
+	} else if (lcd->current_brightness != BRIGHTNESS_OFF) {
+		if (prev_brightness == BRIGHTNESS_OFF) {
+			backlight_gptimer_start(dssdev);
+			usleep_range(2000, 2100);
+		}
 		backlight_gptimer_update(dssdev);
+	}
 }
 
 static int ltn_power_on(struct omap_dss_device *dssdev)
@@ -192,8 +211,6 @@ static int ltn_power_on(struct omap_dss_device *dssdev)
 		/* reset ltn bridge */
 		ltn_hw_reset(dssdev);
 		msleep(100);
-		omap_dm_timer_start(lcd->gptimer);
-		usleep_range(2000, 2100);
 		update_brightness(dssdev);
 
 		lcd->enabled = 1;
@@ -211,9 +228,10 @@ static int ltn_power_off(struct omap_dss_device *dssdev)
 
 	lcd->enabled = 0;
 
-	if (lcd->bl != BRIGHTNESS_OFF) {
-		backlight_gptimer_stop(dssdev);
-		msleep(200);
+	if (lcd->current_brightness != BRIGHTNESS_OFF) {
+		lcd->bl = BRIGHTNESS_OFF;
+		update_brightness(dssdev);
+		msleep(50);
 	}
 
 	gpio_set_value(lcd->pdata->lvds_nshdn_gpio, 0);
@@ -240,7 +258,6 @@ static int ltn_set_brightness(struct backlight_device *bd)
 	struct omap_dss_device *dssdev = dev_get_drvdata(&bd->dev);
 	struct ltn *lcd = dev_get_drvdata(&dssdev->dev);
 	int bl = bd->props.brightness;
-	int ret = 0;
 
 	if (bl < BRIGHTNESS_OFF)
 		bl = BRIGHTNESS_OFF;
@@ -257,8 +274,10 @@ static int ltn_set_brightness(struct backlight_device *bd)
 		dev_dbg(&bd->dev, "brightness=%d, bl=%d\n",
 			bd->props.brightness, lcd->bl);
 	}
+
 	mutex_unlock(&lcd->lock);
-	return ret;
+
+	return 0;
 }
 
 static const struct backlight_ops ltn_backlight_ops = {
@@ -329,7 +348,7 @@ static int ltn_panel_probe(struct omap_dss_device *dssdev)
 
 	lcd->bl = get_gamma_value_from_bl(dssdev, props.brightness);
 
-	/* Register DSI backlight  control */
+	/* Register DSI backlight control */
 	lcd->bd = backlight_device_register("panel", &dssdev->dev, dssdev,
 					    &ltn_backlight_ops, &props);
 	if (IS_ERR(lcd->bd)) {
