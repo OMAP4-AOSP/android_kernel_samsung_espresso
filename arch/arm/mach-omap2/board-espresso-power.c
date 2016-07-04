@@ -26,6 +26,7 @@
 #include <linux/i2c-gpio.h>
 #include <linux/i2c/twl.h>
 #include <linux/power/max17042_battery.h>
+#include <linux/power/smb136-charger.h>
 #include <linux/power/smb347-charger.h>
 #include <linux/battery.h>
 #include <linux/irq.h>
@@ -87,6 +88,11 @@ static char *espresso_battery[] = {
 	"max17042_battery",
 };
 
+static struct smb136_charger_platform_data smb136_charger_pdata = {
+	.supplied_to		= espresso_battery,
+	.num_supplicants	= ARRAY_SIZE(espresso_battery),
+};
+
 static struct smb347_charger_platform_data smb347_charger_pdata = {
 	.battery_info = {
 		.technology		= POWER_SUPPLY_TECHNOLOGY_LION,
@@ -120,6 +126,7 @@ static struct smb347_charger_platform_data smb347_charger_pdata = {
 static const __initdata struct i2c_board_info smb136_i2c[] = {
 	{
 		I2C_BOARD_INFO("smb136", 0x4D), /* 9A >> 1 */
+		.platform_data = &smb136_charger_pdata,
 	},
 };
 
@@ -171,25 +178,33 @@ int check_charger_type(void)
 
 void omap4_espresso_update_charger(int cable_type)
 {
-	struct power_supply *smb347_usb = power_supply_get_by_name("smb347-usb");
-	struct power_supply *smb347_mains = power_supply_get_by_name("smb347-mains");
+	struct power_supply *smb_usb;
+	struct power_supply *smb_mains;
 	union power_supply_propval usb_online = { cable_type == CABLE_TYPE_USB ? 1 : 0 };
 	union power_supply_propval ac_online = { cable_type == CABLE_TYPE_AC ? 1 : 0 };
 
-	if (smb347_mains && smb347_mains->set_property) {
-		smb347_mains->set_property(
-			smb347_mains,
+	if (board_is_espresso10()) {
+		smb_usb = power_supply_get_by_name("smb347-usb");
+		smb_mains = power_supply_get_by_name("smb347-mains");
+	} else {
+		smb_usb = power_supply_get_by_name("smb136-usb");
+		smb_mains = power_supply_get_by_name("smb136-mains");
+	}
+
+	if (smb_mains && smb_mains->set_property) {
+		smb_mains->set_property(
+			smb_mains,
 			POWER_SUPPLY_PROP_ONLINE,
 			&ac_online);
 	}
 
-	if (smb347_usb && smb347_usb->set_property) {
-		smb347_usb->set_property(
-			smb347_usb,
+	if (smb_usb && smb_usb->set_property) {
+		smb_usb->set_property(
+			smb_usb,
 			POWER_SUPPLY_PROP_ONLINE,
 			&usb_online);
-		smb347_usb->set_property(
-			smb347_usb,
+		smb_usb->set_property(
+			smb_usb,
 			POWER_SUPPLY_PROP_USB_HC,
 			&ac_online);
 	}
