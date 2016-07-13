@@ -412,14 +412,14 @@ CONFIG_PL310_ERRATA_727915=y
 # CONFIG_ARM_ERRATA_743622 is not set
 # CONFIG_ARM_ERRATA_751472 is not set
 # CONFIG_PL310_ERRATA_753970 is not set
-# CONFIG_ARM_ERRATA_754322 is not set
+CONFIG_ARM_ERRATA_754322=y
 CONFIG_ARM_ERRATA_754327=y
 CONFIG_ARM_ERRATA_764369=y
 # CONFIG_PL310_ERRATA_769419 is not set
 # CONFIG_ARM_ERRATA_766421 is not set
 # CONFIG_ARM_ERRATA_761171 is not set
 # CONFIG_ARM_ERRATA_4668 is not set
-# CONFIG_ARM_ERRATA_775420 is not set
+CONFIG_ARM_ERRATA_775420=y
 # CONFIG_ARM_ERRATA_773022 is not set
 # CONFIG_ARM_ERRATA_774769 is not set
 # CONFIG_ARM_ERRATA_763722 is not set
@@ -506,7 +506,7 @@ CONFIG_USE_OF=y
 CONFIG_ZBOOT_ROM_TEXT=0
 CONFIG_ZBOOT_ROM_BSS=0
 # CONFIG_ARM_APPENDED_DTB is not set
-CONFIG_CMDLINE="vmalloc=496M androidboot.hardware=espresso androidboot.selinux=permissive"
+CONFIG_CMDLINE="vmalloc=496M omap-cpufreq.safe_suspend_freq=600000000 androidboot.hardware=espresso androidboot.selinux=permissive omap_wdt.timer_margin=30"
 # CONFIG_CMDLINE_FROM_BOOTLOADER is not set
 CONFIG_CMDLINE_EXTEND=y
 # CONFIG_CMDLINE_FORCE is not set
@@ -2180,7 +2180,7 @@ CONFIG_USB_G_ANDROID=y
 # OTG and related infrastructure
 #
 CONFIG_USB_OTG_UTILS=y
-CONFIG_USB_OTG_WAKELOCK=y
+# CONFIG_USB_OTG_WAKELOCK is not set
 # CONFIG_USB_GPIO_VBUS is not set
 # CONFIG_USB_ULPI is not set
 # CONFIG_TWL4030_USB is not set
