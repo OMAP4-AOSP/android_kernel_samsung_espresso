@@ -302,7 +302,6 @@ static struct platform_device espresso_madc_device = {
 	},
 };
 
-#if 0
 static void espresso_twl6030_init(void)
 {
 	int ret;
@@ -371,7 +370,6 @@ static void espresso_twl6030_init(void)
 					__func__);
 	}
 }
-#endif
 
 static struct twl4030_resconfig espresso_rconfig[] = {
 	{ .resource = RES_LDO2, .devgroup = 0, },
@@ -381,9 +379,7 @@ static struct twl4030_resconfig espresso_rconfig[] = {
 };
 
 static struct twl4030_power_data espresso_power_data = {
-#if 0
 	.twl4030_board_init	= espresso_twl6030_init,
-#endif
 	.resource_config = espresso_rconfig,
 };
 
