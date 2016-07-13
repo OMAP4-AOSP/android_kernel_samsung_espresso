@@ -104,11 +104,7 @@ static const struct usbhs_omap_board_data usbhs_bdata __initconst = {
 
 static struct omap_musb_board_data musb_board_data = {
 	.interface_type	= MUSB_INTERFACE_UTMI,
-#ifdef CONFIG_USB_MUSB_OTG
 	.mode		= MUSB_OTG,
-#else
-	.mode		= MUSB_PERIPHERAL,
-#endif
 	.power		= 500,
 };
 
