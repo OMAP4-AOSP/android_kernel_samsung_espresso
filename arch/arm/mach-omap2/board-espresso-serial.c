@@ -22,14 +22,16 @@
 #include <linux/uaccess.h>
 #include <linux/hwspinlock.h>
 
-#include <plat/common.h>
-#include <plat/omap_hwmod.h>
-#include <plat/omap-serial.h>
-
 #include <asm/system_info.h>
+
+#include <mach/serial.h>
+#include <linux/platform_data/serial-omap.h>
+
+#include <plat/i2c.h>
 
 #include "board-espresso.h"
 #include "mux.h"
+#include "omap44xx.h"
 
 #define GPIO_GPS_PWR_EN	173
 #define GPIO_GPS_NRST		178
@@ -45,45 +47,12 @@
 static struct i2c_board_info __initdata espresso_i2c_board_info[] = {
 	{
 		I2C_BOARD_INFO("ducati", 0x20),
-		.irq		= OMAP44XX_IRQ_I2C2,
+		.irq = 57 + OMAP44XX_IRQ_GIC_START,
 	},
 };
 
-static void __init omap_i2c_hwspinlock_init(int bus_id, int spinlock_id,
-				struct omap_i2c_bus_board_data *pdata)
-{
-	/* spinlock_id should be -1 for a generic lock request */
-	if (spinlock_id < 0)
-		pdata->handle = hwspin_lock_request(USE_MUTEX_LOCK);
-	else
-		pdata->handle = hwspin_lock_request_specific(spinlock_id,
-							USE_MUTEX_LOCK);
-
-	if (pdata->handle != NULL) {
-		pdata->hwspin_lock_timeout = hwspin_lock_timeout;
-		pdata->hwspin_unlock = hwspin_unlock;
-	} else {
-		pr_err("I2C hwspinlock request failed for bus %d\n", bus_id);
-	}
-}
-
-static struct omap_i2c_bus_board_data __initdata espresso_i2c_1_bus_pdata;
-static struct omap_i2c_bus_board_data __initdata espresso_i2c_2_bus_pdata;
-static struct omap_i2c_bus_board_data __initdata espresso_i2c_3_bus_pdata;
-static struct omap_i2c_bus_board_data __initdata espresso_i2c_4_bus_pdata;
-
 static void __init espresso_i2c_init(void)
 {
-	omap_i2c_hwspinlock_init(1, 0, &espresso_i2c_1_bus_pdata);
-	omap_i2c_hwspinlock_init(2, 1, &espresso_i2c_2_bus_pdata);
-	omap_i2c_hwspinlock_init(3, 2, &espresso_i2c_3_bus_pdata);
-	omap_i2c_hwspinlock_init(4, 3, &espresso_i2c_4_bus_pdata);
-
-	omap_register_i2c_bus_board_data(1, &espresso_i2c_1_bus_pdata);
-	omap_register_i2c_bus_board_data(2, &espresso_i2c_2_bus_pdata);
-	omap_register_i2c_bus_board_data(3, &espresso_i2c_3_bus_pdata);
-	omap_register_i2c_bus_board_data(4, &espresso_i2c_4_bus_pdata);
-
 	omap_register_i2c_bus(2, 400, espresso_i2c_board_info,
 			      ARRAY_SIZE(espresso_i2c_board_info));
 	omap_register_i2c_bus(3, 400, NULL, 0);
