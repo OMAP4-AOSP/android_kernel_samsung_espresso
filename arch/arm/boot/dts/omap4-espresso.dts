@@ -1,0 +1,24 @@
+/dts-v1/;
+
+/include/ "omap443x.dtsi"
+/include/ "samsung_k3pe7e700m.dtsi"
+
+/ {
+	model = "OMAP4 Espresso board";
+	compatible = "ti,omap4-espresso", "ti,omap4430", "ti,omap4";
+
+	memory {
+		device_type = "memory";
+		reg = <0x80000000 0x40000000>; /* 1 GB */
+	};
+};
+
+&emif1 {
+	cs1-used;
+	device-handle = <&samsung_K3PE7E700M>;
+};
+
+&emif2 {
+	cs1-used;
+	device-handle = <&samsung_K3PE7E700M>;
+};
