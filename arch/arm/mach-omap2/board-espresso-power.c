@@ -115,14 +115,8 @@ static struct smb347_charger_platform_data smb347_charger_pdata = {
 	.use_mains		= true,
 	.use_usb		= true,
 	.use_usb_otg		= false,
-	.disable_automatic_recharge = false,
 	.irq_gpio		= GPIO_TA_NCHG,
-	.disable_stat_interrupts = false,
 	.enable_control		= SMB347_CHG_ENABLE_PIN_ACTIVE_LOW,
-	.usb_mode_pin_ctrl	= false,
-	.supplied_to		= espresso_battery,
-	.num_supplicants	= ARRAY_SIZE(espresso_battery),
-	.en_gpio		= GPIO_TA_EN,
 };
 
 static const __initdata struct i2c_board_info smb136_i2c[] = {
@@ -143,10 +137,12 @@ static struct max17042_platform_data max17042_pdata = {
 	.enable_current_sense = true,
 	.r_sns = 10000,
 	.enable_por_init = false,
+#if 0
 	.vmin = 2500000,
 	.vmax = 4300000,
 	.temp_min = -50,
 	.temp_max = 500,
+#endif
 };
 
 static const __initdata struct i2c_board_info max17042_i2c[] = {
