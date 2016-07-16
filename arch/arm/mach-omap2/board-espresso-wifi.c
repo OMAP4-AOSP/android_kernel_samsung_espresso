@@ -29,12 +29,10 @@
 #include <linux/regulator/machine.h>
 #include <linux/regulator/driver.h>
 #include <linux/regulator/fixed.h>
-#include <plat/mmc.h>
-
-#include <mach/id.h>
 
 #include "board-espresso.h"
 #include "hsmmc.h"
+#include "id.h"
 
 #define GPIO_WLAN_HOST_WAKE	81
 #define GPIO_WLAN_EN		104
@@ -255,7 +253,7 @@ static struct cntry_locales_custom espresso_wifi_translate_custom_table[] = {
 	{"MX", "XY", 3}
 };
 
-static void *espresso_wifi_get_country_code(char *ccode)
+static void *espresso_wifi_get_country_code(char *ccode, u32 flags)
 {
 	int size = ARRAY_SIZE(espresso_wifi_translate_custom_table);
 	int i;
