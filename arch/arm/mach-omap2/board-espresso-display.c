@@ -20,9 +20,6 @@
 #include <linux/omapfb.h>
 #include <linux/platform_data/panel-ltn.h>
 
-#include <plat/omap_hwmod.h>
-#include <plat/android-display.h>
-
 #include <video/omapdss.h>
 
 #include "board-espresso.h"
@@ -77,8 +74,10 @@ static struct omap_dss_device espresso_lcd_device = {
 			.vsw		= 10,
 			.vbp		= 11,
 		},
+#if 0
 		.width_in_um	= 153600,
 		.height_in_um	= 90000,
+#endif
 	},
 };
 
@@ -95,8 +94,10 @@ static struct omap_dss_device espresso10_lcd_config = {
 			.vsw		= 3,
 			.vbp		= 11,
 		},
+#if 0
 		.width_in_um	= 216960,
 		.height_in_um	= 135600,
+#endif
 	},
 };
 
@@ -110,33 +111,10 @@ static struct omap_dss_board_info espresso_dss_data = {
 	.default_device	= &espresso_lcd_device,
 };
 
-static struct sgx_omaplfb_config espresso_omaplfb_config[] = {
-	{
-		.tiler2d_buffers = 2,
-		.swap_chain_length = 2,
-	},
-};
-
-static struct sgx_omaplfb_platform_data espresso_omaplfb_plat_data = {
-	.num_configs = ARRAY_SIZE(espresso_omaplfb_config),
-	.configs = espresso_omaplfb_config,
-};
-
-static struct omapfb_platform_data espresso_fb_pdata = {
-	.mem_desc = {
-		.region_cnt = ARRAY_SIZE(espresso_omaplfb_config),
-	},
-};
-
 void __init omap4_espresso_memory_display_init(void)
 {
 	if (board_is_espresso10())
 		espresso_dss_data.devices[0]->panel = espresso10_lcd_config.panel;
-
-	omap_android_display_setup(&espresso_dss_data,
-				   NULL,
-				   &espresso_omaplfb_plat_data,
-				   &espresso_fb_pdata);
 }
 
 void __init omap4_espresso_display_init(void)
@@ -153,8 +131,6 @@ void __init omap4_espresso_display_init(void)
 		pr_err("%s: gpio_request %d failed!\n", __func__, GPIO_LCD_EN);
 
 	gpio_direction_output(GPIO_LCD_EN, 1);
-
-	omapfb_set_platform_data(&espresso_fb_pdata);
 
 	omap_display_init(&espresso_dss_data);
 }
