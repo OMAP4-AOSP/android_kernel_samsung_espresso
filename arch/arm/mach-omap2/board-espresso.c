@@ -295,8 +295,6 @@ static void __init espresso_init(void)
 {
 	omap4_mux_init(NULL, NULL, OMAP_PACKAGE_CBS);
 
-	omap4_espresso_emif_init();
-
 	if (board_is_espresso10()) {
 		espresso10_update_board_type();
 		if (board_is_bestbuy_variant() && system_rev >= 7)
