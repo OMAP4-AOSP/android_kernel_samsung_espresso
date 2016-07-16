@@ -14,6 +14,7 @@
  */
 
 #include <linux/delay.h>
+#include <linux/device.h>
 #include <linux/gpio.h>
 
 #include <asm/mach-types.h>
@@ -65,7 +66,7 @@ static void irled_work(struct work_struct *work)
 
 	gpio_direction_output(GPIO_IRDA_EN, 1);
 
-	__udelay(1000);
+	udelay(1000);
 
 	period = (MICRO_SEC / ir_data.signal[0]) + ir_data.on_offset;
 
@@ -80,9 +81,9 @@ static void irled_work(struct work_struct *work)
 
 		for (j = 0; j < ir_data.signal[i]; j++) {
 			gpio_direction_output(GPIO_IRDA_CONTROL, 1);
-			__udelay(on);
+			udelay(on);
 			gpio_direction_output(GPIO_IRDA_CONTROL, 0);
-			__udelay(off);
+			udelay(off);
 		}
 
 		period = (MICRO_SEC / ir_data.signal[0]) + ir_data.off_offset;
@@ -91,21 +92,21 @@ static void irled_work(struct work_struct *work)
 
 		if (off_period <= 9999) {
 			if (off_period > 1000) {
-				__udelay(off_period % 1000);
+				udelay(off_period % 1000);
 				mdelay(off_period / 1000);
 			} else
-				__udelay(off_period);
+				udelay(off_period);
 		} else {
 			local_irq_enable();
-			__udelay(off_period % 1000);
+			udelay(off_period % 1000);
 			mdelay(off_period / 1000);
 			local_irq_disable();
 		}
 	}
 	gpio_direction_output(GPIO_IRDA_CONTROL, 1);
-	__udelay(on);
+	udelay(on);
 	gpio_direction_output(GPIO_IRDA_CONTROL, 0);
-	__udelay(off);
+	udelay(off);
 
 	local_irq_enable();
 
