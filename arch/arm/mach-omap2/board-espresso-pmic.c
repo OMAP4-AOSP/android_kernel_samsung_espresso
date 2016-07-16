@@ -28,7 +28,7 @@
 
 #include <asm/system_info.h>
 
-#include <plat/omap-pm.h>
+#include "omap-pm.h"
 #include "pm.h"
 
 #include "board-espresso.h"
@@ -291,7 +291,6 @@ static struct regulator_init_data espresso_vusb = {
 
 static struct twl4030_madc_platform_data espresso_madc = {
 	.irq_line	= -1,
-	.features	= TWL6032_SUBCLASS,
 };
 
 static struct platform_device espresso_madc_device = {
@@ -372,14 +371,14 @@ static void espresso_twl6030_init(void)
 }
 
 static struct twl4030_resconfig espresso_rconfig[] = {
-	{ .resource = RES_LDO2, .devgroup = 0, },
-	{ .resource = RES_LDO7, .devgroup = 0, },
-	{ .resource = RES_LDOLN, .devgroup = 0, },
+	{ .resource = 59 /* RES_LDO2 */, .devgroup = 0, },
+	{ .resource = 54 /* RES_LDO7 */, .devgroup = 0, },
+	{ .resource = 53 /* RES_LDOLN */, .devgroup = 0, },
 	{ .resource = TWL4030_RESCONFIG_UNDEF, 0},
 };
 
 static struct twl4030_power_data espresso_power_data = {
-	.twl4030_board_init	= espresso_twl6030_init,
+	//.twl4030_board_init	= espresso_twl6030_init, // TODO
 	.resource_config = espresso_rconfig,
 };
 
@@ -583,11 +582,9 @@ void __init omap4_espresso_pmic_init(void)
 	}
 
 	omap4_pmic_get_config(&espresso_twl6032_pdata, TWL_COMMON_PDATA_USB,
-			TWL_COMMON_REGULATOR_CLK32KAUDIO |
 			TWL_COMMON_REGULATOR_CLK32KG);
 
-	omap4_pmic_init("twl6032", &espresso_twl6032_pdata,
-			NULL, OMAP44XX_IRQ_SYS_2N);
+	omap4_pmic_init("twl6025", &espresso_twl6032_pdata, NULL, 0);
 
 	i2c_register_board_info(1, espresso_i2c1_board_info,
 		ARRAY_SIZE(espresso_i2c1_board_info));
