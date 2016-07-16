@@ -255,7 +255,6 @@ obj-$(CONFIG_MACH_OMAP_4430SDP)		+= board-4430sdp.o
 obj-$(CONFIG_MACH_OMAP4_PANDA)		+= board-omap4panda.o
 
 obj-$(CONFIG_MACH_OMAP4_ESPRESSO)	+= board-espresso.o \
-					   board-espresso-emif.o \
 					   board-espresso-serial.o \
 					   board-espresso-pmic.o \
 					   board-espresso-sdio.o \

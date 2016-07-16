@@ -63,9 +63,6 @@ void omap4_espresso_set_chager_type(int type);
 void omap4_espresso_connector_init(void);
 int omap4_espresso_get_adc(enum espresso_adc_ch ch);
 
-/** @category LPDDR2 */
-void omap4_espresso_emif_init(void);
-
 /** @category TWL6030, TWL6040 */
 void omap4_espresso_pmic_init(void);
 
