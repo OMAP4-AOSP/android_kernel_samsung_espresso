@@ -33,9 +33,7 @@
 #include <linux/sec_dock_keyboard.h>
 #include <linux/battery.h>
 #include <linux/irq.h>
-#include <linux/usb/omap4_usb_phy.h>
-
-#include <plat/usb.h>
+#include <linux/usb/omap_control_usb.h>
 
 #include <asm/system_info.h>
 
@@ -900,15 +898,15 @@ static int espresso_otg_set_vbus(struct usb_otg *otg, bool enabled)
 static int espresso_otg_phy_init(struct usb_phy *phy)
 {
 	if (phy->last_event == USB_EVENT_ID)
-		omap4_usb_phy_power(phy->dev, 1);
+		omap_control_usb_phy_power(phy->dev, 1);
 	else
-		omap4_usb_phy_power(phy->dev, 1);
+		omap_control_usb_phy_power(phy->dev, 1);
 	return 0;
 }
 
 static void espresso_otg_phy_shutdown(struct usb_phy *phy)
 {
-	omap4_usb_phy_power(phy->dev, 0);
+	omap_control_usb_phy_power(phy->dev, 0);
 }
 
 static irqreturn_t ta_nconnected_irq(int irq, void *_otg)
