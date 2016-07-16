@@ -18,11 +18,11 @@
 #include "mux.h"
 
 #include <linux/gp2a.h>
-#include <linux/i2c/twl6030-gpadc.h>
 #include <linux/regulator/consumer.h>
 #include <linux/bh1721fvc.h>
 #include <linux/yas.h>
 #include <linux/al3201.h>
+#include <linux/i2c/twl4030-madc.h>
 
 #include <asm/system_info.h>
 
@@ -65,24 +65,10 @@ static struct bh1721fvc_platform_data bh1721fvc_pdata = {
 
 static int gp2a_light_adc_value(void)
 {
-	struct twl6030_gpadc_request req;
-	int temp = 0;
-	int ret;
-
-	req.channels = (1 << GP2A_LIGHT_ADC_CHANNEL);
-	req.method = TWL6030_GPADC_SW2;
-	req.active = 0;
-	req.func_cb = NULL;
-	ret = twl6030_gpadc_conversion(&req);
-	if (ret < 0)
-		return ret;
-	if (req.rbuf[GP2A_LIGHT_ADC_CHANNEL] > 0)
-		temp = req.rbuf[GP2A_LIGHT_ADC_CHANNEL];
-
 	if (system_rev >= 6)
-		return temp / 4;
+		twl4030_get_madc_conversion(GP2A_LIGHT_ADC_CHANNEL) / 4;
 	else
-		return temp;
+		twl4030_get_madc_conversion(GP2A_LIGHT_ADC_CHANNEL);
 }
 
 static void omap4_espresso_sensors_regulator_on(bool on)
