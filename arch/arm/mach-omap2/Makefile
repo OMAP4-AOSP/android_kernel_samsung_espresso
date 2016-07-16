@@ -285,7 +285,19 @@ obj-$(CONFIG_MACH_OMAP4_ESPRESSO)	+= board-espresso.o \
 					   board-espresso-jack.o \
 					   board-espresso-power.o \
 					   board-espresso-vibrator.o \
-					   board-espresso-irled.o
+					   board-espresso-irled.o \
+					   board-espresso-muxset-r03.o \
+					   board-espresso-muxset-r04.o \
+					   board-espresso-muxset-r06.o \
+					   board-espresso-muxset-r07.o \
+					   board-espresso-muxset-r09.o \
+					   board-espresso-muxset-r10.o \
+					   board-espresso10-muxset-r00.o \
+					   board-espresso10-muxset-r05.o \
+					   board-espresso10-muxset-r07.o \
+					   board-espresso10-usa-bby-muxset-r07.o \
+					   board-espresso10-muxset-r08.o
+ldflags-$(CONFIG_MACH_OMAP4_ESPRESSO)	+= -T $(srctree)/arch/arm/mach-omap2/sec_omap.lds
 
 obj-$(CONFIG_MACH_OMAP3517EVM)		+= board-am3517evm.o
 
