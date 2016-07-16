@@ -270,6 +270,23 @@ obj-$(CONFIG_MACH_OMAP4_PANDA)		+= board-omap4panda.o
 
 obj-$(CONFIG_MACH_PCM049)		+= board-omap4pcm049.o
 
+obj-$(CONFIG_MACH_OMAP4_ESPRESSO)	+= board-espresso.o \
+					   board-espresso-emif.o \
+					   board-espresso-serial.o \
+					   board-espresso-pmic.o \
+					   board-espresso-sdio.o \
+					   board-espresso-connector.o \
+					   board-espresso-display.o \
+					   board-espresso-input.o \
+					   board-espresso-wifi.o \
+					   board-espresso-modems.o \
+					   board-espresso-sensors.o \
+					   board-espresso-bluetooth.o \
+					   board-espresso-jack.o \
+					   board-espresso-power.o \
+					   board-espresso-vibrator.o \
+					   board-espresso-irled.o
+
 obj-$(CONFIG_MACH_OMAP3517EVM)		+= board-am3517evm.o
 
 obj-$(CONFIG_MACH_CRANEBOARD)		+= board-am3517crane.o
