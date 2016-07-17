@@ -19,7 +19,6 @@
 #include <linux/hrtimer.h>
 #include <linux/platform_device.h>
 #include <linux/slab.h>
-#include <linux/reboot.h>
 
 struct gpio_event {
 	struct gpio_event_input_devs *input_devs;
@@ -44,8 +43,6 @@ static int gpio_input_event(
 		pr_err("gpio_input_event: unknown device %p\n", dev);
 		return -EIO;
 	}
-
-	machine_restart("recovery");
 
 	for (i = 0, ii = ip->info->info; i < ip->info->info_count; i++, ii++) {
 		if ((*ii)->event) {
