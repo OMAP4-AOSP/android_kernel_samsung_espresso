@@ -454,6 +454,10 @@ static inline int twl6030_mmc_card_detect(struct device *dev, int slot)
 
 #define TWL4030_PM_MASTER_GLOBAL_TST		0xb6
 
+#define TWL6030_PHOENIX_DEV_ON			0x06
+
+#define TWL6030_PM_MASTER_MSK_TRANSITION	0x01
+
 /*----------------------------------------------------------------------*/
 
 /* Power bus message definitions */
@@ -470,6 +474,7 @@ static inline int twl6030_mmc_card_detect(struct device *dev, int slot)
 #define DEV_GRP_P1		0x1	/* P1: all OMAP devices */
 #define DEV_GRP_P2		0x2	/* P2: all Modem devices */
 #define DEV_GRP_P3		0x4	/* P3: all peripheral devices */
+#define DEV_GRP_CNT		3
 
 /* Resource groups */
 #define RES_GRP_RES		0x0	/* Reserved */
@@ -525,7 +530,45 @@ static inline int twl6030_mmc_card_detect(struct device *dev, int slot)
 /* Power Reference */
 #define RES_MAIN_REF            28
 
-#define TOTAL_RESOURCES		28
+/* 6030 extra resources */
+#define RES_V1V29		29
+#define RES_V1V8		30
+#define RES_V2V1		31
+#define RES_VDD3		32
+#define RES_VMEM		33
+#define RES_VANA		34
+#define RES_VUAX1		35
+#define RES_VCXIO		36
+#define RES_VPP			37
+#define RES_VRTC		38
+#define RES_REGEN2		39
+#define RES_32KCLKAO		40
+#define RES_32KCLKG		41
+#define RES_32KCLKAUDIO		42
+#define RES_BIAS		43
+#define RES_VBATMIN_HI		44
+#define RES_RC6MHZ		45
+#define RES_TEMP		46
+
+/* 6032 extra resources */
+#define RES_LDOUSB		47
+#define RES_SMPS5		48
+#define RES_SMPS4		49
+#define RES_SMPS3		50
+#define RES_SMPS2		51
+#define RES_SMPS1		52
+#define RES_LDOLN		53
+#define RES_LDO7		54
+#define RES_LDO6		55
+#define RES_LDO5		56
+#define RES_LDO4		57
+#define RES_LDO3		58
+#define RES_LDO2		59
+#define RES_LDO1		60
+#define RES_VSYSMIN_HI		61
+
+#define TOTAL_RESOURCES		61
+
 /*
  * Power Bus Message Format ... these can be sent individually by Linux,
  * but are usually part of downloaded scripts that are run when various
@@ -650,10 +693,17 @@ struct twl4030_resconfig {
 	u8 remap_sleep;	/* sleep state remapping */
 };
 
+struct twl4030_system_config {
+	char *name;
+	u8 group;
+};
+
 struct twl4030_power_data {
 	struct twl4030_script **scripts;
 	unsigned num;
 	struct twl4030_resconfig *resource_config;
+	struct twl4030_system_config *sys_config; /*system resources*/
+	void (*twl4030_board_init)(void); /* pmic init function */
 #define TWL4030_RESCONFIG_UNDEF	((u8)-1)
 	bool use_poweroff;	/* Board is wired for TWL poweroff */
 };
@@ -661,6 +711,9 @@ struct twl4030_power_data {
 extern void twl4030_power_init(struct twl4030_power_data *triton2_scripts);
 extern int twl4030_remove_script(u8 flags);
 extern void twl4030_power_off(void);
+
+extern void twl6030_power_init(struct twl4030_power_data *power_data,\
+					unsigned long features);
 
 struct twl4030_codec_data {
 	unsigned int digimic_delay; /* in ms */
@@ -855,6 +908,8 @@ static inline int twl4030charger_usb_en(int enable) { return 0; }
 #define TWL6025_REG_SMPS3	58
 #define TWL6025_REG_SMPS4	59
 #define TWL6025_REG_VIO		60
+
+#define TWL6025_PREQ1_RES_ASS_A	0xd7
 
 #define TWL6030_REG_CLK32KAUDIO	61
 
