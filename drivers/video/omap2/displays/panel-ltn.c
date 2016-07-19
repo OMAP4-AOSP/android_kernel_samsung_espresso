@@ -19,6 +19,7 @@
  * with this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
+#define DEBUG
 
 #include <linux/module.h>
 #include <linux/wait.h>
@@ -33,11 +34,10 @@
 #include <linux/serial_core.h>
 #include <linux/platform_data/panel-ltn.h>
 #include <linux/platform_device.h>
-#include <plat/hardware.h>
 #include <video/omapdss.h>
 #include <asm/mach-types.h>
 
-#include <plat/dmtimer.h>
+#include "../../../../arch/arm/plat-omap/include/plat/dmtimer.h"
 
 struct ltn {
 	struct device *dev;
@@ -202,6 +202,11 @@ static int ltn_power_on(struct omap_dss_device *dssdev)
 		if (dssdev->platform_enable)
 			dssdev->platform_enable(dssdev);
 
+		printk("%s: pixclock: %d\n", __func__, dssdev->panel.timings.pixel_clock);
+
+		omapdss_dpi_set_timings(dssdev, &dssdev->panel.timings);
+		omapdss_dpi_set_data_lines(dssdev, dssdev->phy.dpi.data_lines);
+
 		ret = omapdss_dpi_display_enable(dssdev);
 		if (ret) {
 			dev_err(&dssdev->dev, "failed to enable DPI\n");
@@ -311,6 +316,7 @@ static int ltn_panel_probe(struct omap_dss_device *dssdev)
 		goto err_no_platform_data;
 	}
 
+#if 0
 	dssdev->panel.config = OMAP_DSS_LCD_TFT
 			     | OMAP_DSS_LCD_IVS
 			     /*| OMAP_DSS_LCD_IEO */
@@ -318,7 +324,9 @@ static int ltn_panel_probe(struct omap_dss_device *dssdev)
 			     | OMAP_DSS_LCD_IHS
 			     | OMAP_DSS_LCD_ONOFF;
 
+
 	dssdev->panel.acb = 0;
+#endif
 
 	lcd->dssdev = dssdev;
 	lcd->pdata = dssdev->data;
@@ -452,6 +460,7 @@ static void ltn_panel_disable(struct omap_dss_device *dssdev)
 	mutex_unlock(&lcd->lock);
 }
 
+#if 0
 static int ltn_panel_suspend(struct omap_dss_device *dssdev)
 {
 	struct ltn *lcd = dev_get_drvdata(&dssdev->dev);
@@ -485,6 +494,7 @@ out:
 	mutex_unlock(&lcd->lock);
 	return ret;
 }
+#endif
 
 static void ltn_panel_get_resolution(struct omap_dss_device *dssdev,
 					    u16 *xres, u16 *yres)
@@ -496,7 +506,7 @@ static void ltn_panel_get_resolution(struct omap_dss_device *dssdev,
 static void ltn_panel_set_timings(struct omap_dss_device *dssdev,
 					 struct omap_video_timings *timings)
 {
-	dpi_set_timings(dssdev, timings);
+	omapdss_dpi_set_timings(dssdev, timings);
 }
 
 static void ltn_panel_get_timings(struct omap_dss_device *dssdev,
@@ -518,8 +528,10 @@ static struct omap_dss_driver ltn_omap_dss_driver = {
 	.enable		= ltn_panel_enable,
 	.disable	= ltn_panel_disable,
 	.get_resolution	= ltn_panel_get_resolution,
+#if 0
 	.suspend	= ltn_panel_suspend,
 	.resume		= ltn_panel_resume,
+#endif
 
 	.set_timings	= ltn_panel_set_timings,
 	.get_timings	= ltn_panel_get_timings,
