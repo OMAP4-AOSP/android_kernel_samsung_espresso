@@ -30,7 +30,6 @@
 #include <linux/interrupt.h>
 #include <linux/slab.h>
 #include <linux/platform_device.h>
-#include <linux/earlysuspend.h>
 #include <linux/semaphore.h>
 #include <linux/firmware.h>
 #include <linux/battery.h>
@@ -386,7 +385,7 @@ static void ts_late_resume(struct early_suspend *h)
 #define TS_MAX_Z_TOUCH			255
 #define TS_MAX_W_TOUCH			100
 
-static int __devinit ts_probe(struct i2c_client *client,
+static int ts_probe(struct i2c_client *client,
 				  const struct i2c_device_id *id)
 {
 	struct ts_data *ts;
@@ -427,7 +426,7 @@ static int __devinit ts_probe(struct i2c_client *client,
 		swap(ts->platform_data->x_pixel_size,
 					ts->platform_data->y_pixel_size);
 
-	input_mt_init_slots(ts->input_dev, MELFAS_MAX_TOUCH);
+	input_mt_init_slots(ts->input_dev, MELFAS_MAX_TOUCH, 0);
 
 	ts->input_dev->name = "melfas_ts";
 	__set_bit(EV_ABS, ts->input_dev->evbit);
@@ -520,11 +519,10 @@ err_check_functionality_failed:
 	return ret;
 }
 
-static int __devexit ts_remove(struct i2c_client *client)
+static int ts_remove(struct i2c_client *client)
 {
 	struct ts_data *ts = i2c_get_clientdata(client);
 
-	unregister_early_suspend(&ts->early_suspend);
 	free_irq(client->irq, ts);
 	input_unregister_device(ts->input_dev);
 	kfree(ts);
@@ -542,15 +540,15 @@ static struct i2c_driver melfas_ts_driver = {
 	},
 	.id_table = melfas_ts_id,
 	.probe = ts_probe,
-	.remove = __devexit_p(ts_remove),
+	.remove = ts_remove,
 };
 
-static int __devinit ts_init(void)
+static int ts_init(void)
 {
 	return i2c_add_driver(&melfas_ts_driver);
 }
 
-static void __exit ts_exit(void)
+static void ts_exit(void)
 {
 	i2c_del_driver(&melfas_ts_driver);
 }

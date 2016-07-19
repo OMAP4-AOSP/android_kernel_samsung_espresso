@@ -31,7 +31,6 @@
 #include <linux/delay.h>
 #include <linux/workqueue.h>
 #include <linux/mfd/stmpe811.h>
-#include <mach/gpio.h>
 
 #define STMPE811_CHIP_ID	0x00
 #define STMPE811_ID_VER		0x02
