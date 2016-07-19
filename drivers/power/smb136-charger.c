@@ -120,6 +120,8 @@ static int smb136_update_charger(struct smb136_charger *smb)
 		smb136_i2c_write(smb->client, SMB136_CHARGE_CURRENT, 0x14);
 		udelay(10);
 	}
+
+	return 0;
 }
 
 static int smb136_mains_get_property(struct power_supply *psy,
@@ -304,7 +306,7 @@ static int smb136_probe(struct i2c_client *client,
 	return 0;
 }
 
-static int __devexit smb136_remove(struct i2c_client *client)
+static int smb136_remove(struct i2c_client *client)
 {
 	struct smb136_charger *smb = i2c_get_clientdata(client);
 
@@ -327,7 +329,7 @@ static struct i2c_driver smb136_i2c_driver = {
 	},
 	.id_table	= smb136_id,
 	.probe	= smb136_probe,
-	.remove	= __devexit_p(smb136_remove),
+	.remove	= smb136_remove,
 	.command = NULL,
 };
 

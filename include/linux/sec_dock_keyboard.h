@@ -16,7 +16,7 @@
  *
  */
 
-#include <linux/earlysuspend.h>
+#include <linux/platform_device.h>
 #include <linux/serio.h>
 
 #ifndef _SEC_DOCK_KEYBOARD_H_
@@ -51,7 +51,6 @@ struct dock_keyboard_data {
 	struct device *kbd_dev;
 	struct work_struct work_msg;
 	struct delayed_work dwork_off;
-	struct early_suspend early_suspend;
 	struct timer_list key_timer;
 	bool led_on;
 	int dock_irq_gpio;

@@ -15,7 +15,10 @@
 #ifndef __OMAP44XX_MUXTBL_H__
 #define __OMAP44XX_MUXTBL_H__
 
+#include <linux/io.h>
+#include "iomap.h"
 #include "mux44xx.h"
+#include "soc.h"
 
 #define OMAP4_MUXTBL_DOMAIN_CORE	0
 #define OMAP4_MUXTBL_DOMAIN_WKUP	1
@@ -34,5 +37,20 @@
 extern void __init omap4_muxtbl_init(void);
 
 extern int __init omap4_muxtbl_add_mux(struct omap_muxtbl *muxtbl);
+
+static inline u32 omap_readl(u32 pa)
+{
+	return __raw_readl(OMAP2_L4_IO_ADDRESS(pa));
+}
+
+static inline void omap_writew(u16 v, u32 pa)
+{
+	__raw_writew(v, OMAP2_L4_IO_ADDRESS(pa));
+}
+
+static inline void omap_writel(u32 v, u32 pa)
+{
+	__raw_writel(v, OMAP2_L4_IO_ADDRESS(pa));
+}
 
 #endif /* __OMAP44XX_MUXTBL_H__ */

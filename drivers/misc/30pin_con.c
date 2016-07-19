@@ -24,7 +24,6 @@
 #include <linux/slab.h>
 #include <linux/30pin_con.h>
 #include <linux/wakelock.h>
-#include <linux/earlysuspend.h>
 #include <linux/mfd/tps6586x.h>
 #include <asm/irq.h>
 
@@ -53,7 +52,6 @@ struct acc_con_info {
 	int jig_irq;
 	struct wake_lock wake_lock;
 	struct delayed_work dwork;
-	struct early_suspend early_suspend;
 	struct delayed_work acc_con_work;
 	struct mutex lock;
 };
@@ -64,8 +62,8 @@ static void connector_detect_change(struct acc_con_info *acc, s16 *adc_res)
 	s16 adc_sum = 0;
 	s16 adc_buff[5];
 	s16 mili_volt;
-	s16 adc_min;
-	s16 adc_max;
+	s16 adc_min = 0;
+	s16 adc_max = 0;
 
 	if (!acc->pdata->get_accessory_adc) {
 		pr_err("30pin_c: no function to get adc.\n");
@@ -182,7 +180,7 @@ static int acc_con_interrupt_init(struct acc_con_info *acc)
 
 	ret = request_threaded_irq(acc->accessory_irq, NULL, acc_con_interrupt,
 				   IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING |
-				   IRQF_NO_SUSPEND, "accessory_detect", acc);
+				   IRQF_NO_SUSPEND | IRQF_ONESHOT, "accessory_detect", acc);
 	if (unlikely(ret < 0)) {
 		pr_err("30pin_c: request accessory_irq failed.\n");
 		return ret;
@@ -333,7 +331,7 @@ static int acc_id_interrupt_init(struct acc_con_info *acc)
 	acc->dock_irq = gpio_to_irq(acc->pdata->dock_irq_gpio);
 	ret = request_threaded_irq(acc->dock_irq, NULL, acc_id_interrupt,
 				   IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING |
-				   IRQF_NO_SUSPEND, "dock_detect", acc);
+				   IRQF_NO_SUSPEND | IRQF_ONESHOT, "dock_detect", acc);
 	if (unlikely(ret < 0)) {
 		pr_err("request dock_irq failed.\n");
 		return ret;
@@ -384,7 +382,7 @@ static int jig_on_interrupt_init(struct acc_con_info *acc)
 	acc->jig_irq = gpio_to_irq(acc->pdata->jig_on_gpio);
 	ret = request_threaded_irq(acc->jig_irq, NULL, jig_on_int_handler,
 				   IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING |
-				   IRQF_NO_SUSPEND, "jig_detect", acc);
+				   IRQF_NO_SUSPEND | IRQF_ONESHOT, "jig_detect", acc);
 	if (unlikely(ret < 0)) {
 		pr_err("request jig_irq failed.\n");
 		return ret;

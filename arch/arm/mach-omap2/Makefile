@@ -295,7 +295,10 @@ obj-$(CONFIG_MACH_OMAP4_ESPRESSO)	+= board-espresso.o \
 					   board-espresso10-muxset-r05.o \
 					   board-espresso10-muxset-r07.o \
 					   board-espresso10-usa-bby-muxset-r07.o \
-					   board-espresso10-muxset-r08.o
+					   board-espresso10-muxset-r08.o \
+					   omap_muxtbl.o \
+					   omap44xx_muxtbl.o \
+					   sec_muxtbl.o
 ldflags-$(CONFIG_MACH_OMAP4_ESPRESSO)	+= -T $(srctree)/arch/arm/mach-omap2/sec_omap.lds
 
 obj-$(CONFIG_MACH_OMAP3517EVM)		+= board-am3517evm.o
