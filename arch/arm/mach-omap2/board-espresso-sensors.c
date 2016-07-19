@@ -66,9 +66,9 @@ static struct bh1721fvc_platform_data bh1721fvc_pdata = {
 static int gp2a_light_adc_value(void)
 {
 	if (system_rev >= 6)
-		twl4030_get_madc_conversion(GP2A_LIGHT_ADC_CHANNEL) / 4;
+		return twl4030_get_madc_conversion(GP2A_LIGHT_ADC_CHANNEL) / 4;
 	else
-		twl4030_get_madc_conversion(GP2A_LIGHT_ADC_CHANNEL);
+		return twl4030_get_madc_conversion(GP2A_LIGHT_ADC_CHANNEL);
 }
 
 static void omap4_espresso_sensors_regulator_on(bool on)

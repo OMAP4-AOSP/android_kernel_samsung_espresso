@@ -19,23 +19,16 @@
 #include <linux/input.h>
 #include <linux/err.h>
 #include <linux/gpio.h>
-#include <linux/ion.h>
 #include <linux/memblock.h>
-#include <linux/omap_ion.h>
+#include <linux/of_platform.h>
 #include <linux/reboot.h>
 #include <linux/sysfs.h>
+#include <linux/usb/musb.h>
+#include <linux/usb/phy.h>
 
-#include <plat/board.h>
-#include <plat/common.h>
+#include <linux/platform_data/ram_console.h>
+
 #include <plat/cpu.h>
-#include <plat/drm.h>
-#include <plat/omap_apps_brd_id.h>
-#include <plat/remoteproc.h>
-#include <plat/usb.h>
-
-#include <mach/id.h>
-
-#include <asm/hardware/gic.h>
 
 #include <asm/mach-types.h>
 #include <asm/mach/arch.h>
@@ -43,16 +36,13 @@
 #include <asm/system_info.h>
 #include <asm/system_misc.h>
 
-#include "mach/omap-secure.h"
-
 #include "board-espresso.h"
 #include "common.h"
 #include "control.h"
 #include "mux.h"
-#include "omap_ram_console.h"
-#include "omap4_ion.h"
 #include "omap4-sar-layout.h"
 
+#include "omap44xx_muxtbl.h"
 #include "sec_muxtbl.h"
 
 /* gpio to distinguish WiFi and USA-BBY (P51xx)
@@ -76,6 +66,9 @@
 #define REBOOT_FLAG_POWER_OFF	(1 << 4)
 #define REBOOT_FLAG_DOWNLOAD	(1 << 5)
 
+#define ESPRESSO_RAMCONSOLE_START	(0x80000000 + SZ_512M)
+#define ESPRESSO_RAMCONSOLE_SIZE	SZ_2M
+
 #define ESPRESSO_ATTR_RO(_type, _name, _show) \
 	struct kobj_attribute espresso_##_type##_prop_attr_##_name = \
 		__ATTR(_name, S_IRUGO, _show, NULL)
@@ -88,18 +81,33 @@ static struct platform_device bcm4330_bluetooth_device = {
 	.id		= -1,
 };
 
-static struct platform_device *espresso_devices[] __initdata = {
-	&bcm4330_bluetooth_device,
+#ifdef CONFIG_ANDROID_RAM_CONSOLE
+static struct resource ramconsole_resources[] = {
+	{
+		.flags  = IORESOURCE_MEM,
+		.start	= ESPRESSO_RAMCONSOLE_START,
+		.end	= ESPRESSO_RAMCONSOLE_START + ESPRESSO_RAMCONSOLE_SIZE - 1,
+	},
 };
 
-static const struct usbhs_omap_board_data usbhs_bdata __initconst = {
-	.port_mode[0] = OMAP_USBHS_PORT_MODE_UNUSED,
-	.port_mode[1] = OMAP_USBHS_PORT_MODE_UNUSED,
-	.port_mode[2] = OMAP_USBHS_PORT_MODE_UNUSED,
-	.phy_reset  = false,
-	.reset_gpio_port[0]  = -EINVAL,
-	.reset_gpio_port[1]  = -EINVAL,
-	.reset_gpio_port[2]  = -EINVAL
+static struct ram_console_platform_data ramconsole_pdata;
+
+static struct platform_device ramconsole_device = {
+	.name           = "ram_console",
+	.id             = -1,
+	.num_resources  = ARRAY_SIZE(ramconsole_resources),
+	.resource       = ramconsole_resources,
+	.dev		= {
+		.platform_data = &ramconsole_pdata,
+	},
+};
+#endif
+
+static struct platform_device *espresso_devices[] __initdata = {
+#ifdef CONFIG_ANDROID_RAM_CONSOLE
+	&ramconsole_device,
+#endif
+	&bcm4330_bluetooth_device,
 };
 
 static struct omap_musb_board_data musb_board_data = {
@@ -291,9 +299,18 @@ static void __init sec_common_init(void)
 		pr_err("Failed to create class (sec)!\n");
 }
 
+static struct of_device_id omap_dt_match_table[] __initdata = {
+        { .compatible = "simple-bus", },
+        { .compatible = "ti,omap-infra", },
+        { }
+};
+
 static void __init espresso_init(void)
 {
 	omap4_mux_init(NULL, NULL, OMAP_PACKAGE_CBS);
+
+	/* populate DTS-based OMAP infrastructure before requesting GPIOs */
+	//of_platform_populate(NULL, omap_dt_match_table, NULL, NULL);
 
 	if (board_is_espresso10()) {
 		espresso10_update_board_type();
@@ -303,13 +320,12 @@ static void __init espresso_init(void)
 	} else
 		sec_muxtbl_init(SEC_MACHINE_ESPRESSO, system_rev);
 
-	register_reboot_notifier(&espresso_reboot_notifier);
+	//register_reboot_notifier(&espresso_reboot_notifier);
 
 	/* initialize sec common infrastructures */
 	sec_common_init();
 
 	/* initialize board props */
-	omap_create_board_props();
 	omap4_espresso_create_board_props();
 
 	/* initialize each drivers */
@@ -317,13 +333,9 @@ static void __init espresso_init(void)
 	omap4_espresso_pmic_init();
 	omap_sdrc_init(NULL, NULL);
 	omap4_espresso_charger_init();
-#ifdef CONFIG_ION_OMAP
-	omap4_register_ion();
-#endif
 	platform_add_devices(espresso_devices, ARRAY_SIZE(espresso_devices));
-	omap_init_dmm_tiler();
 	omap4_espresso_sdio_init();
-	usbhs_init(&usbhs_bdata);
+	usb_bind_phy("musb-hdrc.0.auto", 0, "omap-usb2.1.auto");
 	usb_musb_init(&musb_board_data);
 	omap4_espresso_connector_init();
 	omap4_espresso_display_init();
@@ -334,26 +346,40 @@ static void __init espresso_init(void)
 	omap4_espresso_modem_init();
 }
 
+void espresso_restart(void)
+{
+	u32 flag = REBOOT_FLAG_NORMAL;
+	char *blcmd = "RESET";
+	omap_writel(flag, OMAP_SW_BOOT_CFG_ADDR);
+	omap_writel(*(u32 *) blcmd, OMAP_SW_BOOT_CFG_ADDR - 0x04);
+	omap44xx_restart('r', NULL);
+}
+
 static void __init espresso_reserve(void)
 {
-	omap_ram_console_init(OMAP_RAM_CONSOLE_START_DEFAULT,
-			OMAP_RAM_CONSOLE_SIZE_DEFAULT);
-	omap_rproc_reserve_cma(RPROC_CMA_OMAP4);
+#ifdef CONFIG_ANDROID_RAM_CONSOLE
+	memblock_remove(ESPRESSO_RAMCONSOLE_START, ESPRESSO_RAMCONSOLE_SIZE);
+#endif
 	omap4_espresso_memory_display_init();
-	omap4_ion_init();
-	omap4_secure_workspace_addr_default();
 	omap_reserve();
 }
+
+static const char *espresso_boards_compat[] __initdata = {
+        "ti,omap4-espresso",
+        NULL,
+};
 
 MACHINE_START(OMAP4_ESPRESSO, "OMAP4 Espresso board")
 	/* Maintainer: Daniel Jarai */
 	.atag_offset	= 0x100,
+	.smp		= smp_ops(omap4_smp_ops),
 	.reserve	= espresso_reserve,
 	.map_io		= omap4_map_io,
 	.init_early	= omap4430_init_early,
 	.init_irq	= gic_init_irq,
-	.handle_irq	= gic_handle_irq,
 	.init_machine	= espresso_init,
-	.timer		= &omap4_timer,
-	.restart	= omap_prcm_restart,
+	.init_late	= omap4430_init_late,
+	.init_time	= omap4_local_timer_init,
+	.dt_compat 	= espresso_boards_compat,
+	.restart	= omap44xx_restart,
 MACHINE_END

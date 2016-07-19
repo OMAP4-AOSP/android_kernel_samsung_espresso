@@ -26,6 +26,8 @@ extern int espresso_cable_type;
 
 #define CABLE_DETECT_VALUE	1150
 
+void espresso_restart(void);
+
 enum espresso_adc_ch {
 	REMOTE_SENSE = 0,
 	ADC_CHECK_1,	/* TA detection */

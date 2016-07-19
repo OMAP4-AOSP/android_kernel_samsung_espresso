@@ -24,7 +24,6 @@
 #include <linux/platform_data/sec_ts.h>
 #include <linux/touchscreen/synaptics.h>
 #include <asm/mach-types.h>
-#include <plat/omap4-keypad.h>
 
 #include "board-espresso.h"
 #include "mux.h"
