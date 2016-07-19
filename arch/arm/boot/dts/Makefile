@@ -100,6 +100,7 @@ dtb-$(CONFIG_ARCH_MXS) += imx23-evk.dtb \
 	imx28-m28evk.dtb \
 	imx28-sps1.dtb \
 	imx28-tx28.dtb
+ifneq ($(CONFIG_MACH_OMAP4_ESPRESSO),y)
 dtb-$(CONFIG_ARCH_OMAP2PLUS) += omap2420-h4.dtb \
 	omap3430-sdp.dtb \
 	omap3-beagle.dtb \
@@ -118,6 +119,9 @@ dtb-$(CONFIG_ARCH_OMAP2PLUS) += omap2420-h4.dtb \
 	am335x-boneblack.dtb \
 	dra7-evm.dtb \
 	dra72-evm.dtb
+
+endif
+dtb-$(CONFIG_MACH_OMAP4_ESPRESSO) += omap4-espresso.dtb
 dtb-$(CONFIG_ARCH_ORION5X) += orion5x-lacie-ethernet-disk-mini-v2.dtb
 dtb-$(CONFIG_ARCH_PRIMA2) += prima2-evb.dtb
 dtb-$(CONFIG_ARCH_U8500) += snowball.dtb \
