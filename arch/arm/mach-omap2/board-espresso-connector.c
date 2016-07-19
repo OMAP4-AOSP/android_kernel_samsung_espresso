@@ -15,6 +15,8 @@
  *
  */
 
+#define DEBUG
+
 #include <linux/device.h>
 #include <linux/err.h>
 #include <linux/gpio.h>
@@ -244,7 +246,7 @@ static void omap4_vusb_enable(struct omap4_otg *otg, bool enable)
 {
 	/* delay getting the regulator until later */
 	if (IS_ERR_OR_NULL(otg->vusb)) {
-		otg->vusb = regulator_get(&otg->dev, "vusb");
+		otg->vusb = regulator_get(&otg->dev, "ldousb");
 		if (IS_ERR(otg->vusb)) {
 			dev_err(&otg->dev, "cannot get vusb regulator\n");
 			return;
@@ -1081,9 +1083,11 @@ static int __init espresso_usb_cable_detect(void)
 {
 	struct omap4_otg *espresso_otg = &espresso_otg_xceiv;
 
-	if (!gpio_get_value(GPIO_TA_NCONNECTED)) {
+	printk("%s\n", __func__);
+
+	if (gpio_is_valid(GPIO_TA_NCONNECTED) && !gpio_get_value(GPIO_TA_NCONNECTED)) {
 		omap4_vusb_enable(espresso_otg, true);
-		espresso_cable_type = check_charger_type();;
+		espresso_cable_type = check_charger_type();
 	} else {
 		espresso_cable_type = CABLE_TYPE_NONE;
 	}
@@ -1094,13 +1098,15 @@ static int __init espresso_usb_cable_detect(void)
 
 	return 0;
 }
-late_initcall(espresso_usb_cable_detect);
+//late_initcall(espresso_usb_cable_detect);
 
 void __init omap4_espresso_connector_init(void)
 {
 	struct omap4_otg *espresso_otg = &espresso_otg_xceiv;
 	struct usb_otg *otg;
 	int ret;
+
+	printk("%s+\n", __func__);
 
 	connector_gpio_init();
 	mutex_init(&espresso_otg->lock);
@@ -1182,4 +1188,6 @@ switch_dev_fail:
 	switch_dev_register(&espresso_otg->audio_switch);
 
 	espresso_otg->current_device = 0;
+
+	printk("%s-\n", __func__);
 }

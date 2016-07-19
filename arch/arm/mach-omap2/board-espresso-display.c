@@ -14,6 +14,8 @@
  * GNU General Public License for more details.
  */
 
+#define DEBUG
+
 #include <linux/err.h>
 #include <linux/gpio.h>
 #include <linux/kernel.h>
@@ -73,6 +75,12 @@ static struct omap_dss_device espresso_lcd_device = {
 			.vfp		= 24,
 			.vsw		= 10,
 			.vbp		= 11,
+
+			.vsync_level	= OMAPDSS_SIG_ACTIVE_LOW,
+			.hsync_level	= OMAPDSS_SIG_ACTIVE_LOW,
+			.data_pclk_edge	= OMAPDSS_DRIVE_SIG_RISING_EDGE,
+			.de_level	= OMAPDSS_SIG_ACTIVE_HIGH,
+			.sync_pclk_edge	= OMAPDSS_DRIVE_SIG_OPPOSITE_EDGES,
 		},
 #if 0
 		.width_in_um	= 153600,

@@ -21,8 +21,6 @@
 #include <linux/delay.h>
 #include <asm/system_info.h>
 
-#include <plat/omap_hsi.h>
-
 #include <linux/platform_data/modem_v2.h>
 
 #include "board-espresso.h"
@@ -272,10 +270,10 @@ void __init omap4_espresso_modem_init(void)
 	int ret;
 
 	if (board_has_modem()) {
-		ret = omap_hsi_dev_init();
-		if (ret < 0)
-			pr_err("%s: hsi device registration failed: %d\n",
-				__func__, ret);
+		//ret = omap_hsi_dev_init();
+		//if (ret < 0)
+		//	pr_err("%s: hsi device registration failed: %d\n",
+		//		__func__, ret);
 	} else {
 		none_modem_cfg_mux();
 	}

@@ -159,6 +159,13 @@ static struct platform_device espresso_audio_device = {
 };
 #endif
 
+static struct regulator_init_data espresso_clk32kaudio = {
+	.constraints = {
+		.valid_ops_mask	= REGULATOR_CHANGE_STATUS,
+		.always_on	= true,
+	},
+};
+
 static struct regulator_init_data espresso_vaux1 = {
 	.constraints = {
 		.min_uV			= 2800000,
@@ -269,8 +276,8 @@ static struct regulator_init_data espresso_vcxio = {
 };
 
 static struct regulator_consumer_supply espresso_vusb_supply[] = {
-	REGULATOR_SUPPLY("vusb", "twl6030_usb"),
-	REGULATOR_SUPPLY("vusb", "espresso_otg"),
+	REGULATOR_SUPPLY("ldousb", "twl6030_usb"),
+	REGULATOR_SUPPLY("ldousb", "espresso_otg"),
 };
 
 static struct regulator_init_data espresso_vusb = {
@@ -460,6 +467,9 @@ static struct twl4030_platform_data espresso_twl6032_pdata = {
 	/* pmic power data*/
 	.power		= &espresso_power_data,
 
+	/* clocks */
+	.clk32kaudio	= &espresso_clk32kaudio,
+
 	/* TWL6025 LDO regulators */
 	.vana		= &espresso_vana,
 	.ldo1		= &espresso_vaux1,
@@ -562,7 +572,7 @@ void __init omap4_espresso_pmic_init(void)
 	 * This will allow unused regulator to be shutdown. This flag
 	 * should be set in the board file. Before regulators are registered.
 	 */
-	regulator_has_full_constraints();
+	//regulator_has_full_constraints();
 
 	if (board_is_espresso10()) {
 		espresso_vana.constraints.state_mem.enabled = false;
@@ -609,5 +619,5 @@ void __init omap4_espresso_pmic_init(void)
 	omap_enable_smartreflex_on_init();
 
 	/* enable off-mode */
-	omap_pm_enable_off_mode();
+	//omap_pm_enable_off_mode();
 }
