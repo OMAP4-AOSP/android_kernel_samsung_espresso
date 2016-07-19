@@ -1182,10 +1182,12 @@ twl_probe(struct i2c_client *client, const struct i2c_device_id *id)
 	if ((id->driver_data) & TWL6030_CLASS) {
 		twl_priv->twl_id = TWL6030_CLASS_ID;
 		twl_priv->twl_map = &twl6030_map[0];
+#ifndef CONFIG_MACH_OMAP4_ESPRESSO
 		/* The charger base address is different in twl6025 */
 		if ((id->driver_data) & TWL6025_SUBCLASS)
 			twl_priv->twl_map[TWL_MODULE_MAIN_CHARGE].base =
 							TWL6025_BASEADD_CHARGER;
+#endif
 		twl_regmap_config = twl6030_regmap_config;
 	} else {
 		twl_priv->twl_id = TWL4030_CLASS_ID;
