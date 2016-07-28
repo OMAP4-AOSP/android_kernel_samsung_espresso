@@ -32,6 +32,7 @@ static struct omap2_hsmmc_info espresso_mmc_info[] = {
 		.ocr_mask	= MMC_VDD_165_195,
 		.gpio_wp	= -EINVAL,
 		.gpio_cd	= -EINVAL,
+		.no_off_init	= true,
 	},
 	{
 		.mmc		= 1,

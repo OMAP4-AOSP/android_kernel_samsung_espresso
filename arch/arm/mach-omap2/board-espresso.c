@@ -309,8 +309,10 @@ static void __init espresso_init(void)
 {
 	omap4_mux_init(NULL, NULL, OMAP_PACKAGE_CBS);
 
+#if 0
 	/* populate DTS-based OMAP infrastructure before requesting GPIOs */
-	//of_platform_populate(NULL, omap_dt_match_table, NULL, NULL);
+	of_platform_populate(NULL, omap_dt_match_table, NULL, NULL);
+#endif
 
 	if (board_is_espresso10()) {
 		espresso10_update_board_type();
@@ -320,7 +322,11 @@ static void __init espresso_init(void)
 	} else
 		sec_muxtbl_init(SEC_MACHINE_ESPRESSO, system_rev);
 
-	//register_reboot_notifier(&espresso_reboot_notifier);
+#if 0
+	espresso_restart();
+#endif
+
+	register_reboot_notifier(&espresso_reboot_notifier);
 
 	/* initialize sec common infrastructures */
 	sec_common_init();
@@ -332,8 +338,8 @@ static void __init espresso_init(void)
 	omap4_espresso_serial_init();
 	omap4_espresso_pmic_init();
 	omap_sdrc_init(NULL, NULL);
-	omap4_espresso_charger_init();
 	platform_add_devices(espresso_devices, ARRAY_SIZE(espresso_devices));
+	omap4_espresso_charger_init();
 	omap4_espresso_sdio_init();
 	usb_bind_phy("musb-hdrc.0.auto", 0, "omap-usb2.1.auto");
 	usb_musb_init(&musb_board_data);
@@ -376,7 +382,11 @@ MACHINE_START(OMAP4_ESPRESSO, "OMAP4 Espresso board")
 	.reserve	= espresso_reserve,
 	.map_io		= omap4_map_io,
 	.init_early	= omap4430_init_early,
+#if 1
 	.init_irq	= gic_init_irq,
+#else
+	.init_irq	= omap_gic_of_init,
+#endif
 	.init_machine	= espresso_init,
 	.init_late	= omap4430_init_late,
 	.init_time	= omap4_local_timer_init,
