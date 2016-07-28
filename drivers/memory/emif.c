@@ -1542,6 +1542,8 @@ static int __init_or_module emif_probe(struct platform_device *pdev)
 	struct resource		*res;
 	int			irq;
 
+	printk("%s\n", __func__);
+
 	if (pdev->dev.of_node)
 		emif = of_get_memory_device_details(pdev->dev.of_node, &pdev->dev);
 	else

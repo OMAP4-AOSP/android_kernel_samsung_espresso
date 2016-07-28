@@ -378,14 +378,14 @@ static void espresso_twl6030_init(void)
 }
 
 static struct twl4030_resconfig espresso_rconfig[] = {
-	{ .resource = 59 /* RES_LDO2 */, .devgroup = 0, },
-	{ .resource = 54 /* RES_LDO7 */, .devgroup = 0, },
-	{ .resource = 53 /* RES_LDOLN */, .devgroup = 0, },
+	{ .resource = RES_LDO2, .devgroup = 0, },
+	{ .resource = RES_LDO7, .devgroup = 0, },
+	{ .resource = RES_LDOLN, .devgroup = 0, },
 	{ .resource = TWL4030_RESCONFIG_UNDEF, 0},
 };
 
 static struct twl4030_power_data espresso_power_data = {
-	//.twl4030_board_init	= espresso_twl6030_init, // TODO
+	.twl4030_board_init	= espresso_twl6030_init,
 	.resource_config = espresso_rconfig,
 };
 
@@ -572,7 +572,7 @@ void __init omap4_espresso_pmic_init(void)
 	 * This will allow unused regulator to be shutdown. This flag
 	 * should be set in the board file. Before regulators are registered.
 	 */
-	//regulator_has_full_constraints();
+	regulator_has_full_constraints();
 
 	if (board_is_espresso10()) {
 		espresso_vana.constraints.state_mem.enabled = false;
@@ -619,5 +619,5 @@ void __init omap4_espresso_pmic_init(void)
 	omap_enable_smartreflex_on_init();
 
 	/* enable off-mode */
-	//omap_pm_enable_off_mode();
+	omap_pm_enable_off_mode();
 }

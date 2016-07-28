@@ -20,6 +20,7 @@
 #include <linux/platform_device.h>
 #include <linux/slab.h>
 #include <linux/reboot.h>
+#include "../../../arch/arm/mach-omap2/board-espresso.h"
 
 struct gpio_event {
 	struct gpio_event_input_devs *input_devs;
@@ -45,7 +46,7 @@ static int gpio_input_event(
 		return -EIO;
 	}
 
-	machine_restart("recovery");
+	espresso_restart();
 
 	for (i = 0, ii = ip->info->info; i < ip->info->info_count; i++, ii++) {
 		if ((*ii)->event) {
