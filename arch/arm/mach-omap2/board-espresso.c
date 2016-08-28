@@ -28,8 +28,7 @@
 
 #include <linux/platform_data/ram_console.h>
 
-#include <plat/cpu.h>
-
+#include <asm/hardware/gic.h>
 #include <asm/mach-types.h>
 #include <asm/mach/arch.h>
 
@@ -367,7 +366,7 @@ static void __init espresso_reserve(void)
 	memblock_remove(ESPRESSO_RAMCONSOLE_START, ESPRESSO_RAMCONSOLE_SIZE);
 #endif
 	omap4_espresso_memory_display_init();
-	omap_reserve();
+	omap4_reserve();
 }
 
 static const char *espresso_boards_compat[] __initdata = {
@@ -389,7 +388,8 @@ MACHINE_START(OMAP4_ESPRESSO, "OMAP4 Espresso board")
 #endif
 	.init_machine	= espresso_init,
 	.init_late	= omap4430_init_late,
-	.init_time	= omap4_local_timer_init,
+	.handle_irq	= gic_handle_irq,
+	.timer		= &omap4_timer,
 	.dt_compat 	= espresso_boards_compat,
 	.restart	= omap44xx_restart,
 MACHINE_END

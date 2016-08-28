@@ -113,6 +113,15 @@
 			regulator-min-microvolt = <3300000>;
 			regulator-max-microvolt = <3300000>;
 		};
+
+		vcxio: regulator-vcxio {
+			compatible = "ti,twl6030-vcxio";
+			regulator-always-on;
+		};
+
+		vdac: regulator-vdac {
+			compatible = "ti,twl6030-vdac";
+		};
 	};
 };
 
