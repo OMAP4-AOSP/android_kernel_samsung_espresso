@@ -404,7 +404,7 @@ static int __devinit ts_probe(struct i2c_client *client,
 		goto err_input_dev_alloc_failed;
 	}
 
-	input_mt_init_slots(ts->input_dev, MAX_TOUCH_NUM);
+	input_mt_init_slots(ts->input_dev, MAX_TOUCH_NUM, 0);
 
 	ts->input_dev->name = SEC_TS_NAME;
 	set_bit(EV_ABS, ts->input_dev->evbit);
