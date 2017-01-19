@@ -427,7 +427,7 @@ static int __devinit ts_probe(struct i2c_client *client,
 		swap(ts->platform_data->x_pixel_size,
 					ts->platform_data->y_pixel_size);
 
-	input_mt_init_slots(ts->input_dev, MELFAS_MAX_TOUCH);
+	input_mt_init_slots(ts->input_dev, MELFAS_MAX_TOUCH, 0);
 
 	ts->input_dev->name = "melfas_ts";
 	__set_bit(EV_ABS, ts->input_dev->evbit);
