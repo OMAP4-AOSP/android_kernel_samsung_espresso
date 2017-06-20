@@ -534,6 +534,13 @@ config INPUT_XEN_KBDDEV_FRONTEND
 	  To compile this driver as a module, choose M here: the
 	  module will be called xen-kbdfront.
 
+config OPTICAL_GP2A
+	depends on I2C && GENERIC_GPIO
+	tristate "GP2A ambient light and proximity input device"
+	default n
+	help
+	  This option enables proximity & light sensors using gp2a driver.
+
 config INPUT_BMA180
 	bool "BMA-180 Tri-axis accelerometer"
 	depends on I2C && SYSFS
@@ -554,12 +561,5 @@ config INPUT_TSL2771
 	help
 	  Say Y here if you want to use TSL2771 ALS/Proximity Sensor Driver
 	  through I2C interface.
-
-config OPTICAL_GP2A
-	depends on I2C && GENERIC_GPIO
-	tristate "GP2A ambient light and proximity input device"
-	default n
-	help
-	  This option enables proximity & light sensors using gp2a driver.
 
 endif
