@@ -66,4 +66,3 @@ obj-$(CONFIG_SEC_30PIN_CON)	+= 30pin_con.o
 obj-$(CONFIG_SEC_MODEM)		+= modem_if/
 obj-$(CONFIG_SEC_MODEM_V2)	+= modem_if_v2/
 obj-$(CONFIG_USB_SWITCH_FSA9480)	+= fsa9480.o
-obj-$(CONFIG_COLOR_CONTROL)	+= color_control.o
