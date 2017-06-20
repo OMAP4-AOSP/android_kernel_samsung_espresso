@@ -1675,7 +1675,7 @@ void musb_host_rx(struct musb *musb, u8 epnum)
 				d->status = d_status;
 				buf = urb->transfer_dma + d->offset;
 			} else {
-				length = min((u32)rx_count, urb->transfer_buffer_length);
+				length = min(rx_count, urb->transfer_buffer_length);
 				buf = urb->transfer_dma +
 						urb->actual_length;
 			}
