@@ -316,7 +316,7 @@ done_calib:
 		voltdm_scale(voltdm, volt_data);
 	}
 
-	pr_info("%s: %s: Calibration complete: Voltage Nominal=%d"
+	pr_info("%s: %s: Calibration complete: Voltage:Nominal=%d "
 		"Calib=%d margin=%d\n",
 		 __func__, voltdm->name, volt_data->volt_nominal,
 		 volt_data->volt_calibrated, volt_data->volt_margin);
