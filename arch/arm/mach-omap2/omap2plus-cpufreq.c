@@ -69,10 +69,10 @@ static unsigned int max_thermal;
 static unsigned int max_capped;
 static unsigned int max_freq;
 static unsigned int current_target_freq;
-static unsigned int current_cooling_level;
 static unsigned int screen_off_max_freq;
 static bool omap_cpufreq_ready;
 static bool omap_cpufreq_suspended;
+static unsigned int current_cooling_level;
 
 static unsigned int omap_getspeed(unsigned int cpu)
 {

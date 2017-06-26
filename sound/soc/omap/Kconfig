@@ -21,7 +21,7 @@ config SND_OMAP_SOC_ABE
 	tristate
 
 config SND_OMAP_SOC_DMIC
-    tristate
+	tristate
 
 config SND_OMAP_SOC_HDMI
 	tristate
