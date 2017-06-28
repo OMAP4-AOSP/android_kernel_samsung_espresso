@@ -1155,8 +1155,7 @@ void hsi_set_port_event_cb(struct hsi_device *dev,
 	/* enable the CAWAKE, ERROR and BREAK interrupts */
 	spin_lock_bh(&hsi_ctrl->lock);
 	hsi_clocks_enable_channel(hsi_ctrl->dev, dev->ch->channel_number,
-					__func__);
-
+				__func__);
 #ifdef CONFIG_MACH_TUNA
 	if (port->wake_rx_3_wires_mode)
 		hsi_driver_enable_interrupt(port, HSI_ERROROCCURED
@@ -1167,7 +1166,8 @@ void hsi_set_port_event_cb(struct hsi_device *dev,
 						| HSI_ERROROCCURED
 						| HSI_BREAKDETECTED);
 	hsi_clocks_disable_channel(hsi_ctrl->dev, dev->ch->channel_number,
-				   __func__);
+				__func__);
+
 	spin_unlock_bh(&hsi_ctrl->lock);
 }
 EXPORT_SYMBOL(hsi_set_port_event_cb);
