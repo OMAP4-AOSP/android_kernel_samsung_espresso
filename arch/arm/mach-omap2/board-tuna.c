@@ -1404,9 +1404,6 @@ static void __init tuna_reserve(void)
 {
 	omap_init_ram_size();
 
-	omap_ram_console_init(OMAP_RAM_CONSOLE_START_DEFAULT,
-						OMAP_RAM_CONSOLE_SIZE_DEFAULT);
-
 #ifdef CONFIG_ION_OMAP
 	tuna_android_display_setup(get_omap_ion_platform_data());
 	omap4_tuna_init_carveout_sizes(get_omap_ion_platform_data());
@@ -1414,6 +1411,9 @@ static void __init tuna_reserve(void)
 #else
 	tuna_android_display_setup(NULL);
 #endif
+
+	omap_ram_console_init(OMAP_RAM_CONSOLE_START_DEFAULT,
+				OMAP_RAM_CONSOLE_SIZE_DEFAULT);
 
 #ifndef CONFIG_CMA
 	/* do the static reservations first */

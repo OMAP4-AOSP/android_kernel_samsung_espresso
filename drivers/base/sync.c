@@ -547,17 +547,6 @@ out:
 }
 EXPORT_SYMBOL(sync_fence_wait_async);
 
-static bool sync_fence_check(struct sync_fence *fence)
-{
-	/*
-	 * Make sure that reads to fence->status are ordered with the
-	 * wait queue event triggering
-	 */
-	smp_rmb();
-	return fence->status != 0;
-}
-EXPORT_SYMBOL(sync_fence_cancel_async);
-
 int sync_fence_cancel_async(struct sync_fence *fence,
 			     struct sync_fence_waiter *waiter)
 {
@@ -584,6 +573,17 @@ int sync_fence_cancel_async(struct sync_fence *fence,
 	}
 	spin_unlock_irqrestore(&fence->waiter_list_lock, flags);
 	return ret;
+}
+EXPORT_SYMBOL(sync_fence_cancel_async);
+
+static bool sync_fence_check(struct sync_fence *fence)
+{
+	/*
+	 * Make sure that reads to fence->status are ordered with the
+	 * wait queue event triggering
+	 */
+	smp_rmb();
+	return fence->status != 0;
 }
 
 int sync_fence_wait(struct sync_fence *fence, long timeout)
